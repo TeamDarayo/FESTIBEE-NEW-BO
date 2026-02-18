@@ -1,0 +1,12 @@
+{
+  "extends": "@festibee/typescript-config/react-library.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@festibee/ui": ["../../packages/ui/src"],
+      "@festibee/ui/*": ["../../packages/ui/src/*"]
+    }
+  },
+  "include": [".storybook/**/*", "../../packages/ui/src/**/*.stories.tsx"],
+  "exclude": ["node_modules"]
+}

@@ -1,0 +1,40 @@
+{
+  "name": "@festibee/api",
+  "version": "0.0.1",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./routes": "./src/routes/index.ts",
+    "./schemas": "./src/schemas/index.ts",
+    "./types": "./src/types/index.ts",
+    "./lib": "./src/lib/index.ts",
+    "./generated": "./src/generated/index.ts",
+    "./generated/*": "./src/generated/*.ts"
+  },
+  "scripts": {
+    "fetch-openapi": "npx tsx scripts/fetch-openapi.ts",
+    "fix-openapi": "npx tsx scripts/fix-openapi.ts",
+    "generate": "pnpm fetch-openapi && pnpm fix-openapi && orval",
+    "generate:local": "pnpm fix-openapi && orval",
+    "build": "pnpm generate && tsc",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint src/"
+  },
+  "dependencies": {
+    "@hono/zod-openapi": "^0.19.6",
+    "hono": "^4.11.1",
+    "zod": "^3.24.1"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": "^5.0.0"
+  },
+  "devDependencies": {
+    "@festibee/typescript-config": "workspace:*",
+    "@tanstack/react-query": "^5.62.15",
+    "@types/node": "^22.0.0",
+    "orval": "^7.10.0",
+    "typescript": "5.9.2"
+  }
+}
