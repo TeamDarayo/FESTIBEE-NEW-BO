@@ -1,9 +1,8 @@
 // API
-export { authApi } from "./api/auth-api";
-export type { LoginRequest, LoginResponse, User } from "./api/auth-api";
+export { verifyAdminPassword } from "./api/auth-api";
 
 // Hooks
-export { useAuth, useLogin, useLogout, useMe, authKeys } from "./hooks/use-auth";
+export { useAuth, useLogout } from "./hooks/use-auth";
 
 // Model
 export { useAuthStore } from "./model/auth-store";

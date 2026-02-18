@@ -1,7 +1,4 @@
-import { getAdminPassword } from "@festibee/api/lib";
-
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3011";
+import { getAdminPassword, getBaseUrl } from "@festibee/api/lib";
 
 interface RequestOptions extends RequestInit {
   params?: Record<string, string | number | boolean | undefined>;
@@ -13,7 +10,7 @@ async function request<T>(
 ): Promise<T> {
   const { params, ...init } = options;
 
-  let url = `${API_BASE_URL}${endpoint}`;
+  let url = `${getBaseUrl()}${endpoint}`;
 
   if (params) {
     const searchParams = new URLSearchParams();

@@ -1,6 +1,5 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import {
   useGetArtists as useGeneratedGetArtists,
   getGetArtistsQueryKey,
@@ -20,6 +19,21 @@ export const artistKeys = {
 };
 
 // ============================================================================
+// Helpers
+// ============================================================================
+
+/** 다양한 응답 래핑 형태에서 배열을 추출한다 */
+function extractArtistList(body: unknown): ArtistDetailRes[] {
+  if (Array.isArray(body)) return body;
+  if (body && typeof body === "object") {
+    const obj = body as Record<string, unknown>;
+    const nested = obj.result ?? obj.data ?? obj.content;
+    if (Array.isArray(nested)) return nested;
+  }
+  return [];
+}
+
+// ============================================================================
 // Query Hooks
 // ============================================================================
 
@@ -27,20 +41,21 @@ export function useArtistList() {
   return useGeneratedGetArtists({
     query: {
       queryKey: artistKeys.list(),
-      select: (response) => response.data,
+      select: (response) => extractArtistList(response.data),
     },
   });
 }
 
 export function useArtistDetail(id: number) {
-  const { data: artists } = useArtistList();
-
-  return useQuery({
-    queryKey: artistKeys.detail(id),
-    queryFn: async (): Promise<ArtistDetailRes | undefined> => {
-      return artists?.find((a) => a.id === id);
+  return useGeneratedGetArtists({
+    query: {
+      queryKey: artistKeys.detail(id),
+      select: (response) => {
+        const list = extractArtistList(response.data);
+        return list.find((a) => a.id === id);
+      },
+      enabled: !!id,
     },
-    enabled: !!id && !!artists,
   });
 }
 

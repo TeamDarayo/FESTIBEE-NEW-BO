@@ -35,6 +35,7 @@ const config: StorybookConfig = {
       // UI package exports
       "@festibee/ui/styles": join(uiPackagePath, "src/styles.css"),
       "@festibee/ui/tokens": join(uiPackagePath, "src/tokens/index.css"),
+      "@festibee/ui/theme": join(uiPackagePath, "src/tokens/theme.css"),
       "@festibee/ui": join(uiPackagePath, "src"),
       // Internal path aliases used by shadcn components
       "@ui": join(uiPackagePath, "src"),

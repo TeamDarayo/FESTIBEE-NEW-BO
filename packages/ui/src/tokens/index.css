@@ -59,6 +59,16 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
+
+    /* Z-Index Scale */
+    --z-base: 0;
+    --z-dropdown: 50;
+    --z-sticky: 100;
+    --z-overlay: 1000;
+    --z-modal: 1001;
+    --z-popover: 1002;
+    --z-toast: 1100;
+    --z-tooltip: 1200;
   }
 
   .dark {

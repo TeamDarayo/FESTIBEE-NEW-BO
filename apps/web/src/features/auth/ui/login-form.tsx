@@ -12,68 +12,92 @@ import {
   CardTitle,
   Input,
   Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@festibee/ui";
-import { useLogin } from "../hooks/use-auth";
-import { ROUTES } from "@/shared/config/constants";
+import { useAuthStore } from "../model/auth-store";
+import { verifyAdminPassword } from "../api/auth-api";
+import {
+  API_SERVERS,
+  type ApiServerEnv,
+  ROUTES,
+} from "@/shared/config/constants";
 
 export function LoginForm() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const { apiServer, setAdminPassword, setAuthenticated, setApiServer } =
+    useAuthStore();
+
   const [password, setPassword] = useState("");
-  const loginMutation = useLogin();
+  const [error, setError] = useState("");
+  const [isPending, setIsPending] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+    setIsPending(true);
+
     try {
-      await loginMutation.mutateAsync({ email, password });
+      setAdminPassword(password);
+      await verifyAdminPassword();
+      setAuthenticated(true);
       router.push(ROUTES.DASHBOARD);
-    } catch (error) {
-      console.error("Login failed:", error);
+    } catch {
+      setError("비밀번호가 올바르지 않습니다.");
+      setAdminPassword("");
+    } finally {
+      setIsPending(false);
     }
   };
 
   return (
     <Card className="w-[400px]">
       <CardHeader>
-        <CardTitle>로그인</CardTitle>
-        <CardDescription>계정에 로그인하세요</CardDescription>
+        <CardTitle>Festibee 관리자</CardTitle>
+        <CardDescription>관리자 비밀번호를 입력하세요</CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">이메일</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="email@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+            <Label htmlFor="server">서버 환경</Label>
+            <Select
+              value={apiServer}
+              onValueChange={(v) => setApiServer(v as ApiServerEnv)}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(API_SERVERS).map(([key, server]) => (
+                  <SelectItem key={key} value={key}>
+                    {server.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
+
           <div className="space-y-2">
             <Label htmlFor="password">비밀번호</Label>
             <Input
               id="password"
               type="password"
+              placeholder="관리자 비밀번호"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              autoFocus
             />
           </div>
-          {loginMutation.isError && (
-            <p className="text-sm text-destructive">
-              로그인에 실패했습니다. 다시 시도해주세요.
-            </p>
-          )}
+
+          {error && <p className="text-sm text-destructive">{error}</p>}
         </CardContent>
         <CardFooter>
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={loginMutation.isPending}
-          >
-            {loginMutation.isPending ? "로그인 중..." : "로그인"}
+          <Button type="submit" className="w-full" disabled={isPending}>
+            {isPending ? "확인 중..." : "로그인"}
           </Button>
         </CardFooter>
       </form>

@@ -1,59 +1,23 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useAuthStore, type User } from "../model/auth-store";
-import { authApi, type LoginRequest } from "../api/auth-api";
-
-export type { User };
-
-export const authKeys = {
-  all: ["auth"] as const,
-  me: () => [...authKeys.all, "me"] as const,
-};
+import { useRouter } from "next/navigation";
+import { useCallback } from "react";
+import { useAuthStore } from "../model/auth-store";
+import { ROUTES } from "@/shared/config/constants";
 
 export function useAuth() {
-  const { user, isAuthenticated, setAuth, clearAuth } = useAuthStore();
-
-  return {
-    user,
-    isAuthenticated,
-    setAuth,
-    clearAuth,
-  };
-}
-
-export function useLogin() {
-  const queryClient = useQueryClient();
-  const { setAuth } = useAuthStore();
-
-  return useMutation({
-    mutationFn: (data: LoginRequest) => authApi.login(data),
-    onSuccess: (response) => {
-      setAuth(response.data.user, response.data.token);
-      queryClient.invalidateQueries({ queryKey: authKeys.all });
-    },
-  });
+  const { isAuthenticated, apiServer } = useAuthStore();
+  return { isAuthenticated, apiServer };
 }
 
 export function useLogout() {
-  const queryClient = useQueryClient();
-  const { clearAuth } = useAuthStore();
+  const router = useRouter();
+  const clearAuth = useAuthStore((s) => s.clearAuth);
 
-  return useMutation({
-    mutationFn: () => authApi.logout(),
-    onSuccess: () => {
-      clearAuth();
-      queryClient.clear();
-    },
-  });
-}
+  const logout = useCallback(() => {
+    clearAuth();
+    router.push(ROUTES.LOGIN);
+  }, [clearAuth, router]);
 
-export function useMe() {
-  const { isAuthenticated } = useAuthStore();
-
-  return useQuery({
-    queryKey: authKeys.me(),
-    queryFn: () => authApi.me(),
-    enabled: isAuthenticated,
-  });
+  return { logout };
 }

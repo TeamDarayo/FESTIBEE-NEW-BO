@@ -30,3 +30,7 @@ export {
   useInferArtistIds,
   useMergeArtists,
 } from "./hooks/use-artist-mutations";
+
+// UI
+export { ArtistListPanel } from "./ui/artist-list-panel";
+export { ArtistDetailPanel } from "./ui/artist-detail-panel";
