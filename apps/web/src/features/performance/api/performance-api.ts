@@ -60,6 +60,9 @@ export type SavePerformanceReq =
   DddDarayoFestivalPresentationHttpEndpointsAdminPerformanceExchangesSavePerformanceReq;
 export type EditPerformanceDTO = DddDarayoFestivalDomainDtoEditPerformanceDTO;
 
+// Extended type with placeId (not in generated DTO)
+export type EditPerformanceFullDTO = EditPerformanceDTO & { placeId?: number };
+
 // Request types - Timetable
 export type AddTimetableReq =
   DddDarayoFestivalPresentationHttpEndpointsAdminPerformanceExchangesAddTimetableReq;
@@ -141,6 +144,11 @@ export {
 const BASE_PATH = "/api/admin/performance";
 
 export const performanceApi = {
+  // Performance update (generated code doesn't support placeId)
+  update: (performanceId: number, data: EditPerformanceFullDTO) =>
+    apiClient.put<void>(`${BASE_PATH}/${performanceId}`, data),
+
+
   // Timetable operations (paths include performanceId)
   addTimetable: (performanceId: number, data: AddTimetableReq) =>
     apiClient.post<number>(`${BASE_PATH}/${performanceId}/timetable`, data),

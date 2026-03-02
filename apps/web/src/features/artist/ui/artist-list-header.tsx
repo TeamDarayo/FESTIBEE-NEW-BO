@@ -1,9 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Input, Button } from "@festibee/ui";
 import { Search, Plus } from "lucide-react";
-import { ArtistCreateDialog } from "./artist-create-dialog";
 
 interface ArtistListHeaderProps {
   searchQuery: string;
@@ -14,7 +13,7 @@ export function ArtistListHeader({
   searchQuery,
   onSearchChange,
 }: ArtistListHeaderProps) {
-  const [createOpen, setCreateOpen] = useState(false);
+  const router = useRouter();
 
   return (
     <div className="flex flex-col gap-2 border-b p-4">
@@ -23,7 +22,7 @@ export function ArtistListHeader({
         <Button
           size="sm"
           variant="ghost"
-          onClick={() => setCreateOpen(true)}
+          onClick={() => router.push("/artist/new")}
           className="h-8 w-8 p-0"
         >
           <Plus className="h-4 w-4" />
@@ -38,7 +37,6 @@ export function ArtistListHeader({
           className="pl-8"
         />
       </div>
-      <ArtistCreateDialog open={createOpen} onOpenChange={setCreateOpen} />
     </div>
   );
 }

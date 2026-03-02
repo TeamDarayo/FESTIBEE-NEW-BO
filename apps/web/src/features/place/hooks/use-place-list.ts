@@ -8,6 +8,21 @@ import {
 import type { GetAllPlaceRes } from "../api/place-api";
 
 // ============================================================================
+// Helpers
+// ============================================================================
+
+/** 다양한 응답 래핑 형태에서 배열을 추출한다 */
+function extractPlaceList(body: unknown): GetAllPlaceRes[] {
+  if (Array.isArray(body)) return body;
+  if (body && typeof body === "object") {
+    const obj = body as Record<string, unknown>;
+    const nested = obj.result ?? obj.data ?? obj.content;
+    if (Array.isArray(nested)) return nested;
+  }
+  return [];
+}
+
+// ============================================================================
 // Query Key Factory
 // ============================================================================
 
@@ -27,7 +42,7 @@ export function usePlaceList() {
   return useGeneratedGetPlaces({
     query: {
       queryKey: placeKeys.list(),
-      select: (response) => response.data,
+      select: (response) => extractPlaceList(response.data),
     },
   });
 }

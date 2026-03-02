@@ -46,14 +46,40 @@ export function NavRail() {
   const pathname = usePathname();
   const { apiServer } = useAuth();
   const { logout } = useLogout();
+  const isProd = apiServer === "production";
 
   return (
-    <aside className="flex h-full w-16 flex-col items-center border-r bg-background">
-      {/* Logo */}
-      <div className="flex h-14 w-full items-center justify-center border-b">
-        <Link href={ROUTES.DASHBOARD} className="text-lg font-bold">
+    <aside className="relative flex h-full w-16 flex-col items-center border-r bg-background">
+      {/* Layer 2: 좌측 edge 세로 accent bar */}
+      <div
+        className={cn(
+          "absolute inset-y-0 left-0 w-1",
+          isProd ? "animate-prod-pulse bg-destructive" : "bg-success"
+        )}
+      />
+
+      {/* Layer 3: 로고 영역 - 배경 tint + env 뱃지 */}
+      <div
+        className={cn(
+          "flex h-14 w-full flex-col items-center justify-center gap-0.5 border-b transition-colors",
+          isProd
+            ? "bg-destructive/10 dark:bg-destructive/20"
+            : "bg-success/5 dark:bg-success/10"
+        )}
+      >
+        <Link href={ROUTES.DASHBOARD} className="text-lg font-bold leading-none">
           F
         </Link>
+        <span
+          className={cn(
+            "rounded px-1 py-px text-[9px] font-bold uppercase leading-none tracking-wider",
+            isProd
+              ? "bg-destructive text-destructive-foreground"
+              : "bg-success text-success-foreground"
+          )}
+        >
+          {isProd ? "PROD" : "DEV"}
+        </span>
       </div>
 
       {/* Navigation */}
@@ -88,14 +114,28 @@ export function NavRail() {
 
         {/* Bottom section */}
         <div className="flex flex-col items-center gap-2 border-t py-3">
+          {/* Layer 4: 환경 칩 (기존 h-2 w-2 dot 대체) */}
           <Tooltip>
             <TooltipTrigger asChild>
               <div
                 className={cn(
-                  "h-2 w-2 rounded-full",
-                  apiServer === "production" ? "bg-red-500" : "bg-green-500"
+                  "flex h-8 w-10 cursor-default items-center justify-center rounded-md",
+                  isProd
+                    ? "bg-destructive/15 dark:bg-destructive/25"
+                    : "bg-success/10 dark:bg-success/20"
                 )}
-              />
+              >
+                <span
+                  className={cn(
+                    "text-[10px] font-bold uppercase tracking-wide",
+                    isProd
+                      ? "text-destructive dark:text-red-400"
+                      : "text-success dark:text-green-400"
+                  )}
+                >
+                  {isProd ? "PROD" : "DEV"}
+                </span>
+              </div>
             </TooltipTrigger>
             <TooltipContent side="right">
               {API_SERVERS[apiServer].label}

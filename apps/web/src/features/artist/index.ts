@@ -34,3 +34,4 @@ export {
 // UI
 export { ArtistListPanel } from "./ui/artist-list-panel";
 export { ArtistDetailPanel } from "./ui/artist-detail-panel";
+export { ArtistCreateForm } from "./ui/artist-create-form";

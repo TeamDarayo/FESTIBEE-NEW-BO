@@ -3,12 +3,12 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   useCreatePerformance as useGeneratedCreatePerformance,
-  useUpdatePerformance as useGeneratedUpdatePerformance,
   useDeletePerformance as useGeneratedDeletePerformance,
   useUpdateReservationInfos as useGeneratedUpdateReservationInfos,
 } from "@festibee/api/generated";
 import {
   performanceApi,
+  type EditPerformanceFullDTO,
   type AddTimetableReq,
   type EditTimetableReq,
   type AddTimetableArtistReq,
@@ -38,11 +38,16 @@ export function useCreatePerformance() {
 export function useUpdatePerformance() {
   const queryClient = useQueryClient();
 
-  return useGeneratedUpdatePerformance({
-    mutation: {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: performanceKeys.all });
-      },
+  return useMutation({
+    mutationFn: ({
+      performanceId,
+      data,
+    }: {
+      performanceId: number;
+      data: EditPerformanceFullDTO;
+    }) => performanceApi.update(performanceId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: performanceKeys.all });
     },
   });
 }
