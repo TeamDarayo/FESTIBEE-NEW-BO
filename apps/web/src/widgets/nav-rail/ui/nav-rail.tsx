@@ -9,44 +9,62 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@festibee/ui";
-import { LayoutDashboard, Music, Theater, MapPin, LogOut } from "lucide-react";
+import {
+  LayoutDashboard,
+  Music,
+  Theater,
+  MapPin,
+  ClipboardCheck,
+  LogOut,
+} from "lucide-react";
 import { useAuth, useLogout } from "@/features/auth";
+import { useProposalGroups } from "@/features/proposal";
 import { API_SERVERS, ROUTES } from "@/shared/config/constants";
 
 interface NavRailItem {
   title: string;
   href: string;
   icon: React.ReactNode;
+  badge?: number;
 }
-
-const navItems: NavRailItem[] = [
-  {
-    title: "대시보드",
-    href: ROUTES.DASHBOARD,
-    icon: <LayoutDashboard className="h-5 w-5" />,
-  },
-  {
-    title: "아티스트",
-    href: "/artist",
-    icon: <Music className="h-5 w-5" />,
-  },
-  {
-    title: "공연",
-    href: "/performance",
-    icon: <Theater className="h-5 w-5" />,
-  },
-  {
-    title: "장소",
-    href: "/place",
-    icon: <MapPin className="h-5 w-5" />,
-  },
-];
 
 export function NavRail() {
   const pathname = usePathname();
   const { apiServer } = useAuth();
   const { logout } = useLogout();
   const isProd = apiServer === "production";
+
+  const { data: pendingGroups } = useProposalGroups({ status: "PENDING" });
+  const pendingCount = pendingGroups?.length ?? 0;
+
+  const navItems: NavRailItem[] = [
+    {
+      title: "대시보드",
+      href: ROUTES.DASHBOARD,
+      icon: <LayoutDashboard className="h-5 w-5" />,
+    },
+    {
+      title: "검토 대기",
+      href: ROUTES.PROPOSALS,
+      icon: <ClipboardCheck className="h-5 w-5" />,
+      badge: pendingCount,
+    },
+    {
+      title: "아티스트",
+      href: ROUTES.ARTIST,
+      icon: <Music className="h-5 w-5" />,
+    },
+    {
+      title: "공연",
+      href: ROUTES.PERFORMANCE,
+      icon: <Theater className="h-5 w-5" />,
+    },
+    {
+      title: "장소",
+      href: ROUTES.PLACE,
+      icon: <MapPin className="h-5 w-5" />,
+    },
+  ];
 
   return (
     <aside className="relative flex h-full w-16 flex-col items-center border-r bg-background">
@@ -97,13 +115,18 @@ export function NavRail() {
                   <Link
                     href={item.href}
                     className={cn(
-                      "flex h-10 w-10 items-center justify-center rounded-lg transition-colors",
+                      "relative flex h-10 w-10 items-center justify-center rounded-lg transition-colors",
                       isActive
                         ? "bg-accent text-accent-foreground"
                         : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                     )}
                   >
                     {item.icon}
+                    {item.badge != null && item.badge > 0 && (
+                      <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold leading-none text-destructive-foreground">
+                        {item.badge > 99 ? "99+" : item.badge}
+                      </span>
+                    )}
                   </Link>
                 </TooltipTrigger>
                 <TooltipContent side="right">{item.title}</TooltipContent>

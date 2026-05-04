@@ -28,4 +28,5 @@ export const ROUTES = {
   ARTIST: "/artist",
   PERFORMANCE: "/performance",
   PLACE: "/place",
+  PROPOSALS: "/proposals",
 } as const;

@@ -46,3 +46,7 @@ export {
   useBatchReject,
   useRetryApply,
 } from "./hooks/use-proposal-mutations";
+
+// UI
+export { ProposalGroupListPanel } from "./ui/proposal-group-list-panel";
+export { ProposalGroupDetailPanel } from "./ui/proposal-group-detail-panel";
