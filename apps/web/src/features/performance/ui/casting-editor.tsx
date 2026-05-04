@@ -1,15 +1,17 @@
 "use client";
 
 import { useReducer, useEffect, useState, useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Button, Separator } from "@festibee/ui";
 import { Save } from "lucide-react";
-import type { TimeTableDetailRes } from "../api/performance-api";
-import { performanceApi } from "../api/performance-api";
+import type { TimeTableDetailRes, GetPerformanceHallsResHallInfo } from "../api/performance-api";
+import { performanceApi, getGetPerformanceDetailQueryOptions } from "../api/performance-api";
 import type { CastingRow, CreateFormAction } from "../hooks/use-create-form-reducer";
 import { flattenTimetables } from "../lib/casting-row-utils";
 import { computeTimetableDiff } from "../lib/casting-diff";
 import type { TimetableDiffOp } from "../lib/casting-diff";
 import { CastingSpreadsheet } from "./casting-spreadsheet";
+import { HallManagerPanel } from "./hall-manager-panel";
 import { useQueryClient } from "@tanstack/react-query";
 import { performanceKeys } from "../hooks/use-performance-list";
 
@@ -33,6 +35,7 @@ function castingRowReducer(
         performanceDate: "",
         startTime: "",
         endTime: "",
+        hallId: null,
         order: state.length,
       };
       if (action.afterRowId) {
@@ -112,6 +115,14 @@ export function CastingEditor({
   const [dirty, setDirty] = useState(false);
   const [initialized, setInitialized] = useState(false);
 
+  // Load halls for this performance
+  const { data: hallsRes, isLoading: isHallLoading } = useQuery(
+    getGetPerformanceDetailQueryOptions(performanceId)
+  );
+  const hallPayload = hallsRes?.data;
+  const placeId = hallPayload?.place?.id ?? null;
+  const halls: GetPerformanceHallsResHallInfo[] = hallPayload?.place?.halls ?? [];
+
   // Initialize rows from server data
   useEffect(() => {
     const flatRows = flattenTimetables(timeTables);
@@ -187,7 +198,20 @@ export function CastingEditor({
       </div>
       <Separator className="mb-3" />
 
-      <CastingSpreadsheet rows={rows} dispatch={wrappedDispatch} />
+      {placeId != null && (
+        <HallManagerPanel
+          performanceId={performanceId}
+          placeId={placeId}
+          halls={halls}
+        />
+      )}
+      {!isHallLoading && placeId == null && (
+        <div className="mb-3 rounded-md border border-dashed bg-muted/20 p-3 text-xs text-muted-foreground">
+          공연에 장소가 연결되지 않아 홀을 관리할 수 없습니다. 기본 정보에서 장소를 먼저 연결해 주세요.
+        </div>
+      )}
+
+      <CastingSpreadsheet rows={rows} dispatch={wrappedDispatch} halls={halls} />
     </div>
   );
 }
