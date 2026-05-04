@@ -24,6 +24,18 @@ export type ProposalStatus =
 export type ApplyStatus = "APPLIED" | "BLOCKED" | "FAILED";
 
 // ============================================================================
+// Spring Page wrapper
+// ============================================================================
+
+export type SpringPage<T> = {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  number: number;
+  size: number;
+};
+
+// ============================================================================
 // Response Types
 // ============================================================================
 
@@ -38,7 +50,7 @@ export type ProposalRes = {
   targetType: ProposalTargetType;
   targetId: number | null;
   action: ProposalAction;
-  payload: Record<string, unknown>;
+  payload: Record<string, unknown> | null;
   status: ProposalStatus;
   confidence: number | null;
   decidedBy: string | null;
@@ -67,9 +79,17 @@ export type ProposalGroupRes = {
   summary: ProposalGroupSummary;
 };
 
+export type ProposalGroupInfo = {
+  id: number;
+  createdAt: string;
+  sourceType: SourceType;
+  sourceSite: CrawlingSite | null;
+  sourceRefId: number | null;
+};
+
 export type ProposalGroupDetailRes = {
-  group: ProposalGroupRes;
-  items: ProposalRes[];
+  group: ProposalGroupInfo;
+  proposals: ProposalRes[];
 };
 
 export type BatchApproveRes = {
@@ -156,7 +176,9 @@ export const proposalApi = {
     apiClient.post<ProposalGroupRes>(`${BASE}/groups`, data),
 
   listGroups: (params?: GetProposalGroupsParams) =>
-    apiClient.get<ProposalGroupRes[]>(`${BASE}/groups`, { params }),
+    apiClient
+      .get<SpringPage<ProposalGroupRes>>(`${BASE}/groups`, { params })
+      .then((page) => page.content),
 
   getGroupDetail: (groupId: number) =>
     apiClient.get<ProposalGroupDetailRes>(`${BASE}/groups/${groupId}`),
@@ -166,7 +188,9 @@ export const proposalApi = {
     apiClient.post<ProposalRes>(BASE, data),
 
   listProposals: (params?: GetProposalsParams) =>
-    apiClient.get<ProposalRes[]>(BASE, { params }),
+    apiClient
+      .get<SpringPage<ProposalRes>>(BASE, { params })
+      .then((page) => page.content),
 
   getProposal: (proposalId: number) =>
     apiClient.get<ProposalRes>(`${BASE}/${proposalId}`),

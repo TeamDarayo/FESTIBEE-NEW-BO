@@ -53,7 +53,7 @@ export function ProposalGroupDetailPanel({
   const grouped = useMemo(() => {
     const map = new Map<ProposalTargetType, ProposalRes[]>();
     if (!data) return map;
-    for (const p of data.items) {
+    for (const p of data.proposals) {
       const list = map.get(p.targetType) ?? [];
       list.push(p);
       map.set(p.targetType, list);
@@ -63,7 +63,18 @@ export function ProposalGroupDetailPanel({
 
   const allPendingIds = useMemo(() => {
     if (!data) return [];
-    return data.items.filter((p) => p.status === "PENDING").map((p) => p.id);
+    return data.proposals.filter((p) => p.status === "PENDING").map((p) => p.id);
+  }, [data]);
+
+  const pendingCount = allPendingIds.length;
+  const totalCount = data?.proposals.length ?? 0;
+
+  const performanceTitle = useMemo(() => {
+    if (!data) return null;
+    const perf = data.proposals.find((p) => p.targetType === "PERFORMANCE");
+    if (!perf?.payload) return null;
+    const title = perf.payload["title"];
+    return typeof title === "string" ? title : null;
   }, [data]);
 
   if (isLoading) {
@@ -91,7 +102,7 @@ export function ProposalGroupDetailPanel({
   }
 
   const { group } = data;
-  const title = group.summary.performanceTitle ?? `Group #${group.id}`;
+  const title = performanceTitle ?? `Group #${group.id}`;
 
   const handleBatchApproveAll = () => {
     if (allPendingIds.length === 0) return;
@@ -135,14 +146,14 @@ export function ProposalGroupDetailPanel({
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
             <div className="text-right">
               <div className="text-2xl font-bold text-foreground">
-                {group.summary.pendingCount}
+                {pendingCount}
               </div>
               <div>검토 대기</div>
             </div>
             <Separator orientation="vertical" className="h-10" />
             <div className="text-right">
               <div className="text-2xl font-bold text-foreground">
-                {group.summary.totalCount}
+                {totalCount}
               </div>
               <div>전체</div>
             </div>
