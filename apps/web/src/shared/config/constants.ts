@@ -29,4 +29,5 @@ export const ROUTES = {
   PERFORMANCE: "/performance",
   PLACE: "/place",
   PROPOSALS: "/proposals",
+  CRAWLED_RECORDS: "/crawled-records",
 } as const;

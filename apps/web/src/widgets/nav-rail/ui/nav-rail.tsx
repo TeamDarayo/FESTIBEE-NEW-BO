@@ -18,7 +18,7 @@ import {
   LogOut,
 } from "lucide-react";
 import { useAuth, useLogout } from "@/features/auth";
-import { useProposalGroups } from "@/features/proposal";
+import { useGetCrawledRecords } from "@festibee/api";
 import { API_SERVERS, ROUTES } from "@/shared/config/constants";
 
 interface NavRailItem {
@@ -34,8 +34,8 @@ export function NavRail() {
   const { logout } = useLogout();
   const isProd = apiServer === "production";
 
-  const { data: pendingGroups } = useProposalGroups({ status: "PENDING" });
-  const pendingCount = pendingGroups?.length ?? 0;
+  const { data: newRecordsPage } = useGetCrawledRecords({ status: "NEW", size: 1 });
+  const pendingCount = newRecordsPage?.totalElements ?? 0;
 
   const navItems: NavRailItem[] = [
     {
@@ -44,8 +44,8 @@ export function NavRail() {
       icon: <LayoutDashboard className="h-5 w-5" />,
     },
     {
-      title: "검토 대기",
-      href: ROUTES.PROPOSALS,
+      title: "크롤링 검토",
+      href: ROUTES.CRAWLED_RECORDS,
       icon: <ClipboardCheck className="h-5 w-5" />,
       badge: pendingCount,
     },
