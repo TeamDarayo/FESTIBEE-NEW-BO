@@ -4,3 +4,4 @@
 export * from "./routes";
 export * from "./schemas";
 export * from "./types";
+export * from "./crawled-records";
