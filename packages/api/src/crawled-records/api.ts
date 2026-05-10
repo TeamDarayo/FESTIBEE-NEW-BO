@@ -7,8 +7,8 @@ import type {
 } from "./types";
 
 async function apiFetch<T>(url: string, init?: RequestInit): Promise<T> {
-  const response = await customFetch<{ data: T }>(url, init);
-  return response.data;
+  const response = await customFetch<{ data: { result: T } }>(url, init);
+  return response.data.result;
 }
 
 const BASE = "/api/admin/crawled-records";
