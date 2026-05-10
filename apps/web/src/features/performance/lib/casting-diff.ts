@@ -11,6 +11,7 @@ interface TimetableGroupKey {
   performanceDate: string;
   startTime: string;
   endTime: string;
+  hallId?: number | null;
 }
 
 interface NewTimetableOp {
@@ -49,7 +50,7 @@ export type TimetableDiffOp =
   | RemoveArtistOp;
 
 function groupKey(row: TimetableGroupKey): string {
-  return `${row.performanceDate}|${row.startTime}|${row.endTime}`;
+  return `${row.performanceDate}|${row.startTime}|${row.endTime}|${row.hallId ?? 0}`;
 }
 
 /**
@@ -78,6 +79,7 @@ export function computeTimetableDiff(
       performanceDate: tt.performanceDate ?? "",
       startTime: tt.startTime ?? "",
       endTime: tt.endTime ?? "",
+      hallId: null, // TimeTableDetailRes doesn't expose hallId
     });
     if (!serverByKey.has(key)) serverByKey.set(key, []);
     serverByKey.get(key)!.push(tt);
@@ -107,7 +109,7 @@ export function computeTimetableDiff(
           performanceDate: first.performanceDate || undefined,
           startTime: first.startTime || undefined,
           endTime: first.endTime || undefined,
-          hallId: 0,
+          hallId: first.hallId ?? 0,
           artistIds: rows.map((r) => r.artistId!),
         },
       });

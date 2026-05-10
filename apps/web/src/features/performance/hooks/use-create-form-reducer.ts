@@ -13,6 +13,7 @@ export interface CastingRow {
   performanceDate: string;
   startTime: string;
   endTime: string;
+  hallId: number | null;
   order: number;
 }
 
@@ -96,6 +97,7 @@ function createEmptyRow(order: number): CastingRow {
     performanceDate: "",
     startTime: "",
     endTime: "",
+    hallId: null,
     order,
   };
 }

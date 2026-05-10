@@ -27,6 +27,7 @@ export function flattenTimetables(
         performanceDate: tt.performanceDate ?? "",
         startTime: tt.startTime ?? "",
         endTime: tt.endTime ?? "",
+        hallId: null,
         order: order++,
       });
     } else {
@@ -39,6 +40,7 @@ export function flattenTimetables(
           performanceDate: tt.performanceDate ?? "",
           startTime: tt.startTime ?? "",
           endTime: tt.endTime ?? "",
+          hallId: null,
           order: order++,
         });
       }
@@ -56,7 +58,7 @@ export function groupRowsToTimeTables(rows: CastingRow[]): TimeTableDTO[] {
   const groups = new Map<string, CastingRow[]>();
 
   for (const row of validRows) {
-    const key = `${row.performanceDate}|${row.startTime}|${row.endTime}`;
+    const key = `${row.performanceDate}|${row.startTime}|${row.endTime}|${row.hallId ?? 0}`;
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key)!.push(row);
   }
@@ -72,7 +74,7 @@ export function groupRowsToTimeTables(rows: CastingRow[]): TimeTableDTO[] {
       performanceDate: first.performanceDate || (null as unknown as string),
       startTime: first.startTime || (null as unknown as string),
       endTime: first.endTime || (null as unknown as string),
-      hallId: 0,
+      hallId: first.hallId ?? 0,
       artists,
     };
   });

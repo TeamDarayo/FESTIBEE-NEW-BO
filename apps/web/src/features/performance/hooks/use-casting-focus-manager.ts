@@ -1,6 +1,6 @@
 import { useRef, useCallback } from "react";
 
-const FIELD_ORDER = ["artist", "type", "date", "startTime", "endTime"] as const;
+const FIELD_ORDER = ["artist", "type", "date", "startTime", "endTime", "hall"] as const;
 export type CastingField = (typeof FIELD_ORDER)[number];
 
 /**

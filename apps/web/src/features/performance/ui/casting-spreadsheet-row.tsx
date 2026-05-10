@@ -5,8 +5,10 @@ import { Button, Input, cn } from "@festibee/ui";
 import { X, ChevronDown } from "lucide-react";
 import type { CastingRow, CreateFormAction } from "../hooks/use-create-form-reducer";
 import type { CastingFocusManager, CastingField } from "../hooks/use-casting-focus-manager";
+import type { GetPerformanceHallsResHallInfo } from "../api/performance-api";
 import { InlineArtistCell } from "./inline-artist-cell";
 import { CASTING_GRID_STYLE } from "./casting-spreadsheet";
+import { InlineHallCell } from "./inline-hall-cell";
 
 interface CastingSpreadsheetRowProps {
   row: CastingRow;
@@ -15,6 +17,7 @@ interface CastingSpreadsheetRowProps {
   onRequestNewRow: (afterRowId: string) => string | void;
   onApplyDateBelow: (date: string, fromRowId: string) => void;
   excludeArtistIds: number[];
+  halls: GetPerformanceHallsResHallInfo[];
   isFirst?: boolean;
 }
 
@@ -25,6 +28,7 @@ export function CastingSpreadsheetRow({
   onRequestNewRow,
   onApplyDateBelow,
   excludeArtistIds,
+  halls,
   isFirst,
 }: CastingSpreadsheetRowProps) {
   // Cleanup refs on unmount
@@ -92,6 +96,32 @@ export function CastingSpreadsheetRow({
   const handleRemove = useCallback(() => {
     dispatch({ type: "REMOVE_CASTING_ROW", rowId: row.id });
   }, [dispatch, row.id]);
+
+  const handleHallSelect = useCallback(
+    (hallId: number | null) => {
+      dispatch({
+        type: "UPDATE_CASTING_ROW",
+        rowId: row.id,
+        field: "hallId",
+        value: hallId,
+      });
+    },
+    [dispatch, row.id]
+  );
+
+  const handleHallEnter = useCallback(() => {
+    const moved = focusManager.focusNextField(row.id, "hall");
+    if (!moved) {
+      const movedToNextRow = focusManager.focusNextRowFirstField(row.id);
+      if (!movedToNextRow) {
+        onRequestNewRow(row.id);
+      }
+    }
+  }, [focusManager, onRequestNewRow, row.id]);
+
+  const handleHallShiftTab = useCallback(() => {
+    focusManager.focusPrevField(row.id, "hall");
+  }, [focusManager, row.id]);
 
   return (
     <div
@@ -199,6 +229,18 @@ export function CastingSpreadsheetRow({
         onKeyDown={handleFieldKeyDown("endTime")}
         className="h-8 rounded-none border-0 border-l border-border/50 text-xs focus-visible:ring-1 focus-visible:ring-inset"
       />
+
+      {/* Hall */}
+      <div className="flex items-center border-l border-border/50">
+        <InlineHallCell
+          hallId={row.hallId}
+          halls={halls}
+          onSelect={handleHallSelect}
+          onEnter={handleHallEnter}
+          onShiftTab={handleHallShiftTab}
+          registerRef={(el) => focusManager.registerCell(row.id, "hall", el)}
+        />
+      </div>
 
       {/* Delete */}
       <Button

@@ -15,6 +15,10 @@ import type {
   DddDarayoFestivalPresentationHttpEndpointsAdminPerformanceExchangesPerformanceDetailResReservationInfoDetailResType,
   DddDarayoFestivalPresentationHttpEndpointsAdminPerformanceExchangesPerformanceDetailResArtistDetailRes,
   DddDarayoFestivalPresentationHttpEndpointsAdminPerformanceExchangesPerformanceDetailResUrlDetailRes,
+  // Hall types
+  DddDarayoFestivalPresentationHttpEndpointsAdminPerformanceExchangesGetPerformanceHallsRes,
+  DddDarayoFestivalPresentationHttpEndpointsAdminPerformanceExchangesGetPerformanceHallsResHallInfo,
+  DddDarayoFestivalPresentationHttpEndpointsAdminPerformanceExchangesGetPerformanceHallsResPlaceInfo,
   // Request types
   DddDarayoFestivalPresentationHttpEndpointsAdminPerformanceExchangesSavePerformanceReq,
   DddDarayoFestivalDomainDtoEditPerformanceDTO,
@@ -54,6 +58,14 @@ export type ArtistDetailRes =
   DddDarayoFestivalPresentationHttpEndpointsAdminPerformanceExchangesPerformanceDetailResArtistDetailRes;
 export type UrlDetailRes =
   DddDarayoFestivalPresentationHttpEndpointsAdminPerformanceExchangesPerformanceDetailResUrlDetailRes;
+
+// Hall response types
+export type GetPerformanceHallsRes =
+  DddDarayoFestivalPresentationHttpEndpointsAdminPerformanceExchangesGetPerformanceHallsRes;
+export type GetPerformanceHallsResHallInfo =
+  DddDarayoFestivalPresentationHttpEndpointsAdminPerformanceExchangesGetPerformanceHallsResHallInfo;
+export type GetPerformanceHallsResPlaceInfo =
+  DddDarayoFestivalPresentationHttpEndpointsAdminPerformanceExchangesGetPerformanceHallsResPlaceInfo;
 
 // Request types - Performance
 export type SavePerformanceReq =
@@ -135,6 +147,9 @@ export {
   updateReservationInfos,
   getGetAllPerformanceDetailsQueryKey,
   getGetAllPerformanceDetailsQueryOptions,
+  getPerformanceDetail,
+  getGetPerformanceDetailQueryKey,
+  getGetPerformanceDetailQueryOptions,
 } from "@festibee/api/generated";
 
 // ============================================================================

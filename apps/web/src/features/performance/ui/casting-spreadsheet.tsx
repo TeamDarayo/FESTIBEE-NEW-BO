@@ -4,23 +4,26 @@ import { useMemo, useCallback, useRef } from "react";
 import { Button } from "@festibee/ui";
 import { Plus } from "lucide-react";
 import type { CastingRow, CreateFormAction } from "../hooks/use-create-form-reducer";
+import type { GetPerformanceHallsResHallInfo } from "../api/performance-api";
 import { useCastingFocusManager } from "../hooks/use-casting-focus-manager";
 import { sortRowsForDisplay } from "../lib/casting-row-utils";
 import { CastingSpreadsheetRow } from "./casting-spreadsheet-row";
 
 /** Shared grid-template-columns for header and rows (inline style to avoid Tailwind JIT issues with arbitrary values in constants) */
 export const CASTING_GRID_STYLE = {
-  gridTemplateColumns: "1fr 56px 140px 120px 120px 32px",
+  gridTemplateColumns: "1fr 56px 140px 120px 120px 120px 32px",
 } as const;
 
 interface CastingSpreadsheetProps {
   rows: CastingRow[];
   dispatch: React.Dispatch<CreateFormAction>;
+  halls?: GetPerformanceHallsResHallInfo[];
 }
 
 export function CastingSpreadsheet({
   rows,
   dispatch,
+  halls = [],
 }: CastingSpreadsheetProps) {
   const focusManager = useCastingFocusManager();
   const pendingFocusRowId = useRef<string | null>(null);
@@ -126,6 +129,9 @@ export function CastingSpreadsheet({
             <span className="border-l border-border/50 px-3 py-2 text-xs font-medium text-muted-foreground">
               종료
             </span>
+            <span className="border-l border-border/50 px-3 py-2 text-xs font-medium text-muted-foreground">
+              홀
+            </span>
             <span />
           </div>
 
@@ -146,6 +152,7 @@ export function CastingSpreadsheet({
                 onRequestNewRow={handleRequestNewRow}
                 onApplyDateBelow={handleApplyDateBelow}
                 excludeArtistIds={excludeArtistIds}
+                halls={halls}
                 isFirst={idx === 0}
               />
             </div>

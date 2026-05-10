@@ -1,0 +1,4501 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "OpenAPI definition",
+        "version": "v0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:8080",
+            "description": "Generated server url"
+        }
+    ],
+    "paths": {
+        "/v1/user/alarm": {
+            "put": {
+                "tags": [
+                    "alarm-controller"
+                ],
+                "operationId": "upsertAlarm",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.v1.alarm.exchanges.TokenEnrollReq"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.common.BaseResponseJava.lang.Void"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/timetable/{timetableId}": {
+            "put": {
+                "tags": [
+                    "timetable-admin-controller"
+                ],
+                "operationId": "editTimetable",
+                "parameters": [
+                    {
+                        "name": "timetableId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.timetable.exchanges.EditTimetableReq"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "timetable-admin-controller"
+                ],
+                "operationId": "deleteTimetable",
+                "parameters": [
+                    {
+                        "name": "timetableId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/admin/timetable/{timetableId}/artist": {
+            "put": {
+                "tags": [
+                    "timetable-admin-controller"
+                ],
+                "operationId": "putTimetableArtist",
+                "parameters": [
+                    {
+                        "name": "timetableId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.timetable.exchanges.AddTimetableArtistReq"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/admin/place/{placeId}": {
+            "put": {
+                "tags": [
+                    "place-controller"
+                ],
+                "operationId": "deletePlace",
+                "parameters": [
+                    {
+                        "name": "placeId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.place.exchanges.EditPlaceReq"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "place-controller"
+                ],
+                "operationId": "deletePlaceWithHalls",
+                "parameters": [
+                    {
+                        "name": "placeId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/admin/place/{placeId}/hall/{hallId}": {
+            "put": {
+                "tags": [
+                    "place-hall-admin-controller"
+                ],
+                "operationId": "editHall",
+                "parameters": [
+                    {
+                        "name": "hallId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.place.exchanges.EditHallReq"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/admin/place/hall/{hallId}": {
+            "put": {
+                "tags": [
+                    "place-controller"
+                ],
+                "operationId": "editHall_1",
+                "parameters": [
+                    {
+                        "name": "hallId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.place.exchanges.EditHallReq"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/admin/performance/{performanceId}": {
+            "put": {
+                "tags": [
+                    "performance-admin-controller"
+                ],
+                "operationId": "updatePerformance",
+                "parameters": [
+                    {
+                        "name": "performanceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ddd.darayo.festival.domain.dto.EditPerformanceDTO"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "performance-admin-controller"
+                ],
+                "operationId": "deletePerformance",
+                "parameters": [
+                    {
+                        "name": "performanceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/admin/performance/{performanceId}/timetable": {
+            "put": {
+                "tags": [
+                    "performance-timetable-admin-controller"
+                ],
+                "operationId": "syncTimetables",
+                "parameters": [
+                    {
+                        "name": "performanceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.performance.exchanges.AddTimetableReq"
+                                }
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "performance-timetable-admin-controller"
+                ],
+                "operationId": "createTimetable",
+                "parameters": [
+                    {
+                        "name": "performanceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.performance.exchanges.AddTimetableReq"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "integer",
+                                    "format": "int64"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/performance/{performanceId}/timetable/{timetableId}": {
+            "put": {
+                "tags": [
+                    "performance-timetable-admin-controller"
+                ],
+                "operationId": "editTimetable_1",
+                "parameters": [
+                    {
+                        "name": "timetableId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.timetable.exchanges.EditTimetableReq"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/admin/performance/{performanceId}/timetable/{timetableId}/artist": {
+            "put": {
+                "tags": [
+                    "performance-timetable-admin-controller"
+                ],
+                "operationId": "putTimetableArtist_1",
+                "parameters": [
+                    {
+                        "name": "timetableId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.timetable.exchanges.AddTimetableArtistReq"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "performance-timetable-artist-admin-controller"
+                ],
+                "operationId": "addTimetableArtist",
+                "parameters": [
+                    {
+                        "name": "timetableId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.timetable.exchanges.AddTimetableArtistReq"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/admin/performance/{performanceId}/timetable/{timetableId}/artist/{artistId}": {
+            "put": {
+                "tags": [
+                    "performance-timetable-artist-admin-controller"
+                ],
+                "operationId": "putTimetableArtist_2",
+                "parameters": [
+                    {
+                        "name": "timetableId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "artistId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ddd.darayo.festival.domain.dto.TimetableArtistContentDTO"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "performance-timetable-artist-admin-controller"
+                ],
+                "operationId": "deleteTimetableArtist",
+                "parameters": [
+                    {
+                        "name": "timetableId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "artistId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/admin/performance/{performanceId}/reservation": {
+            "put": {
+                "tags": [
+                    "performance-admin-controller"
+                ],
+                "operationId": "updateReservationInfos",
+                "parameters": [
+                    {
+                        "name": "performanceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.performance.exchanges.EditReservationInfoReq"
+                                }
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "performance-reservation-admin-controller"
+                ],
+                "operationId": "addReservationInfo",
+                "parameters": [
+                    {
+                        "name": "performanceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ddd.darayo.festival.domain.dto.ReservationInfoContentDTO"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/admin/performance/{performanceId}/reservation/{reservationInfoId}": {
+            "put": {
+                "tags": [
+                    "performance-reservation-admin-controller"
+                ],
+                "operationId": "updateReservationInfo",
+                "parameters": [
+                    {
+                        "name": "reservationInfoId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ddd.darayo.festival.domain.dto.EditReservationInfoCommand"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "performance-reservation-admin-controller"
+                ],
+                "operationId": "deleteReservationInfo",
+                "parameters": [
+                    {
+                        "name": "reservationInfoId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/admin/performance/{performanceId}/performanceURL/{performanceURLId}": {
+            "put": {
+                "tags": [
+                    "performance-url-admin-controller"
+                ],
+                "operationId": "updatePerformanceURL",
+                "parameters": [
+                    {
+                        "name": "performanceURLId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ddd.darayo.festival.domain.dto.PerformanceURLContentDTO"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "performance-url-admin-controller"
+                ],
+                "operationId": "deletePerformanceURL",
+                "parameters": [
+                    {
+                        "name": "performanceURLId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/admin/crawling/crawled-performances/{crawledPerformanceId}/links/places/{performancePlaceId}": {
+            "put": {
+                "tags": [
+                    "crawling-place-link-admin-controller"
+                ],
+                "operationId": "updateLink",
+                "parameters": [
+                    {
+                        "name": "crawledPerformanceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "performancePlaceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.crawling.exchanges.UpdatePlaceLinkReq"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.crawling.exchanges.CrawlingPlaceLinkRes"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "crawling-place-link-admin-controller"
+                ],
+                "operationId": "deleteLink",
+                "parameters": [
+                    {
+                        "name": "crawledPerformanceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "performancePlaceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/admin/crawling/crawled-performances/{crawledPerformanceId}/links/performances/{performanceId}": {
+            "put": {
+                "tags": [
+                    "crawling-performance-link-admin-controller"
+                ],
+                "operationId": "updateLink_1",
+                "parameters": [
+                    {
+                        "name": "crawledPerformanceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "performanceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.crawling.exchanges.UpdatePerformanceLinkReq"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.crawling.exchanges.CrawlingPerformanceLinkRes"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "crawling-performance-link-admin-controller"
+                ],
+                "operationId": "deleteLink_1",
+                "parameters": [
+                    {
+                        "name": "crawledPerformanceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "performanceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/admin/crawling/crawled-performances/{crawledPerformanceId}/links/halls/{venderHallName}": {
+            "put": {
+                "tags": [
+                    "crawling-hall-link-admin-controller"
+                ],
+                "operationId": "updateLink_2",
+                "parameters": [
+                    {
+                        "name": "crawledPerformanceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "venderHallName",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.crawling.exchanges.UpdateHallLinkReq"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.crawling.exchanges.CrawlingHallLinkRes"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "crawling-hall-link-admin-controller"
+                ],
+                "operationId": "linkExisting",
+                "parameters": [
+                    {
+                        "name": "crawledPerformanceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "venderHallName",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.crawling.exchanges.LinkExistingHallReq"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.crawling.exchanges.CrawlingHallLinkRes"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "crawling-hall-link-admin-controller"
+                ],
+                "operationId": "deleteLink_2",
+                "parameters": [
+                    {
+                        "name": "crawledPerformanceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "venderHallName",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/admin/crawling/crawled-performances/{crawledPerformanceId}/links/artists/{venderArtistName}": {
+            "put": {
+                "tags": [
+                    "crawling-artist-link-admin-controller"
+                ],
+                "operationId": "updateArtistLink",
+                "parameters": [
+                    {
+                        "name": "crawledPerformanceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "venderArtistName",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.crawling.exchanges.LinkExistingArtistReq"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.crawling.exchanges.CrawlingArtistLinkRes"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "crawling-artist-link-admin-controller"
+                ],
+                "operationId": "linkExistingArtist",
+                "parameters": [
+                    {
+                        "name": "crawledPerformanceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "venderArtistName",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.crawling.exchanges.LinkExistingArtistReq"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.crawling.exchanges.CrawlingArtistLinkRes"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "crawling-artist-link-admin-controller"
+                ],
+                "operationId": "deleteLink_3",
+                "parameters": [
+                    {
+                        "name": "crawledPerformanceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "venderArtistName",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/admin/artist/{artistId}": {
+            "put": {
+                "tags": [
+                    "artist-admin-controller"
+                ],
+                "operationId": "editArtist",
+                "parameters": [
+                    {
+                        "name": "artistId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.artist.exchanges.EditArtistReq"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "artist-admin-controller"
+                ],
+                "operationId": "deleteArtist",
+                "parameters": [
+                    {
+                        "name": "artistId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/admin/artist/{artistId}/alias/{aliasId}": {
+            "put": {
+                "tags": [
+                    "artist-alias-admin-controller"
+                ],
+                "operationId": "editArtistAlias",
+                "parameters": [
+                    {
+                        "name": "aliasId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.artist.exchanges.EditArtistAliasReq"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "artist-alias-admin-controller"
+                ],
+                "operationId": "deleteArtistAlias",
+                "parameters": [
+                    {
+                        "name": "aliasId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/admin/artist/aliases/{aliasId}": {
+            "put": {
+                "tags": [
+                    "artist-admin-controller"
+                ],
+                "operationId": "editArtistAlias_1",
+                "parameters": [
+                    {
+                        "name": "aliasId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.artist.exchanges.EditArtistAliasReq"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "artist-admin-controller"
+                ],
+                "operationId": "deleteArtistAlias_1",
+                "parameters": [
+                    {
+                        "name": "aliasId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/v1/users/push-permission": {
+            "get": {
+                "tags": [
+                    "user-controller"
+                ],
+                "operationId": "getPushPermission",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.common.BaseResponseJava.lang.Boolean"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "user-controller"
+                ],
+                "operationId": "updatePushPermission",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.v1.user.exchanges.PushPermissionReq"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.common.BaseResponseJava.lang.Void"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/users/login": {
+            "post": {
+                "tags": [
+                    "user-controller"
+                ],
+                "operationId": "login",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.v1.user.exchanges.UserLoginReq"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.common.BaseResponseDdd.darayo.festival.presentation.http.endpoints.v1.user.exchanges.UserLoginRes"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/festival/{festivalId}/push": {
+            "get": {
+                "tags": [
+                    "performance-controller"
+                ],
+                "operationId": "getPerformanceAlarm",
+                "parameters": [
+                    {
+                        "name": "festivalId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.common.BaseResponseJava.lang.Boolean"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "performance-controller"
+                ],
+                "operationId": "enrollPerformanceAlarm",
+                "parameters": [
+                    {
+                        "name": "festivalId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.common.BaseResponseJava.lang.Void"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "performance-controller"
+                ],
+                "operationId": "unenrollPerformanceAlarm",
+                "parameters": [
+                    {
+                        "name": "festivalId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.common.BaseResponseJava.lang.Void"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/place": {
+            "get": {
+                "tags": [
+                    "place-controller"
+                ],
+                "operationId": "getPlaces",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.place.exchanges.GetAllPlaceRes"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "place-controller"
+                ],
+                "operationId": "createPlace",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.place.exchanges.AddPlaceReq"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "integer",
+                                    "format": "int64"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/place/{placeId}/hall": {
+            "post": {
+                "tags": [
+                    "place-hall-admin-controller"
+                ],
+                "operationId": "addHall",
+                "parameters": [
+                    {
+                        "name": "placeId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.place.exchanges.AddPlaceHallReq"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "integer",
+                                    "format": "int64"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/performance": {
+            "get": {
+                "tags": [
+                    "performance-admin-controller"
+                ],
+                "operationId": "getAllPerformanceDetails",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.performance.exchanges.PerformanceDetailRes"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "performance-admin-controller"
+                ],
+                "operationId": "createPerformance",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.performance.exchanges.SavePerformanceReq"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "integer",
+                                    "format": "int64"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/performance/{performanceId}/performanceURL": {
+            "post": {
+                "tags": [
+                    "performance-url-admin-controller"
+                ],
+                "operationId": "addPerformanceURL",
+                "parameters": [
+                    {
+                        "name": "performanceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ddd.darayo.festival.domain.dto.PerformanceURLContentDTO"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/admin/crawling/crawled-performances/{crawledPerformanceId}/links/places": {
+            "post": {
+                "tags": [
+                    "crawling-place-link-admin-controller"
+                ],
+                "operationId": "linkExisting_1",
+                "parameters": [
+                    {
+                        "name": "crawledPerformanceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.crawling.exchanges.LinkExistingPlaceReq"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.crawling.exchanges.CrawlingPlaceLinkRes"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/crawling/crawled-performances/{crawledPerformanceId}/links/places/new": {
+            "post": {
+                "tags": [
+                    "crawling-place-link-admin-controller"
+                ],
+                "operationId": "createAndLink",
+                "parameters": [
+                    {
+                        "name": "crawledPerformanceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.crawling.exchanges.CreateAndLinkPlaceReq"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.crawling.exchanges.CrawlingPlaceLinkRes"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/crawling/crawled-performances/{crawledPerformanceId}/links/places/auto": {
+            "post": {
+                "tags": [
+                    "crawling-place-link-admin-controller"
+                ],
+                "operationId": "autoCreatePlaceLink",
+                "parameters": [
+                    {
+                        "name": "crawledPerformanceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/admin/crawling/crawled-performances/{crawledPerformanceId}/links/performances": {
+            "post": {
+                "tags": [
+                    "crawling-performance-link-admin-controller"
+                ],
+                "operationId": "linkExisting_2",
+                "parameters": [
+                    {
+                        "name": "crawledPerformanceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.crawling.exchanges.LinkExistingPerformanceReq"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.crawling.exchanges.CrawlingPerformanceLinkRes"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/crawling/crawled-performances/{crawledPerformanceId}/links/performances/new": {
+            "post": {
+                "tags": [
+                    "crawling-performance-link-admin-controller"
+                ],
+                "operationId": "createAndLink_1",
+                "parameters": [
+                    {
+                        "name": "crawledPerformanceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.crawling.exchanges.CreateAndLinkPerformanceReq"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.crawling.exchanges.CrawlingPerformanceLinkRes"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/crawling/crawled-performances/{crawledPerformanceId}/links/halls/{venderHallName}/new": {
+            "post": {
+                "tags": [
+                    "crawling-hall-link-admin-controller"
+                ],
+                "operationId": "createAndLink_2",
+                "parameters": [
+                    {
+                        "name": "crawledPerformanceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "venderHallName",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.crawling.exchanges.CreateAndLinkHallReq"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.crawling.exchanges.CrawlingHallLinkRes"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/crawling/crawled-performances/{crawledPerformanceId}/links/artists/{venderArtistName}/new": {
+            "post": {
+                "tags": [
+                    "crawling-artist-link-admin-controller"
+                ],
+                "operationId": "createAndLink_3",
+                "parameters": [
+                    {
+                        "name": "crawledPerformanceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "venderArtistName",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.crawling.exchanges.CreateAndLinkArtistReq"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.crawling.exchanges.CrawlingArtistLinkRes"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/crawling/crawled-performances/{crawledPerformanceId}/artist-links/auto": {
+            "post": {
+                "tags": [
+                    "crawling-artist-link-admin-controller"
+                ],
+                "operationId": "autoCreateArtistLinks",
+                "parameters": [
+                    {
+                        "name": "crawledPerformanceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/admin/artist": {
+            "get": {
+                "tags": [
+                    "artist-admin-controller"
+                ],
+                "operationId": "getArtists",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.artist.exchanges.ArtistDetailRes"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "artist-admin-controller"
+                ],
+                "operationId": "createArtist",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.artist.exchanges.SaveArtistReq"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "integer",
+                                    "format": "int64"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/artist/{artistId}/alias": {
+            "post": {
+                "tags": [
+                    "artist-alias-admin-controller"
+                ],
+                "operationId": "addArtistAlias",
+                "parameters": [
+                    {
+                        "name": "artistId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ddd.darayo.festival.domain.dto.ArtistAliasContentDTO"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/admin/artist/inference/artistId": {
+            "post": {
+                "tags": [
+                    "artist-admin-controller"
+                ],
+                "operationId": "inferArtistIds",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.artist.exchanges.ArtistInferenceReq"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ddd.darayo.festival.domain.dto.inference.ArtistMappingResult"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/artist/aliases": {
+            "post": {
+                "tags": [
+                    "artist-admin-controller"
+                ],
+                "operationId": "addArtistAlias_1",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.artist.exchanges.SaveArtistAliasesReq"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/admin/artist/{targetArtistId}/merge": {
+            "patch": {
+                "tags": [
+                    "artist-admin-controller"
+                ],
+                "operationId": "mergeArtists",
+                "parameters": [
+                    {
+                        "name": "targetArtistId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.artist.exchanges.MergeArtistsReq"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/v1/festival": {
+            "get": {
+                "tags": [
+                    "performance-controller"
+                ],
+                "operationId": "getPerformances",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.common.BaseResponseJava.util.ListDdd.darayo.festival.presentation.http.endpoints.v1.performance.exchanges.UserGetPerformanceInfo"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/festival/{festivalId}": {
+            "get": {
+                "tags": [
+                    "performance-controller"
+                ],
+                "operationId": "getPerformance",
+                "parameters": [
+                    {
+                        "name": "festivalId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.common.BaseResponseDdd.darayo.festival.presentation.http.endpoints.v1.performance.exchanges.UserGetPerformanceInfo"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/festival/{festivalId}/timetable": {
+            "get": {
+                "tags": [
+                    "performance-controller"
+                ],
+                "operationId": "getPerformancesForFestival",
+                "parameters": [
+                    {
+                        "name": "festivalId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.common.BaseResponseJava.util.ListDdd.darayo.festival.presentation.http.endpoints.v1.performance.exchanges.UserGetTimetableRes"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/festival/alarmed": {
+            "get": {
+                "tags": [
+                    "performance-controller"
+                ],
+                "operationId": "getAlarmedPerformances",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.common.BaseResponseJava.util.ListDdd.darayo.festival.presentation.http.endpoints.v1.performance.exchanges.UserGetPerformanceInfo"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/alarm/test": {
+            "get": {
+                "tags": [
+                    "test-alarm-controller"
+                ],
+                "operationId": "testAlarm",
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "date",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "dayLeft",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.common.BaseResponseJava.lang.Void"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/performance/{performanceId}/hall": {
+            "get": {
+                "tags": [
+                    "performance-admin-controller"
+                ],
+                "operationId": "getPerformanceDetail",
+                "parameters": [
+                    {
+                        "name": "performanceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.performance.exchanges.GetPerformanceHallsRes"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/applemusic/search": {
+            "get": {
+                "tags": [
+                    "apple-music-controller"
+                ],
+                "operationId": "search",
+                "parameters": [
+                    {
+                        "name": "term",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "types",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.applemusic.dto.ArtistResponse"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/crawling/seed-performances": {
+            "get": {
+                "tags": [
+                    "crawling-controller"
+                ],
+                "operationId": "getCrawlingSeedPerformances",
+                "parameters": [
+                    {
+                        "name": "site",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "INTERPARK",
+                                "MELON"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "pageable",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/components/schemas/org.springdoc.core.converters.models.Pageable"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ddd.darayo.festival.domain.dto.CrawlingDTO.SeedPerformanceDTO"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/crawling/jobs": {
+            "get": {
+                "tags": [
+                    "crawling-controller"
+                ],
+                "operationId": "getCrawlingJobs",
+                "parameters": [
+                    {
+                        "name": "pageable",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/components/schemas/org.springdoc.core.converters.models.Pageable"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ddd.darayo.festival.domain.dto.CrawlingDTO.CrawlingJob"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/crawling/crawled-performances": {
+            "get": {
+                "tags": [
+                    "crawling-controller"
+                ],
+                "operationId": "getCrawledPerformances",
+                "parameters": [
+                    {
+                        "name": "site",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "INTERPARK",
+                                "MELON"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "pageable",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/components/schemas/org.springdoc.core.converters.models.Pageable"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ddd.darayo.festival.domain.dto.CrawlingDTO.CrawledPerformanceDetailDTO"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/user/alarm/{token}": {
+            "delete": {
+                "tags": [
+                    "alarm-controller"
+                ],
+                "operationId": "deleteAlarm",
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.common.BaseResponseJava.lang.Void"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/timetable/{timetableId}/artist/{artistId}": {
+            "delete": {
+                "tags": [
+                    "timetable-admin-controller"
+                ],
+                "operationId": "deleteTimetableArtist_1",
+                "parameters": [
+                    {
+                        "name": "timetableId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "artistId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/admin/performance/reservation/{reservationInfoId}": {
+            "delete": {
+                "tags": [
+                    "performance-admin-controller"
+                ],
+                "operationId": "deleteReservation",
+                "parameters": [
+                    {
+                        "name": "reservationInfoId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "ddd.darayo.festival.presentation.http.endpoints.v1.alarm.exchanges.TokenEnrollReq": {
+                "type": "object",
+                "properties": {
+                    "token": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.common.BaseResponseJava.lang.Void": {
+                "type": "object",
+                "properties": {
+                    "resultCode": {
+                        "type": "string"
+                    },
+                    "resultMsg": {
+                        "type": "string"
+                    },
+                    "result": {}
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.timetable.exchanges.EditTimetableReq": {
+                "type": "object",
+                "properties": {
+                    "performanceDate": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "startTime": {
+                        "type": "string"
+                    },
+                    "endTime": {
+                        "type": "string"
+                    },
+                    "hallId": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                }
+            },
+            "ddd.darayo.festival.domain.dto.TimetableArtistContentDTO": {
+                "type": "object",
+                "properties": {
+                    "participationType": {
+                        "type": "string",
+                        "enum": [
+                            "MAIN",
+                            "SUB"
+                        ]
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.timetable.exchanges.AddTimetableArtistReq": {
+                "type": "object",
+                "properties": {
+                    "artistId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "participationType": {
+                        "type": "string",
+                        "enum": [
+                            "MAIN",
+                            "SUB"
+                        ]
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.place.exchanges.EditPlaceReq": {
+                "type": "object",
+                "properties": {
+                    "placeName": {
+                        "type": "string"
+                    },
+                    "address": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.place.exchanges.EditHallReq": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ddd.darayo.festival.domain.dto.EditPerformanceDTO": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "startDate": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "endDate": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "posterUrl": {
+                        "type": "string"
+                    },
+                    "banGoods": {
+                        "type": "string"
+                    },
+                    "transportationInfo": {
+                        "type": "string"
+                    },
+                    "remark": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.performance.exchanges.AddTimetableReq": {
+                "type": "object",
+                "properties": {
+                    "performanceDate": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "startTime": {
+                        "type": "string"
+                    },
+                    "endTime": {
+                        "type": "string"
+                    },
+                    "hallId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "artistIds": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                }
+            },
+            "ddd.darayo.festival.domain.dto.EditReservationInfoCommand": {
+                "type": "object",
+                "properties": {
+                    "openDateTime": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "closeDateTime": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "GENERAL",
+                            "EARLY_BIRD"
+                        ]
+                    },
+                    "ticketURL": {
+                        "type": "string"
+                    },
+                    "remark": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.performance.exchanges.EditReservationInfoReq": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "openDateTime": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "closeDateTime": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "GENERAL",
+                            "EARLY_BIRD"
+                        ]
+                    },
+                    "ticketURL": {
+                        "type": "string"
+                    },
+                    "remark": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ddd.darayo.festival.domain.dto.PerformanceURLContentDTO": {
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "INSTAGRAM",
+                            "HOMEPAGE"
+                        ]
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.crawling.exchanges.UpdatePlaceLinkReq": {
+                "type": "object",
+                "properties": {
+                    "targetPerformancePlaceId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "venderPlaceId": {
+                        "type": "string"
+                    },
+                    "site": {
+                        "type": "string",
+                        "enum": [
+                            "INTERPARK",
+                            "MELON"
+                        ]
+                    }
+                },
+                "required": [
+                    "site"
+                ]
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.crawling.exchanges.CrawlingPlaceLinkRes": {
+                "type": "object",
+                "properties": {
+                    "crawledPerformanceId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "performancePlaceId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "venderPlaceId": {
+                        "type": "string"
+                    },
+                    "site": {
+                        "type": "string",
+                        "enum": [
+                            "INTERPARK",
+                            "MELON"
+                        ]
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.crawling.exchanges.UpdatePerformanceLinkReq": {
+                "type": "object",
+                "properties": {
+                    "targetPerformanceId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "linkItems": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "BASIC",
+                                "PERFORMANCE_DATE",
+                                "RESERVATION_INFO",
+                                "TIMETABLE"
+                            ]
+                        },
+                        "minItems": 1
+                    }
+                },
+                "required": [
+                    "linkItems"
+                ]
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.crawling.exchanges.CrawlingPerformanceLinkRes": {
+                "type": "object",
+                "properties": {
+                    "crawledPerformanceId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "performanceId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "linkItems": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "BASIC",
+                                "PERFORMANCE_DATE",
+                                "RESERVATION_INFO",
+                                "TIMETABLE"
+                            ]
+                        },
+                        "uniqueItems": true
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.crawling.exchanges.UpdateHallLinkReq": {
+                "type": "object",
+                "properties": {
+                    "targetHallId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "venderHallId": {
+                        "type": "string"
+                    },
+                    "site": {
+                        "type": "string",
+                        "enum": [
+                            "INTERPARK",
+                            "MELON"
+                        ]
+                    }
+                },
+                "required": [
+                    "site"
+                ]
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.crawling.exchanges.CrawlingHallLinkRes": {
+                "type": "object",
+                "properties": {
+                    "crawledPerformanceId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "venderHallName": {
+                        "type": "string"
+                    },
+                    "venderHallId": {
+                        "type": "string"
+                    },
+                    "site": {
+                        "type": "string",
+                        "enum": [
+                            "INTERPARK",
+                            "MELON"
+                        ]
+                    },
+                    "hallId": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.crawling.exchanges.LinkExistingArtistReq": {
+                "type": "object",
+                "properties": {
+                    "artistId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "venderArtistId": {
+                        "type": "string"
+                    },
+                    "site": {
+                        "type": "string",
+                        "enum": [
+                            "INTERPARK",
+                            "MELON"
+                        ]
+                    }
+                },
+                "required": [
+                    "artistId",
+                    "site"
+                ]
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.crawling.exchanges.CrawlingArtistLinkRes": {
+                "type": "object",
+                "properties": {
+                    "crawledPerformanceId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "venderArtistName": {
+                        "type": "string"
+                    },
+                    "venderArtistId": {
+                        "type": "string"
+                    },
+                    "site": {
+                        "type": "string",
+                        "enum": [
+                            "INTERPARK",
+                            "MELON"
+                        ]
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "TEMP",
+                            "TEMP_WITH_NEW_ARTIST",
+                            "CONFIRMED"
+                        ]
+                    },
+                    "artistId": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.artist.exchanges.EditArtistReq": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "imageUrl": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ddd.darayo.festival.domain.dto.ArtistAliasContentDTO": {
+                "type": "object",
+                "properties": {
+                    "alias": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.artist.exchanges.EditArtistAliasReq": {
+                "type": "object",
+                "properties": {
+                    "alias": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.v1.user.exchanges.PushPermissionReq": {
+                "type": "object",
+                "properties": {
+                    "permissionEnabled": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.v1.user.exchanges.UserLoginReq": {
+                "type": "object",
+                "properties": {
+                    "deviceId": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.common.BaseResponseDdd.darayo.festival.presentation.http.endpoints.v1.user.exchanges.UserLoginRes": {
+                "type": "object",
+                "properties": {
+                    "resultCode": {
+                        "type": "string"
+                    },
+                    "resultMsg": {
+                        "type": "string"
+                    },
+                    "result": {
+                        "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.v1.user.exchanges.UserLoginRes"
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.v1.user.exchanges.UserLoginRes": {
+                "type": "object",
+                "properties": {
+                    "token": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.place.exchanges.AddPlaceReq": {
+                "type": "object",
+                "properties": {
+                    "placeName": {
+                        "type": "string"
+                    },
+                    "address": {
+                        "type": "string"
+                    },
+                    "placeHalls": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.place.exchanges.AddPlaceHallReq": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ddd.darayo.festival.domain.dto.ReservationInfoContentDTO": {
+                "type": "object",
+                "properties": {
+                    "openDateTime": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "closeDateTime": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "GENERAL",
+                            "EARLY_BIRD"
+                        ]
+                    },
+                    "ticketURL": {
+                        "type": "string"
+                    },
+                    "remark": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.performance.exchanges.SavePerformanceReq": {
+                "type": "object",
+                "properties": {
+                    "password": {
+                        "type": "string"
+                    },
+                    "performance": {
+                        "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.performance.exchanges.SavePerformanceReq.PerformanceDTO"
+                    },
+                    "timeTables": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.performance.exchanges.SavePerformanceReq.TimeTableDTO"
+                        }
+                    },
+                    "reservationInfos": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ddd.darayo.festival.domain.dto.ReservationInfoContentDTO"
+                        }
+                    },
+                    "urlInfos": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ddd.darayo.festival.domain.dto.PerformanceURLContentDTO"
+                        }
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.performance.exchanges.SavePerformanceReq.ArtistParticipateDTO": {
+                "type": "object",
+                "properties": {
+                    "artistId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "MAIN",
+                            "SUB"
+                        ]
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.performance.exchanges.SavePerformanceReq.PerformanceDTO": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "placeId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "startDate": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "endDate": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "posterUrl": {
+                        "type": "string"
+                    },
+                    "banGoods": {
+                        "type": "string"
+                    },
+                    "transportationInfo": {
+                        "type": "string"
+                    },
+                    "remark": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.performance.exchanges.SavePerformanceReq.TimeTableDTO": {
+                "type": "object",
+                "properties": {
+                    "performanceDate": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "startTime": {
+                        "type": "string"
+                    },
+                    "endTime": {
+                        "type": "string"
+                    },
+                    "hallId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "artists": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.performance.exchanges.SavePerformanceReq.ArtistParticipateDTO"
+                        }
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.crawling.exchanges.LinkExistingPlaceReq": {
+                "type": "object",
+                "properties": {
+                    "performancePlaceId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "venderPlaceId": {
+                        "type": "string"
+                    },
+                    "site": {
+                        "type": "string",
+                        "enum": [
+                            "INTERPARK",
+                            "MELON"
+                        ]
+                    }
+                },
+                "required": [
+                    "site"
+                ]
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.crawling.exchanges.CreateAndLinkPlaceReq": {
+                "type": "object",
+                "properties": {
+                    "placeName": {
+                        "type": "string"
+                    },
+                    "address": {
+                        "type": "string"
+                    },
+                    "venderPlaceId": {
+                        "type": "string"
+                    },
+                    "site": {
+                        "type": "string",
+                        "enum": [
+                            "INTERPARK",
+                            "MELON"
+                        ]
+                    }
+                },
+                "required": [
+                    "site"
+                ]
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.crawling.exchanges.LinkExistingPerformanceReq": {
+                "type": "object",
+                "properties": {
+                    "performanceId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "linkItems": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "BASIC",
+                                "PERFORMANCE_DATE",
+                                "RESERVATION_INFO",
+                                "TIMETABLE"
+                            ]
+                        },
+                        "minItems": 1
+                    }
+                },
+                "required": [
+                    "linkItems"
+                ]
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.crawling.exchanges.CreateAndLinkPerformanceReq": {
+                "type": "object",
+                "properties": {
+                    "linkItems": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "BASIC",
+                                "PERFORMANCE_DATE",
+                                "RESERVATION_INFO",
+                                "TIMETABLE"
+                            ]
+                        },
+                        "minItems": 1
+                    }
+                },
+                "required": [
+                    "linkItems"
+                ]
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.crawling.exchanges.LinkExistingHallReq": {
+                "type": "object",
+                "properties": {
+                    "hallId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "venderHallId": {
+                        "type": "string"
+                    },
+                    "site": {
+                        "type": "string",
+                        "enum": [
+                            "INTERPARK",
+                            "MELON"
+                        ]
+                    }
+                },
+                "required": [
+                    "site"
+                ]
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.crawling.exchanges.CreateAndLinkHallReq": {
+                "type": "object",
+                "properties": {
+                    "hallName": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "placeId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "venderHallId": {
+                        "type": "string"
+                    },
+                    "site": {
+                        "type": "string",
+                        "enum": [
+                            "INTERPARK",
+                            "MELON"
+                        ]
+                    }
+                },
+                "required": [
+                    "hallName",
+                    "site"
+                ]
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.crawling.exchanges.CreateAndLinkArtistReq": {
+                "type": "object",
+                "properties": {
+                    "venderArtistId": {
+                        "type": "string"
+                    },
+                    "site": {
+                        "type": "string",
+                        "enum": [
+                            "INTERPARK",
+                            "MELON"
+                        ]
+                    }
+                },
+                "required": [
+                    "site"
+                ]
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.artist.exchanges.SaveArtistReq": {
+                "type": "object",
+                "properties": {
+                    "password": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "imageUrl": {
+                        "type": "string"
+                    },
+                    "aliasList": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "ddd.darayo.festival.domain.dto.inference.ArtistMappingCommand": {
+                "type": "object",
+                "properties": {
+                    "venderArtistName": {
+                        "type": "string"
+                    },
+                    "venderArtistId": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.artist.exchanges.ArtistInferenceReq": {
+                "type": "object",
+                "properties": {
+                    "site": {
+                        "type": "string",
+                        "enum": [
+                            "INTERPARK",
+                            "MELON"
+                        ]
+                    },
+                    "artistInfo": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ddd.darayo.festival.domain.dto.inference.ArtistMappingCommand"
+                        }
+                    }
+                }
+            },
+            "ddd.darayo.festival.domain.dto.inference.ArtistMappingItem": {
+                "type": "object",
+                "properties": {
+                    "venderArtistName": {
+                        "type": "string"
+                    },
+                    "venderArtistId": {
+                        "type": "string"
+                    },
+                    "artistId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "artistName": {
+                        "type": "string"
+                    },
+                    "site": {
+                        "type": "string",
+                        "enum": [
+                            "INTERPARK",
+                            "MELON"
+                        ]
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "TEMP",
+                            "TEMP_WITH_NEW_ARTIST",
+                            "CONFIRMED"
+                        ]
+                    },
+                    "metadata": {
+                        "type": "object",
+                        "additionalProperties": {}
+                    }
+                }
+            },
+            "ddd.darayo.festival.domain.dto.inference.ArtistMappingResult": {
+                "type": "object",
+                "properties": {
+                    "matched": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ddd.darayo.festival.domain.dto.inference.ArtistMappingItem"
+                        }
+                    },
+                    "unmatched": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ddd.darayo.festival.domain.dto.inference.ArtistMappingCommand"
+                        }
+                    },
+                    "allMatched": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.artist.exchanges.SaveArtistAliasesReq": {
+                "type": "object",
+                "properties": {
+                    "password": {
+                        "type": "string"
+                    },
+                    "artistId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "aliases": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.artist.exchanges.MergeArtistsReq": {
+                "type": "object",
+                "properties": {
+                    "sourceArtistId": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                },
+                "required": [
+                    "sourceArtistId"
+                ]
+            },
+            "ddd.darayo.festival.presentation.http.common.BaseResponseJava.lang.Boolean": {
+                "type": "object",
+                "properties": {
+                    "resultCode": {
+                        "type": "string"
+                    },
+                    "resultMsg": {
+                        "type": "string"
+                    },
+                    "result": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.common.BaseResponseJava.util.ListDdd.darayo.festival.presentation.http.endpoints.v1.performance.exchanges.UserGetPerformanceInfo": {
+                "type": "object",
+                "properties": {
+                    "resultCode": {
+                        "type": "string"
+                    },
+                    "resultMsg": {
+                        "type": "string"
+                    },
+                    "result": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.v1.performance.exchanges.UserGetPerformanceInfo"
+                        }
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.v1.performance.exchanges.UserGetPerformanceInfo": {
+                "type": "object",
+                "properties": {
+                    "festivalId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "placeName": {
+                        "type": "string"
+                    },
+                    "placeAddress": {
+                        "type": "string"
+                    },
+                    "startDate": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "endDate": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "posterUrl": {
+                        "type": "string"
+                    },
+                    "banGoods": {
+                        "type": "string"
+                    },
+                    "transportationInfo": {
+                        "type": "string"
+                    },
+                    "remark": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "reservationInfos": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.v1.performance.exchanges.UserGetPerformanceInfo.ReservationInfoDetailRes"
+                        }
+                    },
+                    "artists": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.v1.performance.exchanges.UserGetPerformanceInfo.ArtistDetailRes"
+                        }
+                    },
+                    "urlInfos": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.v1.performance.exchanges.UserGetPerformanceInfo.PerformanceURLRes"
+                        }
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.v1.performance.exchanges.UserGetPerformanceInfo.ArtistDetailRes": {
+                "type": "object",
+                "properties": {
+                    "artistId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "artistDisplayName": {
+                        "type": "string"
+                    },
+                    "artistImageUrl": {
+                        "type": "string"
+                    },
+                    "performanceDate": {
+                        "type": "string",
+                        "format": "date"
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.v1.performance.exchanges.UserGetPerformanceInfo.PerformanceURLRes": {
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "INSTAGRAM",
+                            "HOMEPAGE"
+                        ]
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.v1.performance.exchanges.UserGetPerformanceInfo.ReservationInfoDetailRes": {
+                "type": "object",
+                "properties": {
+                    "reservationInfoId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "openDateTime": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "closeDateTime": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "ticketURL": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "GENERAL",
+                            "EARLY_BIRD"
+                        ]
+                    },
+                    "remark": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.common.BaseResponseDdd.darayo.festival.presentation.http.endpoints.v1.performance.exchanges.UserGetPerformanceInfo": {
+                "type": "object",
+                "properties": {
+                    "resultCode": {
+                        "type": "string"
+                    },
+                    "resultMsg": {
+                        "type": "string"
+                    },
+                    "result": {
+                        "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.v1.performance.exchanges.UserGetPerformanceInfo"
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.common.BaseResponseJava.util.ListDdd.darayo.festival.presentation.http.endpoints.v1.performance.exchanges.UserGetTimetableRes": {
+                "type": "object",
+                "properties": {
+                    "resultCode": {
+                        "type": "string"
+                    },
+                    "resultMsg": {
+                        "type": "string"
+                    },
+                    "result": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.v1.performance.exchanges.UserGetTimetableRes"
+                        }
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.v1.performance.exchanges.UserGetTimetableRes": {
+                "type": "object",
+                "properties": {
+                    "timetableId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "performanceDate": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "startTime": {
+                        "type": "string"
+                    },
+                    "endTime": {
+                        "type": "string"
+                    },
+                    "performanceHall": {
+                        "type": "string"
+                    },
+                    "artists": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.v1.performance.exchanges.UserGetTimetableRes.UserTimetableArtistRes"
+                        }
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.v1.performance.exchanges.UserGetTimetableRes.UserTimetableArtistRes": {
+                "type": "object",
+                "properties": {
+                    "artistId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "artistDisplayName": {
+                        "type": "string"
+                    },
+                    "artistImageUrl": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "MAIN",
+                            "SUB"
+                        ]
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.place.exchanges.GetAllPlaceRes": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "placeName": {
+                        "type": "string"
+                    },
+                    "address": {
+                        "type": "string"
+                    },
+                    "halls": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.place.exchanges.GetAllPlaceRes.HallInfo"
+                        }
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.place.exchanges.GetAllPlaceRes.HallInfo": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "name": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.performance.exchanges.PerformanceDetailRes": {
+                "type": "object",
+                "properties": {
+                    "performance": {
+                        "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.performance.exchanges.PerformanceDetailRes.PerformanceDetail"
+                    },
+                    "timeTables": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.performance.exchanges.PerformanceDetailRes.TimeTableDetailRes"
+                        }
+                    },
+                    "reservationInfos": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.performance.exchanges.PerformanceDetailRes.ReservationInfoDetailRes"
+                        }
+                    },
+                    "artists": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.performance.exchanges.PerformanceDetailRes.ArtistDetailRes"
+                        }
+                    },
+                    "urlInfos": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.performance.exchanges.PerformanceDetailRes.UrlDetailRes"
+                        }
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.performance.exchanges.PerformanceDetailRes.ArtistDetailRes": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "displayName": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.performance.exchanges.PerformanceDetailRes.ArtistParticipateDetailRes": {
+                "type": "object",
+                "properties": {
+                    "timetableArtistId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "artistId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "artistName": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "MAIN",
+                            "SUB"
+                        ]
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.performance.exchanges.PerformanceDetailRes.PerformanceDetail": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "placeName": {
+                        "type": "string"
+                    },
+                    "placeAddress": {
+                        "type": "string"
+                    },
+                    "startDate": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "endDate": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "posterUrl": {
+                        "type": "string"
+                    },
+                    "banGoods": {
+                        "type": "string"
+                    },
+                    "transportationInfo": {
+                        "type": "string"
+                    },
+                    "remark": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.performance.exchanges.PerformanceDetailRes.ReservationInfoDetailRes": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "openDateTime": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "closeDateTime": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "ticketURL": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "GENERAL",
+                            "EARLY_BIRD"
+                        ]
+                    },
+                    "remark": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.performance.exchanges.PerformanceDetailRes.TimeTableDetailRes": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "performanceDate": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "startTime": {
+                        "type": "string"
+                    },
+                    "endTime": {
+                        "type": "string"
+                    },
+                    "performanceHall": {
+                        "type": "string"
+                    },
+                    "artists": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.performance.exchanges.PerformanceDetailRes.ArtistParticipateDetailRes"
+                        }
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.performance.exchanges.PerformanceDetailRes.UrlDetailRes": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "url": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "INSTAGRAM",
+                            "HOMEPAGE"
+                        ]
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.performance.exchanges.GetPerformanceHallsRes": {
+                "type": "object",
+                "properties": {
+                    "performanceId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "performanceName": {
+                        "type": "string"
+                    },
+                    "place": {
+                        "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.performance.exchanges.GetPerformanceHallsRes.PlaceInfo"
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.performance.exchanges.GetPerformanceHallsRes.HallInfo": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "name": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.performance.exchanges.GetPerformanceHallsRes.PlaceInfo": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "placeName": {
+                        "type": "string"
+                    },
+                    "address": {
+                        "type": "string"
+                    },
+                    "halls": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.performance.exchanges.GetPerformanceHallsRes.HallInfo"
+                        }
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.artist.exchanges.ArtistDetailRes": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "imageUrl": {
+                        "type": "string"
+                    },
+                    "aliases": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.artist.exchanges.ArtistDetailRes.AliasDetail"
+                        }
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.artist.exchanges.ArtistDetailRes.AliasDetail": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "name": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.applemusic.dto.ArtistResponse": {
+                "type": "object",
+                "properties": {
+                    "artworkUrl": {
+                        "type": "string"
+                    },
+                    "genreNames": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "name": {
+                        "type": "string"
+                    }
+                }
+            },
+            "org.springdoc.core.converters.models.Pageable": {
+                "type": "object",
+                "properties": {
+                    "page": {
+                        "type": "integer",
+                        "format": "int32",
+                        "minimum": 0
+                    },
+                    "size": {
+                        "type": "integer",
+                        "format": "int32",
+                        "minimum": 1
+                    },
+                    "sort": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "ddd.darayo.festival.domain.dto.CrawlingDTO.SeedPerformanceDTO": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "venderPerformanceId": {
+                        "type": "string"
+                    },
+                    "site": {
+                        "type": "string",
+                        "enum": [
+                            "INTERPARK",
+                            "MELON"
+                        ]
+                    },
+                    "isOpen": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/ddd.darayo.festival.domain.dto.CrawlingDTO.SeedPerformanceData"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updatedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "ddd.darayo.festival.domain.dto.CrawlingDTO.SeedPerformanceData": {
+                "type": "object",
+                "properties": {
+                    "venderId": {
+                        "type": "string"
+                    },
+                    "isOpen": {
+                        "type": "boolean"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "detailUrl": {
+                        "type": "string"
+                    },
+                    "posterUrl": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ddd.darayo.festival.domain.dto.CrawlingDTO.CrawlingJob": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "SUCCESS",
+                            "FAILED",
+                            "PENDING"
+                        ]
+                    },
+                    "url": {
+                        "type": "string"
+                    },
+                    "retryCount": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "lastError": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updatedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "completedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "ddd.darayo.festival.domain.dto.CrawlingDTO.CrawledPerformanceDTO": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "venderPerformanceId": {
+                        "type": "string"
+                    },
+                    "site": {
+                        "type": "string",
+                        "enum": [
+                            "INTERPARK",
+                            "MELON"
+                        ]
+                    },
+                    "isOpen": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/ddd.darayo.festival.domain.dto.CrawlingDTO.CrawledPerformanceData"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updatedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "ddd.darayo.festival.domain.dto.CrawlingDTO.CrawledPerformanceData": {
+                "type": "object",
+                "properties": {
+                    "venderPerformanceId": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "posterUrl": {
+                        "type": "string"
+                    },
+                    "dates": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    "reservations": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ddd.darayo.festival.domain.dto.CrawlingDTO.CrawledPerformanceData.Reservation"
+                        }
+                    },
+                    "place": {
+                        "$ref": "#/components/schemas/ddd.darayo.festival.domain.dto.CrawlingDTO.CrawledPerformanceData.Place"
+                    },
+                    "site": {
+                        "type": "string",
+                        "enum": [
+                            "INTERPARK",
+                            "MELON"
+                        ]
+                    },
+                    "timetables": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ddd.darayo.festival.domain.dto.CrawlingDTO.CrawledPerformanceData.ParticipantTimetable"
+                        }
+                    }
+                }
+            },
+            "ddd.darayo.festival.domain.dto.CrawlingDTO.CrawledPerformanceData.ParticipantTimetable": {
+                "type": "object",
+                "properties": {
+                    "date": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "startTime": {
+                        "type": "string"
+                    },
+                    "endTime": {
+                        "type": "string"
+                    },
+                    "venderArtistName": {
+                        "type": "string"
+                    },
+                    "venderArtistId": {
+                        "type": "string"
+                    },
+                    "hallName": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ddd.darayo.festival.domain.dto.CrawlingDTO.CrawledPerformanceData.Place": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "address": {
+                        "type": "string"
+                    },
+                    "venderPlaceId": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ddd.darayo.festival.domain.dto.CrawlingDTO.CrawledPerformanceData.Reservation": {
+                "type": "object",
+                "properties": {
+                    "startDate": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "endDate": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "url": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ddd.darayo.festival.domain.dto.CrawlingDTO.CrawledPerformanceDetailDTO": {
+                "type": "object",
+                "properties": {
+                    "performance": {
+                        "$ref": "#/components/schemas/ddd.darayo.festival.domain.dto.CrawlingDTO.CrawledPerformanceDTO"
+                    },
+                    "performanceLinks": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ddd.darayo.festival.domain.dto.CrawlingLinkContentDTO.PerformanceLinkContent"
+                        }
+                    },
+                    "placeLinks": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ddd.darayo.festival.domain.dto.CrawlingLinkContentDTO.PlaceLinkContent"
+                        }
+                    },
+                    "hallLinks": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ddd.darayo.festival.domain.dto.CrawlingLinkContentDTO.HallLinkContent"
+                        }
+                    },
+                    "timetableLinks": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ddd.darayo.festival.domain.dto.CrawlingLinkContentDTO.TimetableLinkContent"
+                        }
+                    },
+                    "artistLinks": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ddd.darayo.festival.domain.dto.CrawlingLinkContentDTO.ArtistLinkContent"
+                        }
+                    }
+                }
+            },
+            "ddd.darayo.festival.domain.dto.CrawlingLinkContentDTO.ArtistLinkContent": {
+                "type": "object",
+                "properties": {
+                    "crawledPerformanceId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "venderArtistName": {
+                        "type": "string"
+                    },
+                    "venderArtistId": {
+                        "type": "string"
+                    },
+                    "site": {
+                        "type": "string",
+                        "enum": [
+                            "INTERPARK",
+                            "MELON"
+                        ]
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "TEMP",
+                            "TEMP_WITH_NEW_ARTIST",
+                            "CONFIRMED"
+                        ]
+                    },
+                    "autoSearchInfo": {
+                        "type": "object",
+                        "additionalProperties": {}
+                    },
+                    "artistId": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                }
+            },
+            "ddd.darayo.festival.domain.dto.CrawlingLinkContentDTO.HallLinkContent": {
+                "type": "object",
+                "properties": {
+                    "crawledPerformanceId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "venderHallName": {
+                        "type": "string"
+                    },
+                    "venderHallId": {
+                        "type": "string"
+                    },
+                    "site": {
+                        "type": "string",
+                        "enum": [
+                            "INTERPARK",
+                            "MELON"
+                        ]
+                    },
+                    "hallId": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                }
+            },
+            "ddd.darayo.festival.domain.dto.CrawlingLinkContentDTO.PerformanceLinkContent": {
+                "type": "object",
+                "properties": {
+                    "crawledPerformanceId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "performanceId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "linkItems": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "BASIC",
+                                "PERFORMANCE_DATE",
+                                "RESERVATION_INFO",
+                                "TIMETABLE"
+                            ]
+                        }
+                    }
+                }
+            },
+            "ddd.darayo.festival.domain.dto.CrawlingLinkContentDTO.PlaceLinkContent": {
+                "type": "object",
+                "properties": {
+                    "crawledPerformanceId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "performancePlaceId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "venderPlaceId": {
+                        "type": "string"
+                    },
+                    "site": {
+                        "type": "string",
+                        "enum": [
+                            "INTERPARK",
+                            "MELON"
+                        ]
+                    }
+                }
+            },
+            "ddd.darayo.festival.domain.dto.CrawlingLinkContentDTO.TimetableLinkContent": {
+                "type": "object",
+                "properties": {
+                    "crawledPerformanceId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "venderArtistName": {
+                        "type": "string"
+                    },
+                    "venderArtistId": {
+                        "type": "string"
+                    },
+                    "site": {
+                        "type": "string",
+                        "enum": [
+                            "INTERPARK",
+                            "MELON"
+                        ]
+                    },
+                    "timetableId": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                }
+            }
+        }
+    }
+}
