@@ -34,6 +34,12 @@ export interface NormalizedCrawlData {
   dates: string[];
   reservations: CrawledReservation[];
   artists: CrawledArtistEntry[];
+  position?: string | null;
+  job_description?: string | null;
+  salary?: string | null;
+  work_location?: string | null;
+  self_intro_questions?: string[];
+  detail_markdown?: string | null;
   field_origins: Record<string, string>;
 }
 
@@ -41,6 +47,7 @@ export interface CrawledRecordRes {
   id: number;
   site: string;
   venderId: string;
+  sourceUrl?: string | null;
   status: CrawledRecordStatus;
   data: string; // JSON string of NormalizedCrawlData
   crawledAt: string;
@@ -56,6 +63,7 @@ export interface ArtistMapping {
 }
 
 export interface ApplyCrawledRecordReq {
+  targetPerformanceId?: number | null;
   artistMappings: ArtistMapping[];
 }
 

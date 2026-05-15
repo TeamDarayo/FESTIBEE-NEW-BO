@@ -4,9 +4,12 @@ import { useState } from "react";
 import { Button } from "@festibee/ui";
 import {
   useDashboardStats,
+  useAiProvenanceStats,
   StatsCards,
   FunnelChart,
   CompletenessChart,
+  ProvenanceChart,
+  ProvenanceKpiCards,
   type StatsPreset,
 } from "@/features/dashboard";
 
@@ -19,6 +22,7 @@ const PRESETS: { label: string; value: StatsPreset }[] = [
 export default function DashboardPage() {
   const [preset, setPreset] = useState<StatsPreset>("ALL");
   const { data, isLoading, error } = useDashboardStats({ preset });
+  const { data: provenanceData, isLoading: provenanceLoading } = useAiProvenanceStats({ preset });
 
   return (
     <div className="flex-1 space-y-6 overflow-y-auto p-6">
@@ -55,6 +59,21 @@ export default function DashboardPage() {
             <FunnelChart data={data} />
             <CompletenessChart data={data.fieldCompleteness} />
           </div>
+        </>
+      )}
+
+      {provenanceLoading && (
+        <div className="text-muted-foreground">AI 기여도 분석 중...</div>
+      )}
+
+      {provenanceData && provenanceData.analyzedCount > 0 && (
+        <>
+          <h2 className="text-xl font-semibold pt-2">AI 기여도 분석</h2>
+          <p className="text-sm text-muted-foreground">
+            등록 완료된 {provenanceData.analyzedCount}건의 크롤링 데이터와 현재 공연 정보를 비교
+          </p>
+          <ProvenanceKpiCards data={provenanceData} />
+          <ProvenanceChart data={provenanceData} />
         </>
       )}
     </div>

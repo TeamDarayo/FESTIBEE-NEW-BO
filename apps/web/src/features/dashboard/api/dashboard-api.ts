@@ -45,10 +45,32 @@ export interface StatsParams {
   preset?: StatsPreset;
 }
 
+export interface FieldProvenanceRes {
+  aiOriginal: number;
+  humanModified: number;
+  humanOnly: number;
+  empty: number;
+}
+
+export interface AiProvenanceStatsRes {
+  analyzedCount: number;
+  aiContributionRate: number;
+  aiAccuracyRate: number;
+  humanAdditionRate: number;
+  byField: Record<string, FieldProvenanceRes>;
+}
+
 export const dashboardApi = {
   getStats: (params: StatsParams) =>
     apiClient.get<BaseResponse<CrawledRecordStatsRes>>(
       "/api/admin/crawled-records/stats/summary",
+      {
+        params: params as Record<string, string | undefined>,
+      }
+    ),
+  getAiProvenance: (params: StatsParams) =>
+    apiClient.get<BaseResponse<AiProvenanceStatsRes>>(
+      "/api/admin/crawled-records/stats/ai-provenance",
       {
         params: params as Record<string, string | undefined>,
       }

@@ -37,7 +37,12 @@ export const customFetch = async <T>(
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
-    throw new Error(error.message || `HTTP error! status: ${response.status}`);
+    const message =
+      error?.resultMsg ||
+      error?.message ||
+      error?.error ||
+      `HTTP error! status: ${response.status}`;
+    throw new Error(message);
   }
 
   // Handle empty response (204 No Content)
