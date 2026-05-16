@@ -32,7 +32,6 @@ export const customFetch = async <T>(
       ...(adminPassword ? { "X-Admin-Password": adminPassword } : {}),
       ...init?.headers,
     },
-    credentials: "include",
   });
 
   if (!response.ok) {
