@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Button,
+  Badge,
   Separator,
   AlertDialog,
   AlertDialogAction,
@@ -15,20 +16,68 @@ import {
   AlertDialogTitle,
 } from "@festibee/ui";
 import { AlertCircle, ExternalLink, MapPin, CalendarDays, Users, Ticket } from "lucide-react";
-import { useGetCrawledRecord, useIgnoreCrawledRecord } from "@festibee/api";
+import { useGetCrawledRecord, useIgnoreCrawledRecord, recordReviewEvent } from "@festibee/api";
 import type { NormalizedCrawlData, CrawledRecordStatus } from "@festibee/api";
 import { CrawledRecordStatusBadge } from "./crawled-record-status-badge";
 import { ArtistMatchingModal } from "./artist-matching-modal";
 
-function formatDate(dateStr: string | null | undefined): string {
+function formatDateTime(dateStr: string | null | undefined): string {
   if (!dateStr) return "-";
-  return new Date(dateStr).toLocaleString("ko-KR", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  return d.toLocaleDateString("ko-KR", {
+    month: "long",
+    day: "numeric",
+    weekday: "short",
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+function formatDateOnly(dateStr: string | null | undefined): string {
+  if (!dateStr) return "-";
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  return d.toLocaleDateString("ko-KR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    weekday: "short",
+  });
+}
+
+function formatRelativeFromNow(dateStr: string): string {
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  const diff = Date.now() - d.getTime();
+  const minutes = Math.floor(diff / 60000);
+  if (minutes < 1) return "방금 전";
+  if (minutes < 60) return `${minutes}분 전`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}시간 전`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}일 전`;
+  return formatDateOnly(dateStr);
+}
+
+const SITE_PATTERNS: { pattern: RegExp; label: string; variant: "default" | "secondary" | "outline" }[] = [
+  { pattern: /interpark/i, label: "인터파크", variant: "default" },
+  { pattern: /yes24/i, label: "YES24", variant: "secondary" },
+  { pattern: /melon/i, label: "멜론티켓", variant: "secondary" },
+  { pattern: /ticketlink/i, label: "티켓링크", variant: "secondary" },
+  { pattern: /globalinterpark/i, label: "인터파크 글로벌", variant: "outline" },
+];
+
+function detectSiteFromUrl(url: string): { label: string; variant: "default" | "secondary" | "outline" } {
+  for (const { pattern, label, variant } of SITE_PATTERNS) {
+    if (pattern.test(url)) return { label, variant };
+  }
+  try {
+    const hostname = new URL(url).hostname.replace("www.", "");
+    return { label: hostname, variant: "outline" };
+  } catch {
+    return { label: "기타", variant: "outline" };
+  }
 }
 
 export function CrawledRecordDetail({ id }: { id: number }) {
@@ -37,18 +86,23 @@ export function CrawledRecordDetail({ id }: { id: number }) {
   const ignoreMutation = useIgnoreCrawledRecord();
   const [showMatchModal, setShowMatchModal] = useState(false);
   const [showIgnoreDialog, setShowIgnoreDialog] = useState(false);
+  const reviewStartedAtRef = useRef<Date>(new Date());
+
+  useEffect(() => {
+    reviewStartedAtRef.current = new Date();
+  }, [id]);
 
   if (isLoading) {
     return (
       <div className="p-6 space-y-4">
         <div className="h-10 w-2/3 animate-pulse rounded bg-muted" />
         <div className="h-4 w-1/3 animate-pulse rounded bg-muted" />
-        <div className="mt-6 h-48 animate-pulse rounded-lg bg-muted" />
-        <div className="grid grid-cols-2 gap-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-20 animate-pulse rounded-lg bg-muted" />
+        <div className="mt-6 grid grid-cols-3 gap-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="h-24 animate-pulse rounded-lg bg-muted" />
           ))}
         </div>
+        <div className="h-40 animate-pulse rounded-lg bg-muted" />
       </div>
     );
   }
@@ -78,12 +132,18 @@ export function CrawledRecordDetail({ id }: { id: number }) {
   const dateRange =
     crawlData && crawlData.dates.length > 0
       ? crawlData.dates.length === 1
-        ? crawlData.dates[0]
-        : `${crawlData.dates[0]} ~ ${crawlData.dates[crawlData.dates.length - 1]}`
+        ? formatDateOnly(crawlData.dates[0])
+        : `${formatDateOnly(crawlData.dates[0])} ~ ${formatDateOnly(crawlData.dates[crawlData.dates.length - 1])}`
       : null;
 
   const handleIgnore = async () => {
     await ignoreMutation.mutateAsync(id);
+    recordReviewEvent({
+      crawledRecordId: id,
+      action: "IGNORED",
+      reviewStartedAt: reviewStartedAtRef.current.toISOString(),
+      reviewCompletedAt: new Date().toISOString(),
+    }).catch(() => {});
     router.push("/crawled-records");
   };
 
@@ -106,7 +166,7 @@ export function CrawledRecordDetail({ id }: { id: number }) {
             <CrawledRecordStatusBadge status={record.status as CrawledRecordStatus} />
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
-            {record.site} &middot; {formatDate(record.crawledAt)}
+            {record.site} &middot; {formatRelativeFromNow(record.crawledAt)}
           </p>
           {record.sourceUrl && (
             <a
@@ -140,90 +200,135 @@ export function CrawledRecordDetail({ id }: { id: number }) {
 
       {/* Content */}
       <div className="flex-1 overflow-auto p-6">
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-          {/* Basic Info */}
-          <SectionCard icon={<CalendarDays className="h-4 w-4" />} title="기본 정보">
-            <InfoRow label="제목" value={crawlData?.title} />
-            <InfoRow label="날짜" value={dateRange} />
+        {/* 3-column summary row */}
+        <div className="grid grid-cols-3 gap-6">
+          <SectionCard icon={<CalendarDays className="h-4 w-4" />} title="공연 일정">
+            <InfoRow label="기간" value={dateRange} />
             <InfoRow
               label="공연 일수"
               value={crawlData?.dates.length ? `${crawlData.dates.length}일` : null}
             />
           </SectionCard>
 
-          {/* Venue */}
-          {crawlData?.venue && (
-            <SectionCard icon={<MapPin className="h-4 w-4" />} title="장소">
-              <InfoRow label="이름" value={crawlData.venue.name} />
-              {crawlData.venue.address && (
+          <SectionCard icon={<MapPin className="h-4 w-4" />} title="장소">
+            {crawlData?.venue ? (
+              <>
+                <InfoRow label="이름" value={crawlData.venue.name} />
                 <InfoRow label="주소" value={crawlData.venue.address} />
-              )}
-            </SectionCard>
-          )}
+              </>
+            ) : (
+              <p className="py-2 text-sm text-muted-foreground">장소 정보 없음</p>
+            )}
+          </SectionCard>
 
-          {/* Artists */}
-          {crawlData && crawlData.artists.length > 0 && (
-            <SectionCard
-              icon={<Users className="h-4 w-4" />}
-              title={`아티스트 (${crawlData.artists.length}명)`}
-              className="xl:col-span-2"
-            >
-              <div className="divide-y">
-                {crawlData.artists.map((artist, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center gap-4 py-2.5 text-sm"
-                  >
-                    <span className="w-48 shrink-0 font-medium">{artist.name}</span>
-                    {artist.date && (
-                      <span className="text-muted-foreground">{artist.date}</span>
-                    )}
-                    {artist.start_time && (
-                      <span className="text-muted-foreground">
-                        {artist.start_time}
-                        {artist.end_time ? ` ~ ${artist.end_time}` : ""}
-                      </span>
-                    )}
-                    {artist.stage && (
-                      <span className="rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                        {artist.stage}
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </SectionCard>
-          )}
-
-          {/* Reservations */}
-          {crawlData && crawlData.reservations.length > 0 && (
-            <SectionCard
-              icon={<Ticket className="h-4 w-4" />}
-              title={`예매 정보 (${crawlData.reservations.length}건)`}
-              className="xl:col-span-2"
-            >
-              <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
-                {crawlData.reservations.map((res, i) => (
-                  <div key={i} className="rounded-lg border p-3">
-                    <p className="text-sm text-muted-foreground">
-                      오픈: {formatDate(res.start_at)}
-                      {res.end_at && ` · 마감: ${formatDate(res.end_at)}`}
-                    </p>
-                    <a
-                      href={res.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-1 inline-flex items-center gap-1 text-sm text-primary hover:underline"
-                    >
-                      {res.url}
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
-                  </div>
-                ))}
-              </div>
-            </SectionCard>
-          )}
+          <SectionCard icon={<Ticket className="h-4 w-4" />} title="요약">
+            <InfoRow
+              label="아티스트"
+              value={crawlData?.artists.length ? `${crawlData.artists.length}명` : "0명"}
+            />
+            <InfoRow
+              label="예매"
+              value={crawlData?.reservations.length ? `${crawlData.reservations.length}건` : "0건"}
+            />
+          </SectionCard>
         </div>
+
+        {/* Reservations - horizontal table */}
+        {crawlData && crawlData.reservations.length > 0 && (
+          <div className="mt-8">
+            <div className="mb-3 flex items-center gap-2">
+              <Ticket className="h-4 w-4 text-muted-foreground" />
+              <h2 className="text-sm font-semibold">예매 정보</h2>
+            </div>
+            <Separator className="mb-3" />
+            <div className="overflow-hidden rounded-lg border">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-muted/50">
+                    <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">사이트</th>
+                    <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">오픈일</th>
+                    <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">마감일</th>
+                    <th className="px-4 py-2.5 text-right font-medium text-muted-foreground">링크</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {crawlData.reservations.map((res, i) => {
+                    const site = detectSiteFromUrl(res.url);
+                    return (
+                      <tr key={i} className="border-b last:border-b-0">
+                        <td className="px-4 py-2.5">
+                          <Badge variant={site.variant}>{site.label}</Badge>
+                        </td>
+                        <td className="px-4 py-2.5 text-muted-foreground">
+                          {formatDateTime(res.start_at)}
+                        </td>
+                        <td className="px-4 py-2.5 text-muted-foreground">
+                          {res.end_at ? formatDateTime(res.end_at) : "-"}
+                        </td>
+                        <td className="px-4 py-2.5 text-right">
+                          <a
+                            href={res.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-primary hover:underline"
+                          >
+                            예매하기
+                            <ExternalLink className="h-3 w-3" />
+                          </a>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Artists */}
+        {crawlData && crawlData.artists.length > 0 && (
+          <div className="mt-8">
+            <div className="mb-3 flex items-center gap-2">
+              <Users className="h-4 w-4 text-muted-foreground" />
+              <h2 className="text-sm font-semibold">아티스트 ({crawlData.artists.length}명)</h2>
+            </div>
+            <Separator className="mb-3" />
+            <div className="overflow-hidden rounded-lg border">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-muted/50">
+                    <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">이름</th>
+                    <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">날짜</th>
+                    <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">시간</th>
+                    <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">스테이지</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {crawlData.artists.map((artist, i) => (
+                    <tr key={i} className="border-b last:border-b-0">
+                      <td className="px-4 py-2.5 font-medium">{artist.name}</td>
+                      <td className="px-4 py-2.5 text-muted-foreground">
+                        {artist.date ?? "-"}
+                      </td>
+                      <td className="px-4 py-2.5 text-muted-foreground">
+                        {artist.start_time
+                          ? `${artist.start_time}${artist.end_time ? ` ~ ${artist.end_time}` : ""}`
+                          : "-"}
+                      </td>
+                      <td className="px-4 py-2.5">
+                        {artist.stage ? (
+                          <Badge variant="outline">{artist.stage}</Badge>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Artist Matching Modal */}
@@ -233,6 +338,7 @@ export function CrawledRecordDetail({ id }: { id: number }) {
           onClose={() => setShowMatchModal(false)}
           recordId={id}
           artists={crawlData.artists}
+          reviewStartedAt={reviewStartedAtRef.current}
         />
       )}
 
@@ -292,7 +398,7 @@ function InfoRow({
 }) {
   if (!value) return null;
   return (
-    <div className="grid grid-cols-[100px_1fr] gap-2 py-1.5 text-sm">
+    <div className="grid grid-cols-[72px_1fr] gap-2 py-1.5 text-sm">
       <span className="text-muted-foreground">{label}</span>
       <span>{value}</span>
     </div>

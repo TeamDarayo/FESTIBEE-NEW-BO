@@ -4,6 +4,7 @@ import type {
   CrawledRecordRes,
   GetCrawledRecordsParams,
   PageResponse,
+  RecordReviewEventReq,
 } from "./types";
 
 async function apiFetch<T>(url: string, init?: RequestInit): Promise<T> {
@@ -45,5 +46,12 @@ export function applyCrawledRecord(
 export function ignoreCrawledRecord(id: number): Promise<CrawledRecordRes> {
   return apiFetch<CrawledRecordRes>(`${BASE}/${id}/ignore`, {
     method: "POST",
+  });
+}
+
+export function recordReviewEvent(req: RecordReviewEventReq): Promise<void> {
+  return apiFetch<void>(`/api/admin/review-events`, {
+    method: "POST",
+    body: JSON.stringify(req),
   });
 }

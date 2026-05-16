@@ -7,6 +7,7 @@ export const dashboardKeys = {
   all: ["dashboard"] as const,
   stats: (params: StatsParams) => [...dashboardKeys.all, "stats", params] as const,
   aiProvenance: (params: StatsParams) => [...dashboardKeys.all, "ai-provenance", params] as const,
+  reviewStats: (params: StatsParams) => [...dashboardKeys.all, "review-stats", params] as const,
 };
 
 export function useDashboardStats(params: StatsParams) {
@@ -22,6 +23,15 @@ export function useAiProvenanceStats(params: StatsParams) {
   return useQuery({
     queryKey: dashboardKeys.aiProvenance(params),
     queryFn: () => dashboardApi.getAiProvenance(params),
+    select: (response) => response.result,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useReviewEventStats(params: StatsParams) {
+  return useQuery({
+    queryKey: dashboardKeys.reviewStats(params),
+    queryFn: () => dashboardApi.getReviewStats(params),
     select: (response) => response.result,
     staleTime: 5 * 60 * 1000,
   });

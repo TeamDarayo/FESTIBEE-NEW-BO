@@ -80,3 +80,10 @@ export interface GetCrawledRecordsParams {
   page?: number;
   size?: number;
 }
+
+export interface RecordReviewEventReq {
+  crawledRecordId: number;
+  action: "APPLIED" | "IGNORED";
+  reviewStartedAt: string;
+  reviewCompletedAt: string;
+}

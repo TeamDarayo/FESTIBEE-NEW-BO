@@ -11,7 +11,7 @@ import {
   DialogFooter,
   ScrollArea,
 } from "@festibee/ui";
-import { useApplyCrawledRecord } from "@festibee/api";
+import { useApplyCrawledRecord, recordReviewEvent } from "@festibee/api";
 import type { CrawledArtistEntry, ArtistMapping } from "@festibee/api";
 import { ArtistSearchInput } from "./artist-search-input";
 
@@ -20,6 +20,7 @@ interface ArtistMatchingModalProps {
   onClose: () => void;
   recordId: number;
   artists: CrawledArtistEntry[];
+  reviewStartedAt: Date;
 }
 
 type MatchState = {
@@ -32,6 +33,7 @@ export function ArtistMatchingModal({
   onClose,
   recordId,
   artists,
+  reviewStartedAt,
 }: ArtistMatchingModalProps) {
   const router = useRouter();
   const applyMutation = useApplyCrawledRecord();
@@ -71,6 +73,12 @@ export function ArtistMatchingModal({
     }));
 
     await applyMutation.mutateAsync({ id: recordId, req: { artistMappings } });
+    recordReviewEvent({
+      crawledRecordId: recordId,
+      action: "APPLIED",
+      reviewStartedAt: reviewStartedAt.toISOString(),
+      reviewCompletedAt: new Date().toISOString(),
+    }).catch(() => {});
     onClose();
     router.push("/crawled-records");
   };
