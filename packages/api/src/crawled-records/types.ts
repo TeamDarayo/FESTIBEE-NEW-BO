@@ -96,8 +96,16 @@ export interface ManualTimetableMapping {
   artists?: ManualArtistMapping[] | null;
 }
 
+export interface NewPerformanceReq {
+  name: string;
+  startDate?: string | null; // YYYY-MM-DD
+  endDate?: string | null;
+  posterUrl?: string | null;
+}
+
 export interface ApplyMappingReq {
-  targetPerformanceId: number;
+  targetPerformanceId?: number | null;
+  newPerformance?: NewPerformanceReq | null;
   place?: ManualPlaceMapping | null;
   reservations?: ManualReservationMapping[] | null;
   timetables?: ManualTimetableMapping[] | null;

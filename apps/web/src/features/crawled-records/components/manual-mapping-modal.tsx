@@ -31,7 +31,7 @@ import type {
   ReservationTypeEnum,
 } from "@festibee/api";
 import { PlaceCombobox } from "@/features/performance/ui/place-combobox";
-import { PerformancePicker } from "./performance-picker";
+import { PerformancePicker, type PerformanceTarget } from "./performance-picker";
 import { ArtistPicker } from "./artist-picker";
 
 interface ManualMappingModalProps {
@@ -130,7 +130,7 @@ export function ManualMappingModal({
   const applyReservationMut = useApplyReservation();
   const applyTimetableMut = useApplyTimetable();
 
-  const [targetPerformanceId, setTargetPerformanceId] = useState<number | null>(
+  const [performanceTarget, setPerformanceTarget] = useState<PerformanceTarget | null>(
     null
   );
 
@@ -197,20 +197,38 @@ export function ManualMappingModal({
       artists: t.artists.map((a) => a.mapping),
     }));
 
-  const requireTarget = (): number | null => {
-    if (targetPerformanceId == null) {
+  const requireTarget = (): boolean => {
+    if (performanceTarget == null) {
+      setError("대상 공연을 먼저 선택하세요.");
+      return false;
+    }
+    setError(null);
+    return true;
+  };
+
+  const requireExistingTarget = (): number | null => {
+    if (performanceTarget == null) {
       setError("대상 공연을 먼저 선택하세요.");
       return null;
     }
+    if (performanceTarget.mode === "new") {
+      setError("개별 반영은 기존 공연만 선택 가능합니다. 전체 반영을 사용하세요.");
+      return null;
+    }
     setError(null);
-    return targetPerformanceId;
+    return performanceTarget.id;
   };
 
   const handleApplyAll = async () => {
-    const id = requireTarget();
-    if (id == null) return;
+    if (!requireTarget()) return;
     const req: ApplyMappingReq = {
-      targetPerformanceId: id,
+      targetPerformanceId: performanceTarget!.mode === "existing" ? performanceTarget!.id : null,
+      newPerformance: performanceTarget!.mode === "new" ? {
+        name: performanceTarget!.name,
+        startDate: performanceTarget!.startDate || null,
+        endDate: performanceTarget!.endDate || null,
+        posterUrl: performanceTarget!.posterUrl || null,
+      } : null,
       place: placeMapping ?? null,
       reservations: enabledReservations.length ? reservationPayloads() : null,
       timetables: enabledTimetables.length ? timetablePayloads() : null,
@@ -225,7 +243,7 @@ export function ManualMappingModal({
   };
 
   const handleApplyPlace = async () => {
-    const id = requireTarget();
+    const id = requireExistingTarget();
     if (id == null) return;
     if (!placeMapping) {
       setError("장소 정보를 입력하세요.");
@@ -242,7 +260,7 @@ export function ManualMappingModal({
   };
 
   const handleApplyReservation = async () => {
-    const id = requireTarget();
+    const id = requireExistingTarget();
     if (id == null) return;
     const payload = reservationPayloads();
     if (payload.length === 0) {
@@ -260,7 +278,7 @@ export function ManualMappingModal({
   };
 
   const handleApplyTimetable = async () => {
-    const id = requireTarget();
+    const id = requireExistingTarget();
     if (id == null) return;
     const payload = timetablePayloads();
     if (payload.length === 0) {
@@ -291,8 +309,8 @@ export function ManualMappingModal({
               <Label className="text-sm font-semibold">대상 공연</Label>
               <div className="mt-2">
                 <PerformancePicker
-                  value={targetPerformanceId}
-                  onChange={(id) => setTargetPerformanceId(id)}
+                  value={performanceTarget}
+                  onChange={setPerformanceTarget}
                 />
               </div>
             </section>
