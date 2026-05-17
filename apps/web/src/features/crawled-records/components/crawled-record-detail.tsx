@@ -19,7 +19,7 @@ import { AlertCircle, ExternalLink, MapPin, CalendarDays, Users, Ticket } from "
 import { useGetCrawledRecord, useIgnoreCrawledRecord, recordReviewEvent } from "@festibee/api";
 import type { NormalizedCrawlData, CrawledRecordStatus } from "@festibee/api";
 import { CrawledRecordStatusBadge } from "./crawled-record-status-badge";
-import { ArtistMatchingModal } from "./artist-matching-modal";
+import { ManualMappingModal } from "./manual-mapping-modal";
 
 function formatDateTime(dateStr: string | null | undefined): string {
   if (!dateStr) return "-";
@@ -331,13 +331,13 @@ export function CrawledRecordDetail({ id }: { id: number }) {
         )}
       </div>
 
-      {/* Artist Matching Modal */}
+      {/* Manual Mapping Modal */}
       {crawlData && (
-        <ArtistMatchingModal
+        <ManualMappingModal
           open={showMatchModal}
           onClose={() => setShowMatchModal(false)}
           recordId={id}
-          artists={crawlData.artists}
+          crawlData={crawlData}
           reviewStartedAt={reviewStartedAtRef.current}
         />
       )}

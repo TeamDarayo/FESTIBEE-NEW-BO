@@ -1,6 +1,9 @@
 import { customFetch } from "../lib/custom-fetch";
 import type {
-  ApplyCrawledRecordReq,
+  ApplyMappingReq,
+  ApplyPlaceReq,
+  ApplyReservationReq,
+  ApplyTimetableReq,
   CrawledRecordRes,
   GetCrawledRecordsParams,
   PageResponse,
@@ -35,9 +38,39 @@ export function getCrawledRecord(id: number): Promise<CrawledRecordRes> {
 
 export function applyCrawledRecord(
   id: number,
-  req: ApplyCrawledRecordReq
+  req: ApplyMappingReq
 ): Promise<CrawledRecordRes> {
   return apiFetch<CrawledRecordRes>(`${BASE}/${id}/apply`, {
+    method: "POST",
+    body: JSON.stringify(req),
+  });
+}
+
+export function applyPlace(
+  id: number,
+  req: ApplyPlaceReq
+): Promise<CrawledRecordRes> {
+  return apiFetch<CrawledRecordRes>(`${BASE}/${id}/apply-place`, {
+    method: "POST",
+    body: JSON.stringify(req),
+  });
+}
+
+export function applyReservation(
+  id: number,
+  req: ApplyReservationReq
+): Promise<CrawledRecordRes> {
+  return apiFetch<CrawledRecordRes>(`${BASE}/${id}/apply-reservation`, {
+    method: "POST",
+    body: JSON.stringify(req),
+  });
+}
+
+export function applyTimetable(
+  id: number,
+  req: ApplyTimetableReq
+): Promise<CrawledRecordRes> {
+  return apiFetch<CrawledRecordRes>(`${BASE}/${id}/apply-timetable`, {
     method: "POST",
     body: JSON.stringify(req),
   });

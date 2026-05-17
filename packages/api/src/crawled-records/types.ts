@@ -56,15 +56,66 @@ export interface CrawledRecordRes {
   appliedPerformanceId: number | null;
 }
 
-export interface ArtistMapping {
-  crawledName: string;
-  artistId: number | null;
-  newArtistName: string | null;
+// ============================================================================
+// Manual mapping request types (matches backend ApplyMappingReq)
+// ============================================================================
+
+export type ReservationTypeEnum = "GENERAL" | "EARLY_BIRD";
+
+export interface NewPlaceReq {
+  name: string;
+  address?: string | null;
 }
 
-export interface ApplyCrawledRecordReq {
-  targetPerformanceId?: number | null;
-  artistMappings: ArtistMapping[];
+export interface ManualPlaceMapping {
+  existingPlaceId?: number | null;
+  newPlace?: NewPlaceReq | null;
+}
+
+export interface ManualReservationMapping {
+  openDateTime: string; // ISO LocalDateTime "YYYY-MM-DDTHH:mm:ss"
+  closeDateTime: string;
+  ticketURL?: string | null;
+  type: ReservationTypeEnum;
+}
+
+export interface NewArtistReq {
+  displayName: string;
+}
+
+export interface ManualArtistMapping {
+  existingArtistId?: number | null;
+  newArtist?: NewArtistReq | null;
+}
+
+export interface ManualTimetableMapping {
+  performanceDate: string; // YYYY-MM-DD
+  startTime: string; // HH:mm:ss
+  endTime: string;
+  stageId?: number | null;
+  artists?: ManualArtistMapping[] | null;
+}
+
+export interface ApplyMappingReq {
+  targetPerformanceId: number;
+  place?: ManualPlaceMapping | null;
+  reservations?: ManualReservationMapping[] | null;
+  timetables?: ManualTimetableMapping[] | null;
+}
+
+export interface ApplyPlaceReq {
+  targetPerformanceId: number;
+  place: ManualPlaceMapping;
+}
+
+export interface ApplyReservationReq {
+  targetPerformanceId: number;
+  reservations: ManualReservationMapping[];
+}
+
+export interface ApplyTimetableReq {
+  targetPerformanceId: number;
+  timetables: ManualTimetableMapping[];
 }
 
 export interface PageResponse<T> {
