@@ -12,6 +12,7 @@ import {
 } from "@festibee/ui";
 import { ChevronsUpDown, Plus, Search } from "lucide-react";
 import { usePerformanceList } from "@/features/performance";
+import type { NormalizedCrawlData } from "@festibee/api";
 
 type PerformanceTarget =
   | { mode: "existing"; id: number; name: string }
@@ -20,15 +21,24 @@ type PerformanceTarget =
 interface PerformancePickerProps {
   value: PerformanceTarget | null;
   onChange: (target: PerformanceTarget) => void;
+  crawlData?: NormalizedCrawlData | null;
 }
 
-export function PerformancePicker({ value, onChange }: PerformancePickerProps) {
+export function PerformancePicker({ value, onChange, crawlData }: PerformancePickerProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [showNewForm, setShowNewForm] = useState(false);
-  const [newName, setNewName] = useState("");
-  const [newStartDate, setNewStartDate] = useState("");
-  const [newEndDate, setNewEndDate] = useState("");
+
+  const defaultName = crawlData?.title ?? "";
+  const defaultStartDate = crawlData?.dates?.[0] ?? "";
+  const defaultEndDate = crawlData?.dates?.length
+    ? crawlData.dates[crawlData.dates.length - 1]
+    : "";
+  const defaultPosterUrl = crawlData?.poster_url ?? "";
+
+  const [newName, setNewName] = useState(defaultName);
+  const [newStartDate, setNewStartDate] = useState(defaultStartDate);
+  const [newEndDate, setNewEndDate] = useState(defaultEndDate);
   const { data: performances } = usePerformanceList();
 
   const filtered = useMemo(() => {
@@ -45,8 +55,8 @@ export function PerformancePicker({ value, onChange }: PerformancePickerProps) {
   const displayLabel = value
     ? value.mode === "existing"
       ? value.name
-      : `새 공연: ${value.name}`
-    : "공연 검색/���택";
+      : `(new) ${value.name}`
+    : "공연을 선택하세요";
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -75,7 +85,12 @@ export function PerformancePicker({ value, onChange }: PerformancePickerProps) {
               <div className="p-1">
                 <button
                   type="button"
-                  onClick={() => setShowNewForm(true)}
+                  onClick={() => {
+                    setNewName(defaultName);
+                    setNewStartDate(defaultStartDate);
+                    setNewEndDate(defaultEndDate);
+                    setShowNewForm(true);
+                  }}
                   className="flex w-full items-center gap-1.5 rounded-md px-2 py-1.5 text-left text-xs font-medium text-primary transition-colors hover:bg-accent"
                 >
                   <Plus className="h-3.5 w-3.5" />
@@ -159,7 +174,7 @@ export function PerformancePicker({ value, onChange }: PerformancePickerProps) {
                     name: newName.trim(),
                     startDate: newStartDate || "",
                     endDate: newEndDate || "",
-                    posterUrl: "",
+                    posterUrl: defaultPosterUrl,
                   });
                   setOpen(false);
                   setShowNewForm(false);

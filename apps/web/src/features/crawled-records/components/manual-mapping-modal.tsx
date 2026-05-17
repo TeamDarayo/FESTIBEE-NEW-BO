@@ -311,6 +311,7 @@ export function ManualMappingModal({
                 <PerformancePicker
                   value={performanceTarget}
                   onChange={setPerformanceTarget}
+                  crawlData={crawlData}
                 />
               </div>
             </section>
