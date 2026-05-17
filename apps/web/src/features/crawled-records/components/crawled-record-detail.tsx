@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Button,
@@ -16,7 +16,7 @@ import {
   AlertDialogTitle,
 } from "@festibee/ui";
 import { AlertCircle, ExternalLink, MapPin, CalendarDays, Users, Ticket } from "lucide-react";
-import { useGetCrawledRecord, useIgnoreCrawledRecord, recordReviewEvent } from "@festibee/api";
+import { useGetCrawledRecord, useIgnoreCrawledRecord } from "@festibee/api";
 import type { NormalizedCrawlData, CrawledRecordStatus } from "@festibee/api";
 import { CrawledRecordStatusBadge } from "./crawled-record-status-badge";
 import { ManualMappingModal } from "./manual-mapping-modal";
@@ -86,11 +86,6 @@ export function CrawledRecordDetail({ id }: { id: number }) {
   const ignoreMutation = useIgnoreCrawledRecord();
   const [showMatchModal, setShowMatchModal] = useState(false);
   const [showIgnoreDialog, setShowIgnoreDialog] = useState(false);
-  const reviewStartedAtRef = useRef<Date>(new Date());
-
-  useEffect(() => {
-    reviewStartedAtRef.current = new Date();
-  }, [id]);
 
   if (isLoading) {
     return (
@@ -138,12 +133,6 @@ export function CrawledRecordDetail({ id }: { id: number }) {
 
   const handleIgnore = async () => {
     await ignoreMutation.mutateAsync(id);
-    recordReviewEvent({
-      crawledRecordId: id,
-      action: "IGNORED",
-      reviewStartedAt: reviewStartedAtRef.current.toISOString(),
-      reviewCompletedAt: new Date().toISOString(),
-    }).catch(() => {});
     router.push("/crawled-records");
   };
 
@@ -338,7 +327,6 @@ export function CrawledRecordDetail({ id }: { id: number }) {
           onClose={() => setShowMatchModal(false)}
           recordId={id}
           crawlData={crawlData}
-          reviewStartedAt={reviewStartedAtRef.current}
         />
       )}
 

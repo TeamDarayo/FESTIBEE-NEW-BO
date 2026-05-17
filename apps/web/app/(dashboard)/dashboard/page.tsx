@@ -4,15 +4,9 @@ import { useState } from "react";
 import { Button } from "@festibee/ui";
 import {
   useDashboardStats,
-  useAiProvenanceStats,
-  useReviewEventStats,
   StatsCards,
   FunnelChart,
   CompletenessChart,
-  ProvenanceChart,
-  ProvenanceKpiCards,
-  ReviewStatsCards,
-  ReviewTrendChart,
   type StatsPreset,
 } from "@/features/dashboard";
 
@@ -25,8 +19,6 @@ const PRESETS: { label: string; value: StatsPreset }[] = [
 export default function DashboardPage() {
   const [preset, setPreset] = useState<StatsPreset>("ALL");
   const { data, isLoading, error } = useDashboardStats({ preset });
-  const { data: provenanceData, isLoading: provenanceLoading } = useAiProvenanceStats({ preset });
-  const { data: reviewData, isLoading: reviewLoading } = useReviewEventStats({ preset });
 
   return (
     <div className="flex-1 space-y-6 overflow-y-auto p-6">
@@ -66,37 +58,6 @@ export default function DashboardPage() {
         </>
       )}
 
-      {reviewLoading && (
-        <div className="text-muted-foreground">검토 효율 분석 중...</div>
-      )}
-
-      {reviewData && reviewData.totalReviews > 0 && (
-        <>
-          <h2 className="text-xl font-semibold pt-2">검토 효율</h2>
-          <p className="text-sm text-muted-foreground">
-            CrawledRecord 검토에 소요된 시간 분석 ({reviewData.totalReviews}건)
-          </p>
-          <ReviewStatsCards data={reviewData} />
-          {reviewData.dailyTrend.length > 0 && (
-            <ReviewTrendChart data={reviewData.dailyTrend} />
-          )}
-        </>
-      )}
-
-      {provenanceLoading && (
-        <div className="text-muted-foreground">AI 기여도 분석 중...</div>
-      )}
-
-      {provenanceData && provenanceData.analyzedCount > 0 && (
-        <>
-          <h2 className="text-xl font-semibold pt-2">AI 기여도 분석</h2>
-          <p className="text-sm text-muted-foreground">
-            등록 완료된 {provenanceData.analyzedCount}건의 크롤링 데이터와 현재 공연 정보를 비교
-          </p>
-          <ProvenanceKpiCards data={provenanceData} />
-          <ProvenanceChart data={provenanceData} />
-        </>
-      )}
     </div>
   );
 }

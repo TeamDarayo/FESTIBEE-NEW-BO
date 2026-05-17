@@ -16,7 +16,6 @@ import {
   Checkbox,
 } from "@festibee/ui";
 import {
-  recordReviewEvent,
   useApplyCrawledRecord,
   useApplyPlace,
   useApplyReservation,
@@ -40,7 +39,6 @@ interface ManualMappingModalProps {
   onClose: () => void;
   recordId: number;
   crawlData: NormalizedCrawlData;
-  reviewStartedAt: Date;
 }
 
 type PlaceMode = "existing" | "new";
@@ -125,7 +123,6 @@ export function ManualMappingModal({
   onClose,
   recordId,
   crawlData,
-  reviewStartedAt,
 }: ManualMappingModalProps) {
   const router = useRouter();
   const applyAll = useApplyCrawledRecord();
@@ -220,12 +217,6 @@ export function ManualMappingModal({
     };
     try {
       await applyAll.mutateAsync({ id: recordId, req });
-      recordReviewEvent({
-        crawledRecordId: recordId,
-        action: "APPLIED",
-        reviewStartedAt: reviewStartedAt.toISOString(),
-        reviewCompletedAt: new Date().toISOString(),
-      }).catch(() => {});
       onClose();
       router.push("/crawled-records");
     } catch (e) {
