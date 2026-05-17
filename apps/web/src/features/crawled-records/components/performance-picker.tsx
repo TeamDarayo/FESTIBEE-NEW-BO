@@ -29,16 +29,17 @@ export function PerformancePicker({ value, onChange, crawlData }: PerformancePic
   const [query, setQuery] = useState("");
   const [showNewForm, setShowNewForm] = useState(false);
 
-  const defaultName = crawlData?.title ?? "";
-  const defaultStartDate = crawlData?.dates?.[0] ?? "";
-  const defaultEndDate = crawlData?.dates?.length
-    ? crawlData.dates[crawlData.dates.length - 1]
-    : "";
-  const defaultPosterUrl = crawlData?.poster_url ?? "";
+  const getDefaultName = (): string => crawlData?.title ?? "";
+  const getDefaultStartDate = (): string => crawlData?.dates?.[0] ?? "";
+  const getDefaultEndDate = (): string => {
+    const dates = crawlData?.dates;
+    return dates?.length ? (dates[dates.length - 1] ?? "") : "";
+  };
+  const getDefaultPosterUrl = (): string => crawlData?.poster_url ?? "";
 
-  const [newName, setNewName] = useState(defaultName);
-  const [newStartDate, setNewStartDate] = useState(defaultStartDate);
-  const [newEndDate, setNewEndDate] = useState(defaultEndDate);
+  const [newName, setNewName] = useState("");
+  const [newStartDate, setNewStartDate] = useState("");
+  const [newEndDate, setNewEndDate] = useState("");
   const { data: performances } = usePerformanceList();
 
   const filtered = useMemo(() => {
@@ -86,9 +87,9 @@ export function PerformancePicker({ value, onChange, crawlData }: PerformancePic
                 <button
                   type="button"
                   onClick={() => {
-                    setNewName(defaultName);
-                    setNewStartDate(defaultStartDate);
-                    setNewEndDate(defaultEndDate);
+                    setNewName(getDefaultName());
+                    setNewStartDate(getDefaultStartDate());
+                    setNewEndDate(getDefaultEndDate());
                     setShowNewForm(true);
                   }}
                   className="flex w-full items-center gap-1.5 rounded-md px-2 py-1.5 text-left text-xs font-medium text-primary transition-colors hover:bg-accent"
@@ -174,7 +175,7 @@ export function PerformancePicker({ value, onChange, crawlData }: PerformancePic
                     name: newName.trim(),
                     startDate: newStartDate || "",
                     endDate: newEndDate || "",
-                    posterUrl: defaultPosterUrl,
+                    posterUrl: getDefaultPosterUrl(),
                   });
                   setOpen(false);
                   setShowNewForm(false);
