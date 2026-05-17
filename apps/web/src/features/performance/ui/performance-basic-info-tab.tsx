@@ -14,6 +14,7 @@ import { AutoResizeTextarea } from "./auto-resize-textarea";
 import { PlaceCombobox } from "./place-combobox";
 import { PerformanceReservationTab } from "./performance-reservation-tab";
 import { PerformanceUrlTab } from "./performance-url-tab";
+import { StageEditor } from "./stage-editor";
 
 interface PerformanceBasicInfoTabProps {
   performanceId: number;
@@ -214,6 +215,11 @@ export function PerformanceBasicInfoTab({
         <Separator className="mb-3" />
         <PlaceCombobox value={derivedPlaceId} />
       </div>
+
+      {/* ============================================================ */}
+      {/* Stage Section */}
+      {/* ============================================================ */}
+      <StageEditor performanceId={performanceId} />
 
       {/* ============================================================ */}
       {/* Reservation Section (inline) */}

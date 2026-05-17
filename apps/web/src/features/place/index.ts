@@ -20,3 +20,8 @@ export {
   useAddPlaceHall,
   useUpdatePlaceHall,
 } from "./hooks/use-place-mutations";
+
+// UI
+export { PlaceListPanel } from "./ui/place-list-panel";
+export { PlaceDetailPanel } from "./ui/place-detail-panel";
+export { PlaceCreateForm } from "./ui/place-create-form";

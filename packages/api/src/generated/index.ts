@@ -19,6 +19,7 @@ export * from "./crawling-place-link-admin-controller/crawling-place-link-admin-
 export * from "./performance-admin-controller/performance-admin-controller";
 export * from "./performance-controller/performance-controller";
 export * from "./performance-reservation-admin-controller/performance-reservation-admin-controller";
+export * from "./performance-stage-admin-controller/performance-stage-admin-controller";
 export * from "./performance-timetable-admin-controller/performance-timetable-admin-controller";
 export * from "./performance-timetable-artist-admin-controller/performance-timetable-artist-admin-controller";
 export * from "./performance-url-admin-controller/performance-url-admin-controller";

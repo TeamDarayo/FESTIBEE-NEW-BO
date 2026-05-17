@@ -2586,6 +2586,166 @@
                     }
                 }
             }
+        },
+        "/api/admin/performance/{performanceId}/stage": {
+            "get": {
+                "tags": [
+                    "performance-stage-admin-controller"
+                ],
+                "operationId": "getStages",
+                "parameters": [
+                    {
+                        "name": "performanceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.common.BaseResponseJava.util.ListStageRes"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "performance-stage-admin-controller"
+                ],
+                "operationId": "addStage",
+                "parameters": [
+                    {
+                        "name": "performanceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "name"
+                                ]
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.common.BaseResponseStageRes"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/performance/{performanceId}/stage/{stageId}": {
+            "put": {
+                "tags": [
+                    "performance-stage-admin-controller"
+                ],
+                "operationId": "editStage",
+                "parameters": [
+                    {
+                        "name": "performanceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "stageId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "name"
+                                ]
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "performance-stage-admin-controller"
+                ],
+                "operationId": "deleteStage",
+                "parameters": [
+                    {
+                        "name": "performanceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "stageId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -4493,6 +4653,51 @@
                     "timetableId": {
                         "type": "integer",
                         "format": "int64"
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.endpoints.admin.performance.exchanges.StageRes": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "name": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.common.BaseResponseJava.util.ListStageRes": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "result": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.performance.exchanges.StageRes"
+                        }
+                    }
+                }
+            },
+            "ddd.darayo.festival.presentation.http.common.BaseResponseStageRes": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "result": {
+                        "$ref": "#/components/schemas/ddd.darayo.festival.presentation.http.endpoints.admin.performance.exchanges.StageRes"
                     }
                 }
             }
