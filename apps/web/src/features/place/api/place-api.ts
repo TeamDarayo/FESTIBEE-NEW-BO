@@ -9,11 +9,8 @@ import type {
   DddDarayoFestivalPresentationHttpEndpointsAdminPlaceExchangesGetAllPlaceResHallInfo,
   DddDarayoFestivalPresentationHttpEndpointsAdminPlaceExchangesAddPlaceReq,
   DddDarayoFestivalPresentationHttpEndpointsAdminPlaceExchangesEditPlaceReq,
-  DddDarayoFestivalPresentationHttpEndpointsAdminPlaceExchangesAddPlaceHallReq,
-  DddDarayoFestivalPresentationHttpEndpointsAdminPlaceExchangesEditHallReq,
 } from "@festibee/api/generated";
 
-// Alias exports for backward compatibility
 export type GetAllPlaceRes =
   DddDarayoFestivalPresentationHttpEndpointsAdminPlaceExchangesGetAllPlaceRes;
 export type HallInfo =
@@ -22,10 +19,6 @@ export type AddPlaceReq =
   DddDarayoFestivalPresentationHttpEndpointsAdminPlaceExchangesAddPlaceReq;
 export type EditPlaceReq =
   DddDarayoFestivalPresentationHttpEndpointsAdminPlaceExchangesEditPlaceReq;
-export type AddPlaceHallReq =
-  DddDarayoFestivalPresentationHttpEndpointsAdminPlaceExchangesAddPlaceHallReq;
-export type EditHallReq =
-  DddDarayoFestivalPresentationHttpEndpointsAdminPlaceExchangesEditHallReq;
 
 // ============================================================================
 // Generated API Functions Re-export
@@ -39,8 +32,6 @@ export {
   getGetPlacesQueryOptions,
 } from "@festibee/api/generated";
 
-// From place-hall-admin-controller
-export { addHall, editHall } from "@festibee/api/generated";
 
 // ============================================================================
 // Manual API Client (for endpoints with OpenAPI spec issues)

@@ -4,8 +4,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   useCreatePlace as useGeneratedCreatePlace,
   useDeletePlaceWithHalls as useGeneratedDeletePlace,
-  useAddHall as useGeneratedAddHall,
-  useEditHall as useGeneratedEditHall,
 } from "@festibee/api/generated";
 import { placeApi, type EditPlaceReq } from "../api/place-api";
 import { placeKeys } from "./use-place-list";
@@ -51,30 +49,3 @@ export function useDeletePlace() {
   });
 }
 
-// ============================================================================
-// Hall Mutations (using generated hooks)
-// ============================================================================
-
-export function useAddPlaceHall() {
-  const queryClient = useQueryClient();
-
-  return useGeneratedAddHall({
-    mutation: {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: placeKeys.all });
-      },
-    },
-  });
-}
-
-export function useUpdatePlaceHall() {
-  const queryClient = useQueryClient();
-
-  return useGeneratedEditHall({
-    mutation: {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: placeKeys.all });
-      },
-    },
-  });
-}

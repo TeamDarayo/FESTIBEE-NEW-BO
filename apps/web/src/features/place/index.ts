@@ -5,8 +5,6 @@ export type {
   HallInfo,
   AddPlaceReq,
   EditPlaceReq,
-  AddPlaceHallReq,
-  EditHallReq,
 } from "./api/place-api";
 
 // Hooks - Query
@@ -17,8 +15,6 @@ export {
   useCreatePlace,
   useUpdatePlace,
   useDeletePlace,
-  useAddPlaceHall,
-  useUpdatePlaceHall,
 } from "./hooks/use-place-mutations";
 
 // UI

@@ -17,10 +17,8 @@ import {
   usePlaceList,
   useCreatePlace,
   useUpdatePlace,
-  useAddPlaceHall,
-  useUpdatePlaceHall,
 } from "@/features/place";
-import type { GetAllPlaceRes, HallInfo } from "@/features/place";
+import type { GetAllPlaceRes } from "@/features/place";
 
 interface PlaceComboboxProps {
   value: number | null;
@@ -41,19 +39,10 @@ function PlaceDetailPane({ placeId }: PlaceDetailPaneProps) {
   const place = places?.find((p) => p.id === placeId);
 
   const updatePlaceMutation = useUpdatePlace();
-  const addHallMutation = useAddPlaceHall();
-  const updateHallMutation = useUpdatePlaceHall();
 
-  // Place name/address edit state
   const [editingPlace, setEditingPlace] = useState(false);
   const [editPlaceName, setEditPlaceName] = useState("");
   const [editPlaceAddress, setEditPlaceAddress] = useState("");
-
-  // Hall states
-  const [addingHall, setAddingHall] = useState(false);
-  const [newHallName, setNewHallName] = useState("");
-  const [editingHallId, setEditingHallId] = useState<number | null>(null);
-  const [editHallName, setEditHallName] = useState("");
 
   const startEditPlace = () => {
     setEditPlaceName(place?.placeName ?? "");
@@ -71,31 +60,6 @@ function PlaceDetailPane({ placeId }: PlaceDetailPaneProps) {
       },
     });
     setEditingPlace(false);
-  };
-
-  const startEditHall = (hall: HallInfo) => {
-    setEditingHallId(hall.id ?? null);
-    setEditHallName(hall.name ?? "");
-  };
-
-  const handleSaveHall = async (hallId: number) => {
-    if (!placeId) return;
-    await updateHallMutation.mutateAsync({
-      placeId,
-      hallId,
-      data: { name: editHallName.trim() || undefined },
-    });
-    setEditingHallId(null);
-  };
-
-  const handleAddHall = async () => {
-    if (!placeId || !newHallName.trim()) return;
-    await addHallMutation.mutateAsync({
-      placeId,
-      data: { name: newHallName.trim() },
-    });
-    setNewHallName("");
-    setAddingHall(false);
   };
 
   if (!placeId) {
@@ -116,7 +80,6 @@ function PlaceDetailPane({ placeId }: PlaceDetailPaneProps) {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      {/* Header */}
       <div className="flex items-center justify-between px-3 py-2">
         <span className="truncate text-sm font-semibold">{place.placeName}</span>
         {!editingPlace && (
@@ -134,7 +97,6 @@ function PlaceDetailPane({ placeId }: PlaceDetailPaneProps) {
 
       <ScrollArea className="flex-1">
         <div className="p-3 space-y-3">
-          {/* Place name & address edit */}
           {editingPlace ? (
             <div className="space-y-2">
               <div className="space-y-1">
@@ -187,110 +149,6 @@ function PlaceDetailPane({ placeId }: PlaceDetailPaneProps) {
               </div>
             </div>
           )}
-
-          <Separator />
-
-          {/* Hall list */}
-          <div>
-            <div className="mb-2 flex items-center justify-between">
-              <span className="text-xs font-medium text-muted-foreground">홀 목록</span>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setAddingHall(true)}
-                className="h-6 gap-1 text-xs"
-              >
-                <Plus className="h-3 w-3" />
-                홀 추가
-              </Button>
-            </div>
-
-            <div className="space-y-1">
-              {(place.halls ?? []).length === 0 && !addingHall && (
-                <p className="py-2 text-center text-xs text-muted-foreground">
-                  등록된 홀이 없습니다
-                </p>
-              )}
-
-              {(place.halls ?? []).map((hall) =>
-                editingHallId === hall.id ? (
-                  <div key={hall.id} className="flex items-center gap-1">
-                    <Input
-                      value={editHallName}
-                      onChange={(e) => setEditHallName(e.target.value)}
-                      className="h-7 text-xs"
-                      autoFocus
-                    />
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => hall.id != null && handleSaveHall(hall.id)}
-                      disabled={updateHallMutation.isPending}
-                      className="h-7 w-7 shrink-0 p-0"
-                    >
-                      <Check className="h-3 w-3" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => setEditingHallId(null)}
-                      className="h-7 w-7 shrink-0 p-0"
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </div>
-                ) : (
-                  <div
-                    key={hall.id}
-                    className="group flex items-center justify-between rounded px-2 py-1 text-xs hover:bg-accent"
-                  >
-                    <span>{hall.name}</span>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => startEditHall(hall)}
-                      className="h-6 w-6 p-0 opacity-0 transition-opacity group-hover:opacity-100"
-                    >
-                      <Pencil className="h-3 w-3" />
-                    </Button>
-                  </div>
-                )
-              )}
-
-              {addingHall && (
-                <div className="flex items-center gap-1">
-                  <Input
-                    value={newHallName}
-                    onChange={(e) => setNewHallName(e.target.value)}
-                    placeholder="홀 이름"
-                    className="h-7 text-xs"
-                    autoFocus
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") handleAddHall();
-                      if (e.key === "Escape") setAddingHall(false);
-                    }}
-                  />
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={handleAddHall}
-                    disabled={addHallMutation.isPending}
-                    className="h-7 w-7 shrink-0 p-0"
-                  >
-                    <Check className="h-3 w-3" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => setAddingHall(false)}
-                    className="h-7 w-7 shrink-0 p-0"
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                </div>
-              )}
-            </div>
-          </div>
         </div>
       </ScrollArea>
     </div>
