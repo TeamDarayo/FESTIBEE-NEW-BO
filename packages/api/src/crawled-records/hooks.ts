@@ -5,20 +5,12 @@ import {
 } from "@tanstack/react-query";
 import {
   applyCrawledRecord,
-  applyPlace,
-  applyReservation,
-  applyTimetable,
   getCrawledRecord,
   getCrawledRecords,
   ignoreCrawledRecord,
+  saveEditedData,
 } from "./api";
-import type {
-  ApplyMappingReq,
-  ApplyPlaceReq,
-  ApplyReservationReq,
-  ApplyTimetableReq,
-  GetCrawledRecordsParams,
-} from "./types";
+import type { ApplyMappingReq, GetCrawledRecordsParams } from "./types";
 
 export const crawledRecordKeys = {
   all: ["crawled-records"] as const,
@@ -55,35 +47,13 @@ export function useApplyCrawledRecord() {
   });
 }
 
-export function useApplyPlace() {
+export function useSaveEditedData() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, req }: { id: number; req: ApplyPlaceReq }) =>
-      applyPlace(id, req),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: crawledRecordKeys.all });
-    },
-  });
-}
-
-export function useApplyReservation() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, req }: { id: number; req: ApplyReservationReq }) =>
-      applyReservation(id, req),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: crawledRecordKeys.all });
-    },
-  });
-}
-
-export function useApplyTimetable() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, req }: { id: number; req: ApplyTimetableReq }) =>
-      applyTimetable(id, req),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: crawledRecordKeys.all });
+    mutationFn: ({ id, req }: { id: number; req: ApplyMappingReq }) =>
+      saveEditedData(id, req),
+    onSuccess: (_data, { id }) => {
+      queryClient.invalidateQueries({ queryKey: crawledRecordKeys.detail(id) });
     },
   });
 }

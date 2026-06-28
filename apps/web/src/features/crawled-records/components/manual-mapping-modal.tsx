@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Button,
@@ -15,24 +15,16 @@ import {
   Separator,
   Checkbox,
 } from "@festibee/ui";
-import {
-  useApplyCrawledRecord,
-  useApplyPlace,
-  useApplyReservation,
-  useApplyTimetable,
-} from "@festibee/api";
+import { useApplyCrawledRecord, useSaveEditedData } from "@festibee/api";
 import type {
-  ApplyMappingReq,
   ManualArtistMapping,
-  ManualPlaceMapping,
-  ManualReservationMapping,
-  ManualTimetableMapping,
   NormalizedCrawlData,
   ReservationTypeEnum,
 } from "@festibee/api";
 import { PlaceCombobox } from "@/features/performance/ui/place-combobox";
 import { PerformancePicker, type PerformanceTarget } from "./performance-picker";
 import { ArtistPicker } from "./artist-picker";
+import { buildEditedData } from "../lib/build-edited-data";
 
 interface ManualMappingModalProps {
   open: boolean;
@@ -126,9 +118,7 @@ export function ManualMappingModal({
 }: ManualMappingModalProps) {
   const router = useRouter();
   const applyAll = useApplyCrawledRecord();
-  const applyPlaceMut = useApplyPlace();
-  const applyReservationMut = useApplyReservation();
-  const applyTimetableMut = useApplyTimetable();
+  const saveDraft = useSaveEditedData();
 
   const [performanceTarget, setPerformanceTarget] = useState<PerformanceTarget | null>(
     null
@@ -156,46 +146,10 @@ export function ManualMappingModal({
 
   const [error, setError] = useState<string | null>(null);
 
-  const isPending =
-    applyAll.isPending ||
-    applyPlaceMut.isPending ||
-    applyReservationMut.isPending ||
-    applyTimetableMut.isPending;
-
-  const placeMapping = useMemo<ManualPlaceMapping | null>(() => {
-    if (placeMode === "existing") {
-      if (existingPlaceId == null) return null;
-      return { existingPlaceId, newPlace: null };
-    }
-    if (!newPlaceName.trim()) return null;
-    return {
-      existingPlaceId: null,
-      newPlace: {
-        name: newPlaceName.trim(),
-        address: newPlaceAddress.trim() || null,
-      },
-    };
-  }, [placeMode, existingPlaceId, newPlaceName, newPlaceAddress]);
+  const isPending = applyAll.isPending || saveDraft.isPending;
 
   const enabledReservations = reservations.filter((r) => r.enabled);
   const enabledTimetables = timetables.filter((t) => t.enabled);
-
-  const reservationPayloads = (): ManualReservationMapping[] =>
-    enabledReservations.map((r) => ({
-      openDateTime: r.openDateTime,
-      closeDateTime: r.closeDateTime,
-      ticketURL: r.ticketURL.trim() || null,
-      type: r.type,
-    }));
-
-  const timetablePayloads = (): ManualTimetableMapping[] =>
-    enabledTimetables.map((t) => ({
-      performanceDate: t.performanceDate,
-      startTime: t.startTime,
-      endTime: t.endTime,
-      stageId: t.stageId.trim() ? Number(t.stageId.trim()) : null,
-      artists: t.artists.map((a) => a.mapping),
-    }));
 
   const requireTarget = (): boolean => {
     if (performanceTarget == null) {
@@ -206,35 +160,22 @@ export function ManualMappingModal({
     return true;
   };
 
-  const requireExistingTarget = (): number | null => {
-    if (performanceTarget == null) {
-      setError("대상 공연을 먼저 선택하세요.");
-      return null;
-    }
-    if (performanceTarget.mode === "new") {
-      setError("개별 반영은 기존 공연만 선택 가능합니다. 전체 반영을 사용하세요.");
-      return null;
-    }
-    setError(null);
-    return performanceTarget.id;
-  };
+  const buildPayload = () =>
+    buildEditedData({
+      crawlData,
+      performanceTarget,
+      placeMode,
+      existingPlaceId,
+      newPlaceName,
+      newPlaceAddress,
+      reservations,
+      timetables,
+    });
 
   const handleApplyAll = async () => {
     if (!requireTarget()) return;
-    const req: ApplyMappingReq = {
-      targetPerformanceId: performanceTarget!.mode === "existing" ? performanceTarget!.id : null,
-      newPerformance: performanceTarget!.mode === "new" ? {
-        name: performanceTarget!.name,
-        startDate: performanceTarget!.startDate || null,
-        endDate: performanceTarget!.endDate || null,
-        posterUrl: performanceTarget!.posterUrl || null,
-      } : null,
-      place: placeMapping ?? null,
-      reservations: enabledReservations.length ? reservationPayloads() : null,
-      timetables: enabledTimetables.length ? timetablePayloads() : null,
-    };
     try {
-      await applyAll.mutateAsync({ id: recordId, req });
+      await applyAll.mutateAsync({ id: recordId, req: buildPayload() });
       onClose();
       router.push("/crawled-records");
     } catch (e) {
@@ -242,56 +183,12 @@ export function ManualMappingModal({
     }
   };
 
-  const handleApplyPlace = async () => {
-    const id = requireExistingTarget();
-    if (id == null) return;
-    if (!placeMapping) {
-      setError("장소 정보를 입력하세요.");
-      return;
-    }
+  const handleSaveDraft = async () => {
     try {
-      await applyPlaceMut.mutateAsync({
-        id: recordId,
-        req: { targetPerformanceId: id, place: placeMapping },
-      });
+      await saveDraft.mutateAsync({ id: recordId, req: buildPayload() });
+      setError(null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "장소 반영 실패");
-    }
-  };
-
-  const handleApplyReservation = async () => {
-    const id = requireExistingTarget();
-    if (id == null) return;
-    const payload = reservationPayloads();
-    if (payload.length === 0) {
-      setError("반영할 예약 정보를 선택하세요.");
-      return;
-    }
-    try {
-      await applyReservationMut.mutateAsync({
-        id: recordId,
-        req: { targetPerformanceId: id, reservations: payload },
-      });
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "예약 반영 실패");
-    }
-  };
-
-  const handleApplyTimetable = async () => {
-    const id = requireExistingTarget();
-    if (id == null) return;
-    const payload = timetablePayloads();
-    if (payload.length === 0) {
-      setError("반영할 타임테이블을 선택하세요.");
-      return;
-    }
-    try {
-      await applyTimetableMut.mutateAsync({
-        id: recordId,
-        req: { targetPerformanceId: id, timetables: payload },
-      });
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "타임테이블 반영 실패");
+      setError(e instanceof Error ? e.message : "초안 저장 실패");
     }
   };
 
@@ -320,17 +217,7 @@ export function ManualMappingModal({
 
             {/* Place */}
             <section className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-semibold">장소</Label>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={isPending}
-                  onClick={handleApplyPlace}
-                >
-                  장소만 반영
-                </Button>
-              </div>
+              <Label className="text-sm font-semibold">장소</Label>
               <div className="rounded-md border p-3 space-y-3">
                 <div className="flex gap-2 text-xs">
                   <label className="flex items-center gap-1">
@@ -388,19 +275,9 @@ export function ManualMappingModal({
 
             {/* Reservations */}
             <section className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-semibold">
-                  예약 정보 ({enabledReservations.length}/{reservations.length})
-                </Label>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={isPending}
-                  onClick={handleApplyReservation}
-                >
-                  예약만 반영
-                </Button>
-              </div>
+              <Label className="text-sm font-semibold">
+                예약 정보 ({enabledReservations.length}/{reservations.length})
+              </Label>
               {reservations.length === 0 ? (
                 <p className="rounded border p-3 text-xs text-muted-foreground">
                   크롤링된 예약 정보가 없습니다.
@@ -492,19 +369,9 @@ export function ManualMappingModal({
 
             {/* Timetables */}
             <section className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-semibold">
-                  타임테이블 ({enabledTimetables.length}/{timetables.length})
-                </Label>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={isPending}
-                  onClick={handleApplyTimetable}
-                >
-                  타임테이블만 반영
-                </Button>
-              </div>
+              <Label className="text-sm font-semibold">
+                타임테이블 ({enabledTimetables.length}/{timetables.length})
+              </Label>
               {timetables.length === 0 ? (
                 <p className="rounded border p-3 text-xs text-muted-foreground">
                   크롤링된 타임테이블이 없습니다.
@@ -597,6 +464,14 @@ export function ManualMappingModal({
             disabled={isPending}
           >
             취소
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={isPending}
+            onClick={handleSaveDraft}
+          >
+            {saveDraft.isPending ? "저장 중..." : "초안 저장"}
           </Button>
           <Button size="sm" disabled={isPending} onClick={handleApplyAll}>
             {applyAll.isPending ? "반영 중..." : "전체 반영"}

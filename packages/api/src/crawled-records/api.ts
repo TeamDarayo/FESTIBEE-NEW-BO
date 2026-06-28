@@ -1,9 +1,6 @@
 import { customFetch } from "../lib/custom-fetch";
 import type {
   ApplyMappingReq,
-  ApplyPlaceReq,
-  ApplyReservationReq,
-  ApplyTimetableReq,
   CrawledRecordRes,
   GetCrawledRecordsParams,
   PageResponse,
@@ -36,41 +33,23 @@ export function getCrawledRecord(id: number): Promise<CrawledRecordRes> {
   return apiFetch<CrawledRecordRes>(`${BASE}/${id}`);
 }
 
+/** 라벨링 초안 저장 (반영하지 않고 edited_data 만 갱신). */
+export function saveEditedData(
+  id: number,
+  req: ApplyMappingReq
+): Promise<CrawledRecordRes> {
+  return apiFetch<CrawledRecordRes>(`${BASE}/${id}/edited-data`, {
+    method: "PUT",
+    body: JSON.stringify(req),
+  });
+}
+
+/** 반영 확정 (edited_data 저장 + production 엔티티 생성). */
 export function applyCrawledRecord(
   id: number,
   req: ApplyMappingReq
 ): Promise<CrawledRecordRes> {
   return apiFetch<CrawledRecordRes>(`${BASE}/${id}/apply`, {
-    method: "POST",
-    body: JSON.stringify(req),
-  });
-}
-
-export function applyPlace(
-  id: number,
-  req: ApplyPlaceReq
-): Promise<CrawledRecordRes> {
-  return apiFetch<CrawledRecordRes>(`${BASE}/${id}/apply-place`, {
-    method: "POST",
-    body: JSON.stringify(req),
-  });
-}
-
-export function applyReservation(
-  id: number,
-  req: ApplyReservationReq
-): Promise<CrawledRecordRes> {
-  return apiFetch<CrawledRecordRes>(`${BASE}/${id}/apply-reservation`, {
-    method: "POST",
-    body: JSON.stringify(req),
-  });
-}
-
-export function applyTimetable(
-  id: number,
-  req: ApplyTimetableReq
-): Promise<CrawledRecordRes> {
-  return apiFetch<CrawledRecordRes>(`${BASE}/${id}/apply-timetable`, {
     method: "POST",
     body: JSON.stringify(req),
   });
