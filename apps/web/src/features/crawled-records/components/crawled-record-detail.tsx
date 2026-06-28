@@ -19,7 +19,6 @@ import { AlertCircle, ExternalLink, MapPin, CalendarDays, Users, Ticket } from "
 import { useGetCrawledRecord, useIgnoreCrawledRecord } from "@festibee/api";
 import type { NormalizedCrawlData, CrawledRecordStatus } from "@festibee/api";
 import { CrawledRecordStatusBadge } from "./crawled-record-status-badge";
-import { ManualMappingModal } from "./manual-mapping-modal";
 
 function formatDateTime(dateStr: string | null | undefined): string {
   if (!dateStr) return "-";
@@ -84,7 +83,6 @@ export function CrawledRecordDetail({ id }: { id: number }) {
   const router = useRouter();
   const { data: record, isLoading, isError } = useGetCrawledRecord(id);
   const ignoreMutation = useIgnoreCrawledRecord();
-  const [showMatchModal, setShowMatchModal] = useState(false);
   const [showIgnoreDialog, setShowIgnoreDialog] = useState(false);
 
   if (isLoading) {
@@ -180,7 +178,7 @@ export function CrawledRecordDetail({ id }: { id: number }) {
             >
               무시
             </Button>
-            <Button size="sm" onClick={() => setShowMatchModal(true)}>
+            <Button size="sm" onClick={() => router.push(`/crawled-records/${id}/apply`)}>
               반영
             </Button>
           </div>
@@ -319,16 +317,6 @@ export function CrawledRecordDetail({ id }: { id: number }) {
           </div>
         )}
       </div>
-
-      {/* Manual Mapping Modal */}
-      {crawlData && (
-        <ManualMappingModal
-          open={showMatchModal}
-          onClose={() => setShowMatchModal(false)}
-          recordId={id}
-          crawlData={crawlData}
-        />
-      )}
 
       {/* Ignore Confirm Dialog */}
       <AlertDialog open={showIgnoreDialog} onOpenChange={setShowIgnoreDialog}>
