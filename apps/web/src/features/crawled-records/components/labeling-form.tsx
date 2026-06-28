@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button, Input, Label, Separator, Checkbox } from "@festibee/ui";
+import { Plus, Trash2 } from "lucide-react";
 import { useApplyCrawledRecord, useSaveEditedData } from "@festibee/api";
 import type {
   EditedData,
@@ -9,6 +10,8 @@ import type {
   NormalizedCrawlData,
   ReservationTypeEnum,
 } from "@festibee/api";
+import { usePlaceList } from "@/features/place";
+import { useArtistList } from "@/features/artist";
 import { PlaceCombobox } from "@/features/performance/ui/place-combobox";
 import { PerformancePicker, type PerformanceTarget } from "./performance-picker";
 import { ArtistPicker } from "./artist-picker";
@@ -34,6 +37,11 @@ interface ReservationRow {
   type: ReservationTypeEnum;
 }
 
+interface TimetableArtistRow {
+  crawledName: string;
+  mapping: ManualArtistMapping;
+}
+
 interface TimetableRow {
   enabled: boolean;
   performanceDate: string;
@@ -41,7 +49,7 @@ interface TimetableRow {
   endTime: string;
   stageHint: string | null;
   stageId: string; // text input, parsed to number; empty = null
-  artists: { crawledName: string; mapping: ManualArtistMapping }[];
+  artists: TimetableArtistRow[];
 }
 
 function toLocalDateTimeString(value: string | null | undefined): string {
@@ -60,6 +68,13 @@ function toLocalTimeString(value: string | null | undefined): string {
   const m = value.match(/^(\d{2}):(\d{2})(?::(\d{2}))?/);
   if (!m) return value;
   return `${m[1]}:${m[2]}:${m[3] ?? "00"}`;
+}
+
+function newArtistRow(name = ""): TimetableArtistRow {
+  return {
+    crawledName: name,
+    mapping: { existingArtistId: null, newArtist: { displayName: name } },
+  };
 }
 
 function buildInitialReservations(
@@ -99,13 +114,11 @@ function buildInitialTimetables(
       groups.set(key, row);
     }
     const existingArtistId = artistIdByName?.[a.name] ?? null;
-    row.artists.push({
-      crawledName: a.name,
-      mapping:
-        existingArtistId != null
-          ? { existingArtistId, newArtist: null }
-          : { existingArtistId: null, newArtist: { displayName: a.name } },
-    });
+    row.artists.push(
+      existingArtistId != null
+        ? { crawledName: a.name, mapping: { existingArtistId, newArtist: null } }
+        : newArtistRow(a.name)
+    );
   }
   return [...groups.values()];
 }
@@ -118,6 +131,8 @@ export function LabelingForm({
 }: LabelingFormProps) {
   const applyAll = useApplyCrawledRecord();
   const saveDraft = useSaveEditedData();
+  const { data: places } = usePlaceList();
+  const { data: artists } = useArtistList();
 
   // 초안이 있으면 교정된 extraction/mapping 으로, 없으면 원본 crawlData 로 폼을 초기화한다.
   const source = initialEditedData?.extraction ?? crawlData;
@@ -156,10 +171,114 @@ export function LabelingForm({
   const [error, setError] = useState<string | null>(null);
   const [savedAt, setSavedAt] = useState<string | null>(null);
 
+  // 이름 기반 자동 매칭: 초안이 없는 신규 라벨링에서 목록 로드 후 1회만 적용한다.
+  const autoMatched = useRef(false);
+  useEffect(() => {
+    if (autoMatched.current) return;
+    if (initialEditedData) {
+      autoMatched.current = true;
+      return;
+    }
+    if (!places || !artists) return;
+    autoMatched.current = true;
+
+    const venueName = crawlData.venue?.name?.trim().toLowerCase();
+    if (venueName) {
+      const match = places.find(
+        (p) => p.placeName?.trim().toLowerCase() === venueName
+      );
+      if (match?.id != null) {
+        setPlaceMode("existing");
+        setExistingPlaceId(match.id);
+      }
+    }
+
+    const findArtistId = (name: string): number | null => {
+      const q = name.trim().toLowerCase();
+      if (!q) return null;
+      const m = artists.find(
+        (a) =>
+          a.name?.trim().toLowerCase() === q ||
+          a.aliases?.some((al) => al.name?.trim().toLowerCase() === q)
+      );
+      return m?.id ?? null;
+    };
+
+    setTimetables((prev) =>
+      prev.map((t) => ({
+        ...t,
+        artists: t.artists.map((a) => {
+          if (a.mapping.existingArtistId != null) return a;
+          const id = findArtistId(a.crawledName);
+          return id != null
+            ? { ...a, mapping: { existingArtistId: id, newArtist: null } }
+            : a;
+        }),
+      }))
+    );
+  }, [places, artists, initialEditedData, crawlData]);
+
   const isPending = applyAll.isPending || saveDraft.isPending;
 
   const enabledReservations = reservations.filter((r) => r.enabled);
   const enabledTimetables = timetables.filter((t) => t.enabled);
+
+  // --- reservation mutators ---
+  const updateReservation = (i: number, patch: Partial<ReservationRow>) =>
+    setReservations((prev) => prev.map((x, j) => (j === i ? { ...x, ...patch } : x)));
+  const addReservation = () =>
+    setReservations((prev) => [
+      ...prev,
+      { enabled: true, openDateTime: "", closeDateTime: "", ticketURL: "", type: "GENERAL" },
+    ]);
+  const removeReservation = (i: number) =>
+    setReservations((prev) => prev.filter((_, j) => j !== i));
+
+  // --- timetable mutators ---
+  const updateTimetable = (i: number, patch: Partial<TimetableRow>) =>
+    setTimetables((prev) => prev.map((x, j) => (j === i ? { ...x, ...patch } : x)));
+  const addTimetable = () =>
+    setTimetables((prev) => [
+      ...prev,
+      {
+        enabled: true,
+        performanceDate: "",
+        startTime: "",
+        endTime: "",
+        stageHint: "",
+        stageId: "",
+        artists: [newArtistRow()],
+      },
+    ]);
+  const removeTimetable = (i: number) =>
+    setTimetables((prev) => prev.filter((_, j) => j !== i));
+  const updateArtist = (
+    ti: number,
+    ai: number,
+    patch: Partial<TimetableArtistRow>
+  ) =>
+    setTimetables((prev) =>
+      prev.map((t, j) =>
+        j === ti
+          ? {
+              ...t,
+              artists: t.artists.map((a, k) => (k === ai ? { ...a, ...patch } : a)),
+            }
+          : t
+      )
+    );
+  const addArtist = (ti: number) =>
+    setTimetables((prev) =>
+      prev.map((t, j) =>
+        j === ti ? { ...t, artists: [...t.artists, newArtistRow()] } : t
+      )
+    );
+  const removeArtist = (ti: number, ai: number) =>
+    setTimetables((prev) =>
+      prev.map((t, j) =>
+        j === ti ? { ...t, artists: t.artists.filter((_, k) => k !== ai) } : t
+      )
+    );
 
   const requireTarget = (): boolean => {
     if (performanceTarget == null) {
@@ -279,11 +398,7 @@ export function LabelingForm({
           <Label className="text-sm font-semibold">
             예약 정보 ({enabledReservations.length}/{reservations.length})
           </Label>
-          {reservations.length === 0 ? (
-            <p className="rounded border p-3 text-xs text-muted-foreground">
-              크롤링된 예약 정보가 없습니다.
-            </p>
-          ) : (
+          {reservations.length > 0 && (
             <div className="space-y-2">
               {reservations.map((r, i) => (
                 <div key={i} className="rounded-md border p-2 text-xs">
@@ -291,24 +406,16 @@ export function LabelingForm({
                     <Checkbox
                       checked={r.enabled}
                       onCheckedChange={(v) =>
-                        setReservations((prev) =>
-                          prev.map((x, j) =>
-                            j === i ? { ...x, enabled: Boolean(v) } : x
-                          )
-                        )
+                        updateReservation(i, { enabled: Boolean(v) })
                       }
                     />
                     <select
                       className="h-7 rounded border bg-background px-1 text-xs"
                       value={r.type}
                       onChange={(e) =>
-                        setReservations((prev) =>
-                          prev.map((x, j) =>
-                            j === i
-                              ? { ...x, type: e.target.value as ReservationTypeEnum }
-                              : x
-                          )
-                        )
+                        updateReservation(i, {
+                          type: e.target.value as ReservationTypeEnum,
+                        })
                       }
                     >
                       <option value="GENERAL">일반</option>
@@ -318,25 +425,26 @@ export function LabelingForm({
                       className="h-7 flex-1 text-xs"
                       value={r.ticketURL}
                       onChange={(e) =>
-                        setReservations((prev) =>
-                          prev.map((x, j) =>
-                            j === i ? { ...x, ticketURL: e.target.value } : x
-                          )
-                        )
+                        updateReservation(i, { ticketURL: e.target.value })
                       }
                       placeholder="티켓 URL"
                     />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
+                      onClick={() => removeReservation(i)}
+                      title="삭제"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
                   </div>
                   <div className="mt-1 grid grid-cols-2 gap-2">
                     <Input
                       className="h-7 text-xs"
                       value={r.openDateTime}
                       onChange={(e) =>
-                        setReservations((prev) =>
-                          prev.map((x, j) =>
-                            j === i ? { ...x, openDateTime: e.target.value } : x
-                          )
-                        )
+                        updateReservation(i, { openDateTime: e.target.value })
                       }
                       placeholder="오픈 (YYYY-MM-DDTHH:mm:ss)"
                     />
@@ -344,11 +452,7 @@ export function LabelingForm({
                       className="h-7 text-xs"
                       value={r.closeDateTime}
                       onChange={(e) =>
-                        setReservations((prev) =>
-                          prev.map((x, j) =>
-                            j === i ? { ...x, closeDateTime: e.target.value } : x
-                          )
-                        )
+                        updateReservation(i, { closeDateTime: e.target.value })
                       }
                       placeholder="마감 (YYYY-MM-DDTHH:mm:ss)"
                     />
@@ -357,6 +461,15 @@ export function LabelingForm({
               ))}
             </div>
           )}
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full gap-1 text-xs"
+            onClick={addReservation}
+          >
+            <Plus className="h-3.5 w-3.5" />
+            예약 추가
+          </Button>
         </section>
 
         <Separator />
@@ -366,76 +479,120 @@ export function LabelingForm({
           <Label className="text-sm font-semibold">
             타임테이블 ({enabledTimetables.length}/{timetables.length})
           </Label>
-          {timetables.length === 0 ? (
-            <p className="rounded border p-3 text-xs text-muted-foreground">
-              크롤링된 타임테이블이 없습니다.
-            </p>
-          ) : (
+          {timetables.length > 0 && (
             <div className="space-y-2">
               {timetables.map((t, i) => (
-                <div key={i} className="rounded-md border p-2 text-xs">
+                <div key={i} className="space-y-2 rounded-md border p-2 text-xs">
                   <div className="flex items-center gap-2">
                     <Checkbox
                       checked={t.enabled}
                       onCheckedChange={(v) =>
-                        setTimetables((prev) =>
-                          prev.map((x, j) =>
-                            j === i ? { ...x, enabled: Boolean(v) } : x
-                          )
-                        )
+                        updateTimetable(i, { enabled: Boolean(v) })
                       }
                     />
-                    <span className="font-medium">
-                      {t.performanceDate} {t.startTime} ~ {t.endTime}
-                    </span>
-                    {t.stageHint && (
-                      <span className="text-muted-foreground">· {t.stageHint}</span>
-                    )}
                     <Input
-                      className="ml-auto h-7 w-24 text-xs"
-                      placeholder="Stage ID"
+                      className="h-7 w-32 text-xs"
+                      value={t.performanceDate}
+                      onChange={(e) =>
+                        updateTimetable(i, { performanceDate: e.target.value })
+                      }
+                      placeholder="YYYY-MM-DD"
+                    />
+                    <Input
+                      className="h-7 w-20 text-xs"
+                      value={t.startTime}
+                      onChange={(e) =>
+                        updateTimetable(i, { startTime: e.target.value })
+                      }
+                      placeholder="시작"
+                    />
+                    <span className="text-muted-foreground">~</span>
+                    <Input
+                      className="h-7 w-20 text-xs"
+                      value={t.endTime}
+                      onChange={(e) =>
+                        updateTimetable(i, { endTime: e.target.value })
+                      }
+                      placeholder="종료"
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="ml-auto h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
+                      onClick={() => removeTimetable(i)}
+                      title="타임테이블 삭제"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      className="h-7 flex-1 text-xs"
+                      value={t.stageHint ?? ""}
+                      onChange={(e) =>
+                        updateTimetable(i, { stageHint: e.target.value })
+                      }
+                      placeholder="스테이지명 (예: 그린스테이지)"
+                    />
+                    <Input
+                      className="h-7 w-28 text-xs"
+                      placeholder="Stage ID(선택)"
                       value={t.stageId}
                       onChange={(e) =>
-                        setTimetables((prev) =>
-                          prev.map((x, j) =>
-                            j === i ? { ...x, stageId: e.target.value } : x
-                          )
-                        )
+                        updateTimetable(i, { stageId: e.target.value })
                       }
                     />
                   </div>
-                  <div className="mt-2 space-y-1 pl-6">
+                  <div className="space-y-1 pl-1">
                     {t.artists.map((a, ai) => (
-                      <div
-                        key={ai}
-                        className="flex items-center justify-between gap-2"
-                      >
-                        <span className="text-muted-foreground">{a.crawledName}</span>
+                      <div key={ai} className="flex items-center gap-2">
+                        <Input
+                          className="h-7 flex-1 text-xs"
+                          value={a.crawledName}
+                          onChange={(e) =>
+                            updateArtist(i, ai, { crawledName: e.target.value })
+                          }
+                          placeholder="아티스트명"
+                        />
                         <ArtistPicker
                           crawledName={a.crawledName}
                           value={a.mapping}
-                          onChange={(next) =>
-                            setTimetables((prev) =>
-                              prev.map((x, j) =>
-                                j === i
-                                  ? {
-                                      ...x,
-                                      artists: x.artists.map((y, yi) =>
-                                        yi === ai ? { ...y, mapping: next } : y
-                                      ),
-                                    }
-                                  : x
-                              )
-                            )
-                          }
+                          onChange={(next) => updateArtist(i, ai, { mapping: next })}
                         />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
+                          onClick={() => removeArtist(i, ai)}
+                          title="아티스트 삭제"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
                       </div>
                     ))}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="gap-1 text-xs"
+                      onClick={() => addArtist(i)}
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      아티스트 추가
+                    </Button>
                   </div>
                 </div>
               ))}
             </div>
           )}
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full gap-1 text-xs"
+            onClick={addTimetable}
+          >
+            <Plus className="h-3.5 w-3.5" />
+            타임테이블 추가
+          </Button>
         </section>
       </div>
 
