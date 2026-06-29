@@ -4,9 +4,12 @@ import { useState } from "react";
 import { Button } from "@festibee/ui";
 import {
   useDashboardStats,
+  useReviewEventStats,
   StatsCards,
   FunnelChart,
   CompletenessChart,
+  ReviewStatsCards,
+  ReviewTrendChart,
   type StatsPreset,
 } from "@/features/dashboard";
 
@@ -19,6 +22,7 @@ const PRESETS: { label: string; value: StatsPreset }[] = [
 export default function DashboardPage() {
   const [preset, setPreset] = useState<StatsPreset>("ALL");
   const { data, isLoading, error } = useDashboardStats({ preset });
+  const { data: reviewStats } = useReviewEventStats({ preset });
 
   return (
     <div className="flex-1 space-y-6 overflow-y-auto p-6">
@@ -55,6 +59,14 @@ export default function DashboardPage() {
             <FunnelChart data={data} />
             <CompletenessChart data={data.fieldCompleteness} />
           </div>
+        </>
+      )}
+
+      {reviewStats && (
+        <>
+          <h2 className="text-lg font-semibold">라벨링 phase 측정</h2>
+          <ReviewStatsCards data={reviewStats} />
+          <ReviewTrendChart data={reviewStats.dailyTrend} />
         </>
       )}
 
