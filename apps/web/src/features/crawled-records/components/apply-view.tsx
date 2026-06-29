@@ -23,10 +23,20 @@ function safeParse<T>(json: string | null | undefined): T | null {
   }
 }
 
+/** 현재 시각을 백엔드 LocalDateTime 형식("YYYY-MM-DDTHH:mm:ss", 로컬 wall-clock)으로. */
+function localDateTimeNow(): string {
+  const d = new Date();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
 export function ApplyView({ id }: { id: number }) {
   const router = useRouter();
   const { data: record, isLoading, isError } = useGetCrawledRecord(id);
   const [iframeKey, setIframeKey] = useState(0);
+
+  // annotation phase 시작 시각: 반영 화면 진입(첫 마운트) 순간을 1회만 고정.
+  const [reviewStartedAt] = useState(() => localDateTimeNow());
 
   const crawlData = useMemo(
     () => safeParse<NormalizedCrawlData>(record?.data),
@@ -89,6 +99,7 @@ export function ApplyView({ id }: { id: number }) {
               recordId={id}
               crawlData={crawlData}
               initialEditedData={editedData}
+              reviewStartedAt={reviewStartedAt}
               onApplied={backToDetail}
             />
           ) : (

@@ -8,9 +8,14 @@ import {
   getCrawledRecord,
   getCrawledRecords,
   ignoreCrawledRecord,
+  recordReviewEvent,
   saveEditedData,
 } from "./api";
-import type { ApplyMappingReq, GetCrawledRecordsParams } from "./types";
+import type {
+  ApplyMappingReq,
+  GetCrawledRecordsParams,
+  RecordReviewEventReq,
+} from "./types";
 
 export const crawledRecordKeys = {
   all: ["crawled-records"] as const,
@@ -55,6 +60,16 @@ export function useSaveEditedData() {
     onSuccess: (_data, { id }) => {
       queryClient.invalidateQueries({ queryKey: crawledRecordKeys.detail(id) });
     },
+  });
+}
+
+/**
+ * phase 전환 시간 측정 이벤트 기록. 실패해도 본 작업(반영/무시)을 막지 않도록
+ * 호출부에서 fire-and-forget 으로 쓰는 것을 권장한다.
+ */
+export function useRecordReviewEvent() {
+  return useMutation({
+    mutationFn: (req: RecordReviewEventReq) => recordReviewEvent(req),
   });
 }
 

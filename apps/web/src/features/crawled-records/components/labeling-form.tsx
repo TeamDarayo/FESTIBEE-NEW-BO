@@ -3,7 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import { Button, Input, Label, Separator, Checkbox } from "@festibee/ui";
 import { Plus, Trash2 } from "lucide-react";
-import { useApplyCrawledRecord, useSaveEditedData } from "@festibee/api";
+import {
+  useApplyCrawledRecord,
+  useRecordReviewEvent,
+  useSaveEditedData,
+} from "@festibee/api";
 import type {
   EditedData,
   ManualArtistMapping,
@@ -23,8 +27,17 @@ interface LabelingFormProps {
   crawlData: NormalizedCrawlData;
   /** 저장된 라벨링 초안 (record.editedData). 있으면 폼을 이어서 채운다. */
   initialEditedData?: EditedData | null;
+  /** annotation phase 시작 시각(반영 화면 진입). 반영 시 review_event 기록에 사용. */
+  reviewStartedAt?: string;
   /** 반영 성공 후 콜백 (보통 라우트 이동). */
   onApplied?: () => void;
+}
+
+/** 현재 시각을 백엔드 LocalDateTime 형식("YYYY-MM-DDTHH:mm:ss", 로컬 wall-clock)으로. */
+function localDateTimeNow(): string {
+  const d = new Date();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 }
 
 type PlaceMode = "existing" | "new";
@@ -127,10 +140,12 @@ export function LabelingForm({
   recordId,
   crawlData,
   initialEditedData,
+  reviewStartedAt,
   onApplied,
 }: LabelingFormProps) {
   const applyAll = useApplyCrawledRecord();
   const saveDraft = useSaveEditedData();
+  const reviewEvent = useRecordReviewEvent();
   const { data: places } = usePlaceList();
   const { data: artists } = useArtistList();
 
@@ -305,6 +320,15 @@ export function LabelingForm({
     if (!requireTarget()) return;
     try {
       await applyAll.mutateAsync({ id: recordId, req: buildPayload() });
+      // annotation→production phase 전환 시간 기록. 본 반영을 막지 않도록 실패는 무시.
+      if (reviewStartedAt) {
+        reviewEvent.mutate({
+          crawledRecordId: recordId,
+          action: "APPLIED",
+          reviewStartedAt,
+          reviewCompletedAt: localDateTimeNow(),
+        });
+      }
       onApplied?.();
     } catch (e) {
       setError(e instanceof Error ? e.message : "반영 실패");
