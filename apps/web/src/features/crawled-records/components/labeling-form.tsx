@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button, Input, Label, Separator, Checkbox } from "@festibee/ui";
-import { Plus, Trash2 } from "lucide-react";
+import { Copy, Plus, Trash2 } from "lucide-react";
 import {
   useApplyCrawledRecord,
   useRecordReviewEvent,
@@ -17,8 +17,9 @@ import type {
 import { usePlaceList } from "@/features/place";
 import { useArtistList } from "@/features/artist";
 import { PlaceCombobox } from "@/features/performance/ui/place-combobox";
+import { AutoResizeTextarea } from "@/features/performance/ui/auto-resize-textarea";
 import { PerformancePicker, type PerformanceTarget } from "./performance-picker";
-import { ArtistPicker } from "./artist-picker";
+import { ArtistCell } from "./artist-cell";
 import { buildEditedData } from "../lib/build-edited-data";
 
 interface LabelingFormProps {
@@ -183,6 +184,22 @@ export function LabelingForm({
     buildInitialTimetables(source, mapping?.artistIdByName, mapping?.stageIdByName)
   );
 
+  // 공연 부가정보 (교통/주의(반입금지)/특이(비고)). 빈 값이면 반영 시 기존 공연 값 유지.
+  const [transportationInfo, setTransportationInfo] = useState(
+    source.transportation_info ?? ""
+  );
+  const [banGoods, setBanGoods] = useState(source.ban_goods ?? "");
+  const [remark, setRemark] = useState(source.remark ?? "");
+
+  // Cmd/Ctrl+D 로 복제할 "현재 타임테이블 행". 행 내부 입력에 포커스가 들어오면 갱신.
+  const activeTimetableIndex = useRef<number | null>(null);
+
+  // 새 행(복제/추가) 생성 후 포커스를 옮길 대상. field="artist"=아티스트 칸, "date"=날짜 칸.
+  const timetableListRef = useRef<HTMLDivElement>(null);
+  const pendingFocus = useRef<{ index: number; field: "artist" | "date" } | null>(
+    null
+  );
+
   const [error, setError] = useState<string | null>(null);
   const [savedAt, setSavedAt] = useState<string | null>(null);
 
@@ -252,7 +269,8 @@ export function LabelingForm({
   // --- timetable mutators ---
   const updateTimetable = (i: number, patch: Partial<TimetableRow>) =>
     setTimetables((prev) => prev.map((x, j) => (j === i ? { ...x, ...patch } : x)));
-  const addTimetable = () =>
+  const addTimetable = () => {
+    pendingFocus.current = { index: timetables.length, field: "date" };
     setTimetables((prev) => [
       ...prev,
       {
@@ -265,8 +283,29 @@ export function LabelingForm({
         artists: [newArtistRow()],
       },
     ]);
+  };
   const removeTimetable = (i: number) =>
     setTimetables((prev) => prev.filter((_, j) => j !== i));
+  /** i번 행의 스테이지/날짜/시간을 상속한 새 행을 바로 아래에 추가한다(아티스트는 비움). */
+  const duplicateTimetable = useCallback((i: number) => {
+    pendingFocus.current = { index: i + 1, field: "artist" };
+    setTimetables((prev) => {
+      const src = prev[i];
+      if (!src) return prev;
+      const clone: TimetableRow = {
+        enabled: true,
+        performanceDate: src.performanceDate,
+        startTime: src.startTime,
+        endTime: src.endTime,
+        stageHint: src.stageHint,
+        stageId: src.stageId,
+        artists: [newArtistRow()],
+      };
+      const next = [...prev];
+      next.splice(i + 1, 0, clone);
+      return next;
+    });
+  }, []);
   const updateArtist = (
     ti: number,
     ai: number,
@@ -295,6 +334,36 @@ export function LabelingForm({
       )
     );
 
+  // Cmd/Ctrl+D: 현재(마지막으로 포커스된) 타임테이블 행을 복제. 마우스 없이 연속 입력.
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && (e.key === "d" || e.key === "D")) {
+        if (timetables.length === 0) return;
+        e.preventDefault();
+        const idx = activeTimetableIndex.current ?? timetables.length - 1;
+        duplicateTimetable(Math.min(idx, timetables.length - 1));
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [timetables.length, duplicateTimetable]);
+
+  // 새 행 렌더 후 예약된 포커스 대상으로 커서 이동.
+  useEffect(() => {
+    const pf = pendingFocus.current;
+    if (!pf || !timetableListRef.current) return;
+    pendingFocus.current = null;
+    const row = timetableListRef.current.querySelector(
+      `[data-tt-row="${pf.index}"]`
+    );
+    if (!row) return;
+    const target =
+      pf.field === "artist"
+        ? row.querySelector<HTMLElement>("[data-tt-artists] button")
+        : row.querySelector<HTMLElement>('[data-tt-focus="date"]');
+    target?.focus();
+  }, [timetables]);
+
   const requireTarget = (): boolean => {
     if (performanceTarget == null) {
       setError("대상 공연을 먼저 선택하세요.");
@@ -314,6 +383,9 @@ export function LabelingForm({
       newPlaceAddress,
       reservations,
       timetables,
+      transportationInfo,
+      banGoods,
+      remark,
     });
 
   const handleApplyAll = async () => {
@@ -417,6 +489,45 @@ export function LabelingForm({
 
         <Separator />
 
+        {/* 공연 부가정보 */}
+        <section className="space-y-2">
+          <Label className="text-sm font-semibold">공연 부가정보</Label>
+          <p className="text-[11px] text-muted-foreground">
+            빈 값이면 반영 시 기존 공연 값을 유지합니다.
+          </p>
+          <div className="space-y-2">
+            <div>
+              <Label className="text-xs">교통 정보</Label>
+              <AutoResizeTextarea
+                value={transportationInfo}
+                onChange={(e) => setTransportationInfo(e.target.value)}
+                className="mt-1 text-xs"
+                placeholder="오시는 길, 주차, 셔틀 등"
+              />
+            </div>
+            <div>
+              <Label className="text-xs">주의/반입금지</Label>
+              <AutoResizeTextarea
+                value={banGoods}
+                onChange={(e) => setBanGoods(e.target.value)}
+                className="mt-1 text-xs"
+                placeholder="반입 금지 물품, 입장 주의사항 등"
+              />
+            </div>
+            <div>
+              <Label className="text-xs">특이/비고</Label>
+              <AutoResizeTextarea
+                value={remark}
+                onChange={(e) => setRemark(e.target.value)}
+                className="mt-1 text-xs"
+                placeholder="기타 특이사항"
+              />
+            </div>
+          </div>
+        </section>
+
+        <Separator />
+
         {/* Reservations */}
         <section className="space-y-2">
           <Label className="text-sm font-semibold">
@@ -500,13 +611,26 @@ export function LabelingForm({
 
         {/* Timetables */}
         <section className="space-y-2">
-          <Label className="text-sm font-semibold">
-            타임테이블 ({enabledTimetables.length}/{timetables.length})
-          </Label>
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-semibold">
+              타임테이블 ({enabledTimetables.length}/{timetables.length})
+            </Label>
+            <span className="text-[11px] text-muted-foreground">
+              <kbd className="rounded border px-1 font-mono">⌘/Ctrl+D</kbd> 현재 행
+              복제(스테이지·날짜 상속)
+            </span>
+          </div>
           {timetables.length > 0 && (
-            <div className="space-y-2">
+            <div className="space-y-2" ref={timetableListRef}>
               {timetables.map((t, i) => (
-                <div key={i} className="space-y-2 rounded-md border p-2 text-xs">
+                <div
+                  key={i}
+                  data-tt-row={i}
+                  className="space-y-2 rounded-md border p-2 text-xs"
+                  onFocusCapture={() => {
+                    activeTimetableIndex.current = i;
+                  }}
+                >
                   <div className="flex items-center gap-2">
                     <Checkbox
                       checked={t.enabled}
@@ -515,6 +639,7 @@ export function LabelingForm({
                       }
                     />
                     <Input
+                      data-tt-focus="date"
                       className="h-7 w-32 text-xs"
                       value={t.performanceDate}
                       onChange={(e) =>
@@ -539,15 +664,26 @@ export function LabelingForm({
                       }
                       placeholder="종료"
                     />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="ml-auto h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
-                      onClick={() => removeTimetable(i)}
-                      title="타임테이블 삭제"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
+                    <div className="ml-auto flex shrink-0 items-center">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                        onClick={() => duplicateTimetable(i)}
+                        title="이 행 복제 (스테이지·날짜·시간 상속, ⌘/Ctrl+D)"
+                      >
+                        <Copy className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                        onClick={() => removeTimetable(i)}
+                        title="타임테이블 삭제"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <Input
@@ -567,21 +703,18 @@ export function LabelingForm({
                       }
                     />
                   </div>
-                  <div className="space-y-1 pl-1">
+                  <div className="space-y-1 pl-1" data-tt-artists>
                     {t.artists.map((a, ai) => (
                       <div key={ai} className="flex items-center gap-2">
-                        <Input
-                          className="h-7 flex-1 text-xs"
-                          value={a.crawledName}
-                          onChange={(e) =>
-                            updateArtist(i, ai, { crawledName: e.target.value })
-                          }
-                          placeholder="아티스트명"
-                        />
-                        <ArtistPicker
+                        <ArtistCell
                           crawledName={a.crawledName}
                           value={a.mapping}
-                          onChange={(next) => updateArtist(i, ai, { mapping: next })}
+                          onChangeName={(name) =>
+                            updateArtist(i, ai, { crawledName: name })
+                          }
+                          onChangeMapping={(next) =>
+                            updateArtist(i, ai, { mapping: next })
+                          }
                         />
                         <Button
                           variant="ghost"
