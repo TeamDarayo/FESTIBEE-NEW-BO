@@ -47,6 +47,10 @@ export interface BuildEditedDataArgs {
   newPlaceAddress: string;
   reservations: ReservationRowInput[];
   timetables: TimetableRowInput[];
+  /** 공연 부가정보(어노테이션에서 직접 입력). 빈 값이면 반영 시 기존 공연 값 유지. */
+  transportationInfo?: string;
+  banGoods?: string;
+  remark?: string;
 }
 
 /**
@@ -63,6 +67,9 @@ export function buildEditedData({
   newPlaceAddress,
   reservations,
   timetables,
+  transportationInfo,
+  banGoods,
+  remark,
 }: BuildEditedDataArgs): EditedData {
   const isNewPerf = performanceTarget?.mode === "new";
 
@@ -109,6 +116,9 @@ export function buildEditedData({
         stage: t.stageHint,
       }))
     ),
+    transportation_info: transportationInfo?.trim() || null,
+    ban_goods: banGoods?.trim() || null,
+    remark: remark?.trim() || null,
   };
 
   const artistIdByName: Record<string, number | null> = {};

@@ -34,6 +34,10 @@ export interface NormalizedCrawlData {
   dates: string[];
   reservations: CrawledReservation[];
   artists: CrawledArtistEntry[];
+  // 공연 부가정보(어노테이션에서 사람이 입력). 빈 값이면 반영 시 기존 공연 값 유지.
+  transportation_info?: string | null;
+  ban_goods?: string | null;
+  remark?: string | null;
   position?: string | null;
   job_description?: string | null;
   salary?: string | null;
