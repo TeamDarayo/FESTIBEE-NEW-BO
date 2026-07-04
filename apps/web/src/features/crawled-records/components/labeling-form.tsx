@@ -5,12 +5,15 @@ import { Button, Input, Label, Separator, Checkbox } from "@festibee/ui";
 import { Copy, Plus, Trash2 } from "lucide-react";
 import {
   useApplyCrawledRecord,
+  usePreviewApplyCrawledRecord,
   useRecordReviewEvent,
   useSaveEditedData,
 } from "@festibee/api";
 import type {
+  ApplyPreviewRes,
   EditedData,
   ManualArtistMapping,
+  MergeFieldKey,
   NormalizedCrawlData,
   ReservationTypeEnum,
 } from "@festibee/api";
@@ -21,6 +24,7 @@ import { AutoResizeTextarea } from "@/features/performance/ui/auto-resize-textar
 import { PerformancePicker, type PerformanceTarget } from "./performance-picker";
 import { ArtistCell } from "./artist-cell";
 import { buildEditedData } from "../lib/build-edited-data";
+import { ApplyPreviewDialog } from "./apply-preview-dialog";
 
 interface LabelingFormProps {
   recordId: number;
@@ -145,6 +149,7 @@ export function LabelingForm({
   onApplied,
 }: LabelingFormProps) {
   const applyAll = useApplyCrawledRecord();
+  const previewApply = usePreviewApplyCrawledRecord();
   const saveDraft = useSaveEditedData();
   const reviewEvent = useRecordReviewEvent();
   const { data: places } = usePlaceList();
@@ -202,6 +207,8 @@ export function LabelingForm({
 
   const [error, setError] = useState<string | null>(null);
   const [savedAt, setSavedAt] = useState<string | null>(null);
+  const [preview, setPreview] = useState<ApplyPreviewRes | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
 
   // 이름 기반 자동 매칭: 초안이 없는 신규 라벨링에서 목록 로드 후 1회만 적용한다.
   const autoMatched = useRef(false);
@@ -250,7 +257,8 @@ export function LabelingForm({
     );
   }, [places, artists, initialEditedData, crawlData]);
 
-  const isPending = applyAll.isPending || saveDraft.isPending;
+  const isPending =
+    applyAll.isPending || saveDraft.isPending || previewApply.isPending;
 
   const enabledReservations = reservations.filter((r) => r.enabled);
   const enabledTimetables = timetables.filter((t) => t.enabled);
@@ -388,10 +396,30 @@ export function LabelingForm({
       remark,
     });
 
+  /** 반영 1단계: 미리보기(dry-run)를 띄워 병합 결과를 확인시킨다. */
   const handleApplyAll = async () => {
     if (!requireTarget()) return;
     try {
-      await applyAll.mutateAsync({ id: recordId, req: buildPayload() });
+      const result = await previewApply.mutateAsync({
+        id: recordId,
+        req: buildPayload(),
+      });
+      setPreview(result);
+      setShowPreview(true);
+      setError(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "미리보기 실패");
+    }
+  };
+
+  /** 반영 2단계: 미리보기에서 선택한 덮어쓰기 필드와 함께 확정. */
+  const handleConfirmApply = async (overwrite: MergeFieldKey[]) => {
+    try {
+      const req = {
+        ...buildPayload(),
+        ...(overwrite.length > 0 ? { merge: { overwrite } } : {}),
+      };
+      await applyAll.mutateAsync({ id: recordId, req });
       // annotation→production phase 전환 시간 기록. 본 반영을 막지 않도록 실패는 무시.
       if (reviewStartedAt) {
         reviewEvent.mutate({
@@ -403,6 +431,7 @@ export function LabelingForm({
       }
       onApplied?.();
     } catch (e) {
+      setShowPreview(false);
       setError(e instanceof Error ? e.message : "반영 실패");
     }
   };
@@ -770,10 +799,18 @@ export function LabelingForm({
             {saveDraft.isPending ? "저장 중..." : "초안 저장"}
           </Button>
           <Button size="sm" disabled={isPending} onClick={handleApplyAll}>
-            {applyAll.isPending ? "반영 중..." : "전체 반영"}
+            {previewApply.isPending ? "미리보기 중..." : "전체 반영"}
           </Button>
         </div>
       </div>
+
+      <ApplyPreviewDialog
+        open={showPreview}
+        onOpenChange={setShowPreview}
+        preview={preview}
+        onConfirm={handleConfirmApply}
+        isPending={applyAll.isPending}
+      />
     </div>
   );
 }
