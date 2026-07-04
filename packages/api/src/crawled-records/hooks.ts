@@ -8,6 +8,7 @@ import {
   getCrawledRecord,
   getCrawledRecords,
   ignoreCrawledRecord,
+  previewApplyCrawledRecord,
   recordReviewEvent,
   saveEditedData,
 } from "./api";
@@ -38,6 +39,14 @@ export function useGetCrawledRecord(id: number) {
     queryKey: crawledRecordKeys.detail(id),
     queryFn: () => getCrawledRecord(id),
     enabled: !!id,
+  });
+}
+
+/** 반영 미리보기. 읽기 전용 계산이라 캐시 무효화가 필요 없다. */
+export function usePreviewApplyCrawledRecord() {
+  return useMutation({
+    mutationFn: ({ id, req }: { id: number; req: ApplyMappingReq }) =>
+      previewApplyCrawledRecord(id, req),
   });
 }
 

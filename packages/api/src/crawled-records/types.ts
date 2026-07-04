@@ -80,13 +80,69 @@ export interface CrawlMapping {
   reservationTypes?: string[]; // extraction.reservations 인덱스별 GENERAL|EARLY_BIRD
 }
 
+/** 덮어쓰기를 지원하는 필드 (backend ApplyCrawledRecordReq.Merge.overwrite 값과 일치). */
+export type MergeFieldKey = "title" | "poster_url";
+
+/**
+ * 기존 공연 병합 시 필드별 덮어쓰기 선택. 없으면 fill-only(빈 값만 채움).
+ * apply-preview 에서 CONFLICT 로 표시된 필드를 라벨러가 선택해 넘긴다.
+ */
+export interface MergeOptions {
+  overwrite?: MergeFieldKey[];
+}
+
 export interface EditedData {
   extraction: NormalizedCrawlData;
   mapping: CrawlMapping;
+  merge?: MergeOptions;
 }
 
 /** 반영/초안저장 요청 본문. */
 export type ApplyMappingReq = EditedData;
+
+// ============================================================================
+// 반영 미리보기 (POST /{id}/apply-preview) — DB 변경 없이 병합 결과 계산
+// ============================================================================
+
+/**
+ * FILL: 빈 값 채움(자동) · KEEP: 유지 · CONFLICT: 값 다름(덮어쓰기 선택 가능)
+ * IGNORED: 값 다르지만 덮어쓰기 미지원(유지) · EXPAND: 기간 확장 · CREATE: 신규 생성
+ */
+export type PreviewFieldAction =
+  | "FILL"
+  | "KEEP"
+  | "CONFLICT"
+  | "IGNORED"
+  | "EXPAND"
+  | "CREATE";
+
+export interface PreviewFieldDiff {
+  field: string; // title | poster_url | venue_name | venue_address | start_date | end_date
+  current: string | null;
+  incoming: string | null;
+  action: PreviewFieldAction;
+}
+
+export interface PreviewCollectionDiff {
+  toAdd: number;
+  existing: number;
+}
+
+export interface PreviewArtistDiff {
+  toLink: string[];
+  toCreate: string[];
+}
+
+export interface ApplyPreviewRes {
+  /** null 이면 신규 공연 생성. */
+  targetPerformance: { id: number; name: string } | null;
+  creatingNew: boolean;
+  fields: PreviewFieldDiff[];
+  reservations: PreviewCollectionDiff;
+  artists: PreviewArtistDiff;
+  timetables: PreviewCollectionDiff;
+  stagesToCreate: string[];
+}
 
 /** 아티스트 피커 로컬 값 (payload 빌드 시 artistIdByName 로 변환). */
 export interface ManualArtistMapping {

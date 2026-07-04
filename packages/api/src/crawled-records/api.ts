@@ -1,6 +1,7 @@
 import { customFetch } from "../lib/custom-fetch";
 import type {
   ApplyMappingReq,
+  ApplyPreviewRes,
   CrawledRecordRes,
   GetCrawledRecordsParams,
   PageResponse,
@@ -40,6 +41,17 @@ export function saveEditedData(
 ): Promise<CrawledRecordRes> {
   return apiFetch<CrawledRecordRes>(`${BASE}/${id}/edited-data`, {
     method: "PUT",
+    body: JSON.stringify(req),
+  });
+}
+
+/** 반영 미리보기 (DB 변경 없이 병합 결과 계산). */
+export function previewApplyCrawledRecord(
+  id: number,
+  req: ApplyMappingReq
+): Promise<ApplyPreviewRes> {
+  return apiFetch<ApplyPreviewRes>(`${BASE}/${id}/apply-preview`, {
+    method: "POST",
     body: JSON.stringify(req),
   });
 }
