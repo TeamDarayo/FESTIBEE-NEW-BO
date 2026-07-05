@@ -113,32 +113,26 @@ function buildInitialTimetables(
   artistIdByName?: Record<string, number | null>,
   stageIdByName?: Record<string, number | null>
 ): TimetableRow[] {
-  const groups = new Map<string, TimetableRow>();
-  for (const a of source.artists) {
-    if (!a.date || !a.start_time) continue;
-    const key = `${a.date}|${a.start_time}|${a.end_time ?? ""}|${a.stage ?? ""}`;
-    let row = groups.get(key);
-    if (!row) {
-      const stageId = a.stage ? stageIdByName?.[a.stage] : null;
-      row = {
-        enabled: true,
-        performanceDate: a.date,
-        startTime: toLocalTimeString(a.start_time),
-        endTime: toLocalTimeString(a.end_time ?? a.start_time),
-        stageHint: a.stage,
-        stageId: stageId != null ? String(stageId) : "",
-        artists: [],
-      };
-      groups.set(key, row);
-    }
+  // 크롤된 아티스트 항목을 그룹핑하지 않고 하나씩 개별 타임테이블 행으로 분리한다.
+  // (같은 시간/스테이지라도 각각 독립 행으로 보이게 — 라벨러가 필요 시 직접 합침)
+  // 날짜/시간이 없는 라인업도 버리지 않고 빈 값 행으로 프리필한다(백엔드는 null 허용).
+  return source.artists.map((a) => {
+    const stageId = a.stage ? stageIdByName?.[a.stage] : null;
     const existingArtistId = artistIdByName?.[a.name] ?? null;
-    row.artists.push(
-      existingArtistId != null
-        ? { crawledName: a.name, mapping: { existingArtistId, newArtist: null } }
-        : newArtistRow(a.name)
-    );
-  }
-  return [...groups.values()];
+    return {
+      enabled: true,
+      performanceDate: a.date ?? "",
+      startTime: toLocalTimeString(a.start_time),
+      endTime: toLocalTimeString(a.end_time ?? a.start_time),
+      stageHint: a.stage,
+      stageId: stageId != null ? String(stageId) : "",
+      artists: [
+        existingArtistId != null
+          ? { crawledName: a.name, mapping: { existingArtistId, newArtist: null } }
+          : newArtistRow(a.name),
+      ],
+    };
+  });
 }
 
 export function LabelingForm({
