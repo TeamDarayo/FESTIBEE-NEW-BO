@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Badge,
   Button,
@@ -29,7 +29,14 @@ const FIELD_LABELS: Record<string, string> = {
   end_date: "종료일",
 };
 
-const OVERWRITABLE_FIELDS: MergeFieldKey[] = ["title", "poster_url"];
+/** preview field → merge.overwrite 키. title 은 원본 존중이라 덮어쓰기 불가. venue_* 는 place 로 묶인다. */
+const FIELD_TO_MERGE_KEY: Record<string, MergeFieldKey | undefined> = {
+  poster_url: "poster_url",
+  start_date: "start_date",
+  end_date: "end_date",
+  venue_name: "place",
+  venue_address: "place",
+};
 
 const ACTION_META: Record<
   PreviewFieldAction,
@@ -47,6 +54,8 @@ interface ApplyPreviewDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   preview: ApplyPreviewRes | null;
+  /** 병합 패널에서 선택해 둔 덮어쓰기 필드(다이얼로그 초기값). */
+  initialOverwrite?: Set<MergeFieldKey>;
   /** 라벨러가 선택한 덮어쓰기 필드와 함께 반영 확정. */
   onConfirm: (overwrite: MergeFieldKey[]) => void;
   isPending: boolean;
@@ -56,10 +65,18 @@ export function ApplyPreviewDialog({
   open,
   onOpenChange,
   preview,
+  initialOverwrite,
   onConfirm,
   isPending,
 }: ApplyPreviewDialogProps) {
-  const [overwrite, setOverwrite] = useState<Set<MergeFieldKey>>(new Set());
+  const [overwrite, setOverwrite] = useState<Set<MergeFieldKey>>(
+    () => new Set(initialOverwrite)
+  );
+
+  // 다이얼로그가 열릴 때 병합 패널의 선택으로 동기화한다.
+  useEffect(() => {
+    if (open) setOverwrite(new Set(initialOverwrite));
+  }, [open, initialOverwrite]);
 
   if (!preview) return null;
 
@@ -115,9 +132,8 @@ export function ApplyPreviewDialog({
               <tbody>
                 {visibleFields.map((f) => {
                   const meta = ACTION_META[f.action];
-                  const overwritable =
-                    f.action === "CONFLICT" &&
-                    OVERWRITABLE_FIELDS.includes(f.field as MergeFieldKey);
+                  const mergeKey = FIELD_TO_MERGE_KEY[f.field];
+                  const overwritable = f.action === "CONFLICT" && mergeKey != null;
                   return (
                     <tr key={f.field} className="border-b last:border-b-0">
                       <td className="px-3 py-2 font-medium">
@@ -135,10 +151,8 @@ export function ApplyPreviewDialog({
                       <td className="px-3 py-2 text-center">
                         {overwritable && (
                           <Checkbox
-                            checked={overwrite.has(f.field as MergeFieldKey)}
-                            onCheckedChange={() =>
-                              toggleOverwrite(f.field as MergeFieldKey)
-                            }
+                            checked={overwrite.has(mergeKey)}
+                            onCheckedChange={() => toggleOverwrite(mergeKey)}
                           />
                         )}
                       </td>

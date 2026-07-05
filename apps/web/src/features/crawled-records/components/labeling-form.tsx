@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Button, Input, Label, Separator, Checkbox } from "@festibee/ui";
-import { Copy, Plus, Trash2 } from "lucide-react";
+import { Badge, Button, Input, Label, Separator, Checkbox } from "@festibee/ui";
+import { Copy, GitMerge, Plus, Trash2 } from "lucide-react";
 import {
   useApplyCrawledRecord,
   usePreviewApplyCrawledRecord,
@@ -19,9 +19,11 @@ import type {
 } from "@festibee/api";
 import { usePlaceList } from "@/features/place";
 import { useArtistList } from "@/features/artist";
+import { usePerformanceDetail, useStageList } from "@/features/performance";
 import { PlaceCombobox } from "@/features/performance/ui/place-combobox";
 import { AutoResizeTextarea } from "@/features/performance/ui/auto-resize-textarea";
 import { PerformancePicker, type PerformanceTarget } from "./performance-picker";
+import { MergeModal, type MergeResult } from "./merge-modal";
 import { ArtistCell } from "./artist-cell";
 import { buildEditedData } from "../lib/build-edited-data";
 import { ApplyPreviewDialog } from "./apply-preview-dialog";
@@ -164,6 +166,13 @@ export function LabelingForm({
         : null
     );
 
+  // 기존 공연을 대상으로 고르면 그 공연의 등록 데이터(장소·부가정보·예매·타임테이블)와
+  // 스테이지 목록을 불러와 폼에서 활용한다.
+  const targetPerformanceId =
+    performanceTarget?.mode === "existing" ? performanceTarget.id : 0;
+  const { data: targetDetail } = usePerformanceDetail(targetPerformanceId);
+  const { data: targetStages } = useStageList(targetPerformanceId);
+
   const [placeMode, setPlaceMode] = useState<PlaceMode>(
     mapping?.placeId != null ? "existing" : "new"
   );
@@ -203,6 +212,45 @@ export function LabelingForm({
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [preview, setPreview] = useState<ApplyPreviewRes | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+
+  // 병합 시 필드별 덮어쓰기 선택(기존 값 유지 vs 크롤 값). 병합 모달이 세팅한다.
+  const [overwrite, setOverwrite] = useState<Set<MergeFieldKey>>(
+    () => new Set(initialEditedData?.merge?.overwrite ?? [])
+  );
+
+  // 기존 공연을 대상으로 골랐는지 = '가져와서 병합' 라벨링. 순수 신규 라벨링과 구분해 기록한다.
+  const mergedFromExisting = performanceTarget?.mode === "existing";
+
+  const [mergeOpen, setMergeOpen] = useState(false);
+  // 이 세션에서 병합 모달을 실행해 입력 칸을 채웠는지(재실행 안내용).
+  const [mergeDone, setMergeDone] = useState(
+    Boolean(initialEditedData?.mapping?.mergedFromExisting)
+  );
+
+  /** 병합 모달의 결과를 실제 입력 칸(폼 상태)에 채운다. */
+  const handleApplyMerge = useCallback((result: MergeResult) => {
+    setPlaceMode(result.place.mode);
+    setExistingPlaceId(result.place.existingPlaceId);
+    setNewPlaceName(result.place.newPlaceName);
+    setNewPlaceAddress(result.place.newPlaceAddress);
+    setTransportationInfo(result.transportationInfo);
+    setBanGoods(result.banGoods);
+    setRemark(result.remark);
+    setReservations(result.reservations as ReservationRow[]);
+    setTimetables(result.timetables as TimetableRow[]);
+    setOverwrite(new Set(result.overwrite));
+    setMergeDone(true);
+  }, []);
+
+  const crawlDatesSorted = [...(crawlData.dates ?? [])].filter(Boolean).sort();
+  const mergeCrawlPlaceName =
+    placeMode === "existing"
+      ? (places?.find((pl) => pl.id === existingPlaceId)?.placeName ?? null)
+      : newPlaceName.trim() || crawlData.venue?.name || null;
+  const mergeCrawlPlaceAddress =
+    placeMode === "existing"
+      ? (places?.find((pl) => pl.id === existingPlaceId)?.address ?? null)
+      : newPlaceAddress.trim() || crawlData.venue?.address || null;
 
   // 이름 기반 자동 매칭: 초안이 없는 신규 라벨링에서 목록 로드 후 1회만 적용한다.
   const autoMatched = useRef(false);
@@ -250,6 +298,46 @@ export function LabelingForm({
       }))
     );
   }, [places, artists, initialEditedData, crawlData]);
+
+  // 대상 공연의 스테이지 목록과 폼의 stageId 를 동기화한다.
+  // - 대상에 없는 stageId 는 비운다(반영 시 CR005 방지 — 다른 공연에서 넘어온 값 등).
+  // - stageId 가 비어 있고 스테이지명이 대상의 스테이지와 일치하면 자동 매칭한다.
+  const stageOptions = (targetStages ?? []) as { id?: number; name?: string }[];
+  useEffect(() => {
+    if (targetPerformanceId === 0) {
+      // 대상이 기존 공연이 아니면 스테이지는 전부 이름으로 신규 생성된다.
+      // 이전 대상 공연에서 매칭된 stageId 가 남아 있으면 반영 시 CR005 가 나므로 비운다.
+      setTimetables((prev) =>
+        prev.some((t) => t.stageId !== "")
+          ? prev.map((t) => (t.stageId === "" ? t : { ...t, stageId: "" }))
+          : prev
+      );
+      return;
+    }
+    if (!targetStages) return;
+    const options = targetStages as { id?: number; name?: string }[];
+    const idByName = new Map(
+      options
+        .filter((s) => s.id != null && s.name)
+        .map((s) => [s.name!.trim().toLowerCase(), s.id!])
+    );
+    const validIds = new Set(options.map((s) => s.id).filter((v) => v != null));
+    setTimetables((prev) => {
+      let changed = false;
+      const next = prev.map((t) => {
+        const currentId = t.stageId.trim() ? Number(t.stageId.trim()) : null;
+        if (currentId != null && validIds.has(currentId)) return t;
+        const matchedId = t.stageHint?.trim()
+          ? idByName.get(t.stageHint.trim().toLowerCase())
+          : undefined;
+        const nextStageId = matchedId != null ? String(matchedId) : "";
+        if (nextStageId === t.stageId) return t;
+        changed = true;
+        return { ...t, stageId: nextStageId };
+      });
+      return changed ? next : prev;
+    });
+  }, [targetPerformanceId, targetStages]);
 
   const isPending =
     applyAll.isPending || saveDraft.isPending || previewApply.isPending;
@@ -388,7 +476,14 @@ export function LabelingForm({
       transportationInfo,
       banGoods,
       remark,
+      mergedFromExisting,
     });
+
+  /** overwrite 선택을 payload 에 실어준다(병합 대상이 아니면 생략). */
+  const withMerge = (base: ReturnType<typeof buildPayload>) =>
+    mergedFromExisting && overwrite.size > 0
+      ? { ...base, merge: { overwrite: [...overwrite] } }
+      : base;
 
   /** 반영 1단계: 미리보기(dry-run)를 띄워 병합 결과를 확인시킨다. */
   const handleApplyAll = async () => {
@@ -396,7 +491,7 @@ export function LabelingForm({
     try {
       const result = await previewApply.mutateAsync({
         id: recordId,
-        req: buildPayload(),
+        req: withMerge(buildPayload()),
       });
       setPreview(result);
       setShowPreview(true);
@@ -407,11 +502,13 @@ export function LabelingForm({
   };
 
   /** 반영 2단계: 미리보기에서 선택한 덮어쓰기 필드와 함께 확정. */
-  const handleConfirmApply = async (overwrite: MergeFieldKey[]) => {
+  const handleConfirmApply = async (finalOverwrite: MergeFieldKey[]) => {
     try {
       const req = {
         ...buildPayload(),
-        ...(overwrite.length > 0 ? { merge: { overwrite } } : {}),
+        ...(finalOverwrite.length > 0
+          ? { merge: { overwrite: finalOverwrite } }
+          : {}),
       };
       await applyAll.mutateAsync({ id: recordId, req });
       // annotation→production phase 전환 시간 기록. 본 반영을 막지 않도록 실패는 무시.
@@ -446,12 +543,37 @@ export function LabelingForm({
         {/* Target performance */}
         <section>
           <Label className="text-sm font-semibold">대상 공연</Label>
-          <div className="mt-2">
+          <div className="mt-2 space-y-2">
             <PerformancePicker
               value={performanceTarget}
               onChange={setPerformanceTarget}
               crawlData={crawlData}
             />
+            {targetPerformanceId !== 0 && (
+              <button
+                type="button"
+                onClick={() => setMergeOpen(true)}
+                disabled={!targetDetail}
+                className="flex w-full items-center gap-2 rounded-md border border-amber-500/40 bg-amber-500/[0.06] p-2.5 text-left text-xs transition-colors hover:bg-amber-500/10 disabled:opacity-60"
+              >
+                <GitMerge className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                <span className="min-w-0 flex-1">
+                  <span className="block font-medium">
+                    기존 공연 데이터 병합하기
+                  </span>
+                  <span className="block text-[11px] text-muted-foreground">
+                    {mergeDone
+                      ? "병합 완료 — 입력 칸에 반영됨. 다시 열어 조정할 수 있습니다."
+                      : "클릭하면 기존 공연 데이터와 병합해 아래 입력 칸을 채웁니다."}
+                  </span>
+                </span>
+                {mergeDone && (
+                  <Badge variant="secondary" className="shrink-0 text-[10px]">
+                    병합됨
+                  </Badge>
+                )}
+              </button>
+            )}
           </div>
         </section>
 
@@ -507,6 +629,16 @@ export function LabelingForm({
                 {crawlData.venue.address ? ` · ${crawlData.venue.address}` : ""}
               </p>
             )}
+            {targetDetail?.performance?.placeName && (
+              <p className="text-[11px] text-muted-foreground">
+                대상 공연 장소: {targetDetail.performance.placeName}
+                {targetDetail.performance.placeAddress
+                  ? ` · ${targetDetail.performance.placeAddress}`
+                  : ""}{" "}
+                — 값이 다르면 위 &ldquo;기존 공연 데이터 병합하기&rdquo;에서
+                선택하세요.
+              </p>
+            )}
           </div>
         </section>
 
@@ -527,6 +659,14 @@ export function LabelingForm({
                 className="mt-1 text-xs"
                 placeholder="오시는 길, 주차, 셔틀 등"
               />
+              {targetDetail?.performance?.transportationInfo && (
+                <p
+                  className="mt-0.5 truncate text-[11px] text-muted-foreground"
+                  title={targetDetail.performance.transportationInfo}
+                >
+                  기존 값: {targetDetail.performance.transportationInfo}
+                </p>
+              )}
             </div>
             <div>
               <Label className="text-xs">주의/반입금지</Label>
@@ -536,6 +676,14 @@ export function LabelingForm({
                 className="mt-1 text-xs"
                 placeholder="반입 금지 물품, 입장 주의사항 등"
               />
+              {targetDetail?.performance?.banGoods && (
+                <p
+                  className="mt-0.5 truncate text-[11px] text-muted-foreground"
+                  title={targetDetail.performance.banGoods}
+                >
+                  기존 값: {targetDetail.performance.banGoods}
+                </p>
+              )}
             </div>
             <div>
               <Label className="text-xs">특이/비고</Label>
@@ -545,6 +693,14 @@ export function LabelingForm({
                 className="mt-1 text-xs"
                 placeholder="기타 특이사항"
               />
+              {targetDetail?.performance?.remark && (
+                <p
+                  className="mt-0.5 truncate text-[11px] text-muted-foreground"
+                  title={targetDetail.performance.remark}
+                >
+                  기존 값: {targetDetail.performance.remark}
+                </p>
+              )}
             </div>
           </div>
         </section>
@@ -717,14 +873,29 @@ export function LabelingForm({
                       }
                       placeholder="스테이지명 (예: 그린스테이지)"
                     />
-                    <Input
-                      className="h-7 w-28 text-xs"
-                      placeholder="Stage ID(선택)"
-                      value={t.stageId}
-                      onChange={(e) =>
-                        updateTimetable(i, { stageId: e.target.value })
-                      }
-                    />
+                    {targetPerformanceId !== 0 ? (
+                      <select
+                        className="h-7 w-40 rounded border bg-background px-1 text-xs"
+                        value={t.stageId}
+                        onChange={(e) =>
+                          updateTimetable(i, { stageId: e.target.value })
+                        }
+                        title="기존 스테이지에 연결하거나, 새 스테이지로 생성"
+                      >
+                        <option value="">신규 스테이지 생성</option>
+                        {stageOptions
+                          .filter((s) => s.id != null)
+                          .map((s) => (
+                            <option key={s.id} value={String(s.id)}>
+                              {s.name} #{s.id}
+                            </option>
+                          ))}
+                      </select>
+                    ) : (
+                      <span className="shrink-0 text-[10px] text-muted-foreground">
+                        신규 스테이지
+                      </span>
+                    )}
                   </div>
                   <div className="space-y-1 pl-1" data-tt-artists>
                     {t.artists.map((a, ai) => (
@@ -802,9 +973,39 @@ export function LabelingForm({
         open={showPreview}
         onOpenChange={setShowPreview}
         preview={preview}
+        initialOverwrite={overwrite}
         onConfirm={handleConfirmApply}
         isPending={applyAll.isPending}
       />
+
+      {targetDetail && mergeOpen && (
+        <MergeModal
+          open
+          onOpenChange={setMergeOpen}
+          detail={targetDetail}
+          places={places ?? []}
+          crawl={{
+            posterUrl: crawlData.poster_url ?? null,
+            startDate: crawlDatesSorted[0] ?? null,
+            endDate: crawlDatesSorted[crawlDatesSorted.length - 1] ?? null,
+            place: {
+              mode: placeMode,
+              existingPlaceId,
+              newPlaceName: newPlaceName.trim() || crawlData.venue?.name || "",
+              newPlaceAddress:
+                newPlaceAddress.trim() || crawlData.venue?.address || "",
+            },
+            placeName: mergeCrawlPlaceName,
+            placeAddress: mergeCrawlPlaceAddress,
+            transportationInfo,
+            banGoods,
+            remark,
+            reservations,
+            timetables,
+          }}
+          onApply={handleApplyMerge}
+        />
+      )}
     </div>
   );
 }

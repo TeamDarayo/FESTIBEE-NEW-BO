@@ -78,10 +78,18 @@ export interface CrawlMapping {
   artistIdByName?: Record<string, number | null>; // key = extraction artist name
   stageIdByName?: Record<string, number | null>; // key = extraction stage name
   reservationTypes?: string[]; // extraction.reservations 인덱스별 GENERAL|EARLY_BIRD
+  /**
+   * 기존 공연 데이터를 불러와 병합(merge-resolve)한 라벨링인지 표시.
+   * 순수 신규 라벨링과 '가져와서 일부만 라벨링' 작업을 나중에 구분하기 위해 보존한다.
+   */
+  mergedFromExisting?: boolean;
 }
 
-/** 덮어쓰기를 지원하는 필드 (backend ApplyCrawledRecordReq.Merge.overwrite 값과 일치). */
-export type MergeFieldKey = "title" | "poster_url";
+/**
+ * 덮어쓰기를 지원하는 필드 (backend ApplyCrawledRecordReq.Merge.overwrite 값과 일치).
+ * 공연 이름(title)은 원본을 존중하므로 덮어쓰기 대상이 아니다. venue_name/venue_address 는 'place' 로 묶인다.
+ */
+export type MergeFieldKey = "poster_url" | "start_date" | "end_date" | "place";
 
 /**
  * 기존 공연 병합 시 필드별 덮어쓰기 선택. 없으면 fill-only(빈 값만 채움).

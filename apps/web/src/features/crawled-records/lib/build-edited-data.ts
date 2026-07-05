@@ -51,6 +51,8 @@ export interface BuildEditedDataArgs {
   transportationInfo?: string;
   banGoods?: string;
   remark?: string;
+  /** 기존 공연 데이터를 불러와 병합한 라벨링인지. mapping.mergedFromExisting 로 보존. */
+  mergedFromExisting?: boolean;
 }
 
 /**
@@ -70,6 +72,7 @@ export function buildEditedData({
   transportationInfo,
   banGoods,
   remark,
+  mergedFromExisting,
 }: BuildEditedDataArgs): EditedData {
   const isNewPerf = performanceTarget?.mode === "new";
 
@@ -142,6 +145,7 @@ export function buildEditedData({
     artistIdByName,
     stageIdByName,
     reservationTypes: enabledReservations.map((r) => r.type),
+    mergedFromExisting: mergedFromExisting ?? false,
   };
 
   return { extraction, mapping };

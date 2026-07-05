@@ -39,6 +39,9 @@ export {
   performanceKeys,
 } from "./hooks/use-performance-list";
 
+// Hooks - Stage
+export { useStageList } from "./hooks/use-stage-mutations";
+
 // Hooks - Performance Mutations
 export {
   useCreatePerformance,
