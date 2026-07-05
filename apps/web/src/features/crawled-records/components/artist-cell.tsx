@@ -10,8 +10,8 @@ import {
   ScrollArea,
   cn,
 } from "@festibee/ui";
-import { ChevronsUpDown, Link2, Search, Sparkles, UserPlus } from "lucide-react";
-import { useArtistList } from "@/features/artist";
+import { ChevronsUpDown, Link2, Plus, Search, Sparkles, UserPlus } from "lucide-react";
+import { useArtistList, useAddArtistAlias } from "@/features/artist";
 import type { ManualArtistMapping } from "@festibee/api";
 
 interface ArtistCellProps {
@@ -36,7 +36,10 @@ export function ArtistCell({
 }: ArtistCellProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [aliasInput, setAliasInput] = useState("");
+  const [aliasError, setAliasError] = useState<string | null>(null);
   const { data: artists } = useArtistList();
+  const addAlias = useAddArtistAlias();
 
   const filtered = useMemo(() => {
     if (!artists) return [];
@@ -63,6 +66,31 @@ export function ArtistCell({
   }, [linked, crawledName]);
 
   const state: "linked" | "new" = linked ? "linked" : "new";
+
+  /** 연결된 아티스트에 새 별명을 즉시 등록한다(이번 페스티벌 표기 등). */
+  const handleAddAlias = async () => {
+    if (!linked?.id) return;
+    const name = aliasInput.trim();
+    if (!name) return;
+    const lower = name.toLowerCase();
+    const duplicate =
+      linked.name?.trim().toLowerCase() === lower ||
+      linked.aliases?.some((a) => a.name?.trim().toLowerCase() === lower);
+    if (duplicate) {
+      setAliasError("이미 이름/별명에 있습니다.");
+      return;
+    }
+    try {
+      await addAlias.mutateAsync({
+        artistId: linked.id,
+        data: { alias: name },
+      });
+      setAliasInput("");
+      setAliasError(null);
+    } catch (e) {
+      setAliasError(e instanceof Error ? e.message : "별명 등록 실패");
+    }
+  };
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -183,6 +211,61 @@ export function ArtistCell({
             <span>새 아티스트 &ldquo;{crawledName.trim() || query.trim()}&rdquo; 생성</span>
           </button>
         </div>
+
+        {/* 연결된 아티스트의 별명 확인 + 즉시 등록 (이번 페스티벌 표기 등) */}
+        {linked && (
+          <div className="space-y-1.5 border-t p-2">
+            <label className="text-[10px] font-medium text-muted-foreground">
+              {linked.name} #{linked.id} 의 별명
+            </label>
+            {linked.aliases && linked.aliases.length > 0 ? (
+              <div className="flex flex-wrap gap-1">
+                {linked.aliases.map((al) => (
+                  <span
+                    key={al.id}
+                    className="rounded bg-muted px-1.5 py-0.5 text-[10px]"
+                  >
+                    {al.name}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-[10px] text-muted-foreground/60">
+                등록된 별명 없음
+              </p>
+            )}
+            <div className="flex items-center gap-1">
+              <Input
+                value={aliasInput}
+                onChange={(e) => {
+                  setAliasInput(e.target.value);
+                  setAliasError(null);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    void handleAddAlias();
+                  }
+                }}
+                className="h-7 flex-1 text-xs"
+                placeholder="새 별명 즉시 등록 (예: 이번 표기)"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 gap-1 px-2 text-xs"
+                disabled={!aliasInput.trim() || addAlias.isPending}
+                onClick={() => void handleAddAlias()}
+              >
+                <Plus className="h-3 w-3" />
+                {addAlias.isPending ? "등록 중" : "등록"}
+              </Button>
+            </div>
+            {aliasError && (
+              <p className="text-[10px] text-destructive">{aliasError}</p>
+            )}
+          </div>
+        )}
 
         {/* 별칭 등록 안내 (기존 연결 + 원본명이 이름/별칭에 없을 때) */}
         {aliasWillRegister && (
