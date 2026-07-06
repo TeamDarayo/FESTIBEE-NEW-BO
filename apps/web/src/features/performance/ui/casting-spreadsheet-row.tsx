@@ -5,7 +5,7 @@ import { Button, Input, cn } from "@festibee/ui";
 import { X, ChevronDown } from "lucide-react";
 import type { CastingRow, CreateFormAction } from "../hooks/use-create-form-reducer";
 import type { CastingFocusManager, CastingField } from "../hooks/use-casting-focus-manager";
-import type { GetPerformanceHallsResHallInfo } from "../api/performance-api";
+import type { StageRes } from "../api/performance-api";
 import { InlineArtistCell } from "./inline-artist-cell";
 import { CASTING_GRID_STYLE } from "./casting-spreadsheet";
 import { InlineHallCell } from "./inline-hall-cell";
@@ -17,7 +17,7 @@ interface CastingSpreadsheetRowProps {
   onRequestNewRow: (afterRowId: string) => string | void;
   onApplyDateBelow: (date: string, fromRowId: string) => void;
   excludeArtistIds: number[];
-  halls: GetPerformanceHallsResHallInfo[];
+  stages: StageRes[];
   isFirst?: boolean;
 }
 
@@ -28,7 +28,7 @@ export function CastingSpreadsheetRow({
   onRequestNewRow,
   onApplyDateBelow,
   excludeArtistIds,
-  halls,
+  stages,
   isFirst,
 }: CastingSpreadsheetRowProps) {
   // Cleanup refs on unmount
@@ -98,12 +98,12 @@ export function CastingSpreadsheetRow({
   }, [dispatch, row.id]);
 
   const handleHallSelect = useCallback(
-    (hallId: number | null) => {
+    (stageId: number | null) => {
       dispatch({
         type: "UPDATE_CASTING_ROW",
         rowId: row.id,
-        field: "hallId",
-        value: hallId,
+        field: "stageId",
+        value: stageId,
       });
     },
     [dispatch, row.id]
@@ -233,8 +233,8 @@ export function CastingSpreadsheetRow({
       {/* Hall */}
       <div className="flex items-center border-l border-border/50">
         <InlineHallCell
-          hallId={row.hallId}
-          halls={halls}
+          stageId={row.stageId}
+          stages={stages}
           onSelect={handleHallSelect}
           onEnter={handleHallEnter}
           onShiftTab={handleHallShiftTab}

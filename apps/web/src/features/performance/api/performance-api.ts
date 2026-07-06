@@ -48,8 +48,17 @@ export type PerformanceDetailRes =
   DddDarayoFestivalPresentationHttpEndpointsAdminPerformanceExchangesPerformanceDetailRes;
 export type PerformanceDetail =
   DddDarayoFestivalPresentationHttpEndpointsAdminPerformanceExchangesPerformanceDetailResPerformanceDetail;
+// 백엔드 read 는 stageId(배정된 스테이지)를 내려주지만, 생성 타입이 아직 재생성 전이라 수동 보강한다.
 export type TimeTableDetailRes =
-  DddDarayoFestivalPresentationHttpEndpointsAdminPerformanceExchangesPerformanceDetailResTimeTableDetailRes;
+  DddDarayoFestivalPresentationHttpEndpointsAdminPerformanceExchangesPerformanceDetailResTimeTableDetailRes & {
+    stageId?: number | null;
+  };
+
+// 공연 스테이지(홀) 옵션. GET /api/admin/performance/{id}/stage 의 항목.
+export interface StageRes {
+  id: number;
+  name?: string;
+}
 export type ArtistParticipateDetailRes =
   DddDarayoFestivalPresentationHttpEndpointsAdminPerformanceExchangesPerformanceDetailResArtistParticipateDetailRes;
 export type ReservationInfoDetailRes =
@@ -76,8 +85,14 @@ export type EditPerformanceDTO = DddDarayoFestivalDomainDtoEditPerformanceDTO;
 export type EditPerformanceFullDTO = EditPerformanceDTO & { placeId?: number };
 
 // Request types - Timetable
-export type AddTimetableReq =
-  DddDarayoFestivalPresentationHttpEndpointsAdminPerformanceExchangesAddTimetableReq;
+// 백엔드 계약은 stageId(TimetableContentDTO)이나 생성 타입이 아직 hallId 라 수동 정의로 대체한다.
+export interface AddTimetableReq {
+  performanceDate?: string;
+  startTime?: string;
+  endTime?: string;
+  stageId?: number | null;
+  artistIds?: number[];
+}
 
 // Request types - Reservation
 export type EditReservationInfoReq =
@@ -114,7 +129,7 @@ export interface TimeTableDTO {
   performanceDate: string;
   startTime: string;
   endTime: string;
-  hallId: number;
+  stageId: number | null;
   artists: ArtistParticipateDTO[];
 }
 
@@ -127,7 +142,7 @@ export interface EditTimetableReq {
   performanceDate: string;
   startTime: string;
   endTime: string;
-  hallId: number;
+  stageId: number | null;
 }
 
 export interface AddTimetableArtistReq {

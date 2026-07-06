@@ -60,7 +60,7 @@ export function PerformanceTimetableSlot({
         performanceDate: timetable.performanceDate ?? "",
         startTime: editStartTime,
         endTime: editEndTime,
-        hallId: 0, // TODO: hall select when data available
+        stageId: timetable.stageId ?? null,
       },
     });
     setEditing(false);

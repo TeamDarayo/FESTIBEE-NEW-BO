@@ -1,75 +1,54 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { useQueryClient } from "@tanstack/react-query";
 import { Button, Input } from "@festibee/ui";
 import { Pencil, Check, X, Plus, Trash2 } from "lucide-react";
-import { useAddHall, useEditHall } from "@festibee/api/generated";
-import { getGetPerformanceDetailQueryKey } from "../api/performance-api";
-import type { GetPerformanceHallsResHallInfo } from "../api/performance-api";
-import { placeKeys } from "@/features/place";
-import { apiClient } from "@/shared/api";
+import {
+  useAddStage,
+  useEditStage,
+  useDeleteStage,
+} from "../hooks/use-stage-mutations";
+import type { StageRes } from "../api/performance-api";
 
-interface HallManagerPanelProps {
+interface StageManagerPanelProps {
   performanceId: number;
-  placeId: number;
-  halls: GetPerformanceHallsResHallInfo[];
+  stages: StageRes[];
 }
 
-export function HallManagerPanel({
+/**
+ * 공연 스테이지(캐스팅 그리드의 "홀") 관리 패널.
+ * 스테이지는 공연에 속하며(performance_stage), 크롤 반영(apply)이 여기에 스테이지를 생성한다.
+ */
+export function StageManagerPanel({
   performanceId,
-  placeId,
-  halls,
-}: HallManagerPanelProps) {
-  const queryClient = useQueryClient();
+  stages,
+}: StageManagerPanelProps) {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editName, setEditName] = useState("");
   const [addingNew, setAddingNew] = useState(false);
-  const [newHallName, setNewHallName] = useState("");
+  const [newStageName, setNewStageName] = useState("");
 
-  const invalidateRelatedQueries = () => {
-    queryClient.invalidateQueries({
-      queryKey: getGetPerformanceDetailQueryKey(performanceId),
-    });
-    queryClient.invalidateQueries({ queryKey: placeKeys.all });
+  const { mutate: addStage, isPending: isAdding } = useAddStage(performanceId);
+  const { mutate: editStage, isPending: isEditing } = useEditStage(performanceId);
+  const { mutate: deleteStage, isPending: isDeleting } =
+    useDeleteStage(performanceId);
+
+  const handleStartEdit = (stage: StageRes) => {
+    setEditingId(stage.id ?? null);
+    setEditName(stage.name ?? "");
   };
 
-  const { mutate: addHall, isPending: isAdding } = useAddHall({
-    mutation: {
-      onSuccess: () => {
-        invalidateRelatedQueries();
-        setAddingNew(false);
-        setNewHallName("");
-      },
-    },
-  });
-
-  const { mutate: editHall, isPending: isEditing } = useEditHall({
-    mutation: {
-      onSuccess: () => {
-        invalidateRelatedQueries();
-        setEditingId(null);
-        setEditName("");
-      },
-    },
-  });
-  const { mutate: deleteHall, isPending: isDeleting } = useMutation({
-    mutationFn: (hallId: number) =>
-      apiClient.delete<void>(`/api/admin/place/${placeId}/hall/${hallId}`),
-    onSuccess: () => {
-      invalidateRelatedQueries();
-    },
-  });
-
-  const handleStartEdit = (hall: GetPerformanceHallsResHallInfo) => {
-    setEditingId(hall.id ?? null);
-    setEditName(hall.name ?? "");
-  };
-
-  const handleConfirmEdit = (hallId: number) => {
+  const handleConfirmEdit = (stageId: number) => {
     if (!editName.trim()) return;
-    editHall({ placeId, hallId, data: { name: editName.trim() } });
+    editStage(
+      { performanceId, stageId, data: { name: editName.trim() } },
+      {
+        onSuccess: () => {
+          setEditingId(null);
+          setEditName("");
+        },
+      }
+    );
   };
 
   const handleCancelEdit = () => {
@@ -77,15 +56,26 @@ export function HallManagerPanel({
     setEditName("");
   };
 
-  const handleAddHall = () => {
-    if (!newHallName.trim()) return;
-    addHall({ placeId, data: { name: newHallName.trim() } });
+  const handleAddStage = () => {
+    if (!newStageName.trim()) return;
+    addStage(
+      { performanceId, data: { name: newStageName.trim() } },
+      {
+        onSuccess: () => {
+          setAddingNew(false);
+          setNewStageName("");
+        },
+      }
+    );
   };
-  const handleDeleteHall = (hall: GetPerformanceHallsResHallInfo) => {
-    if (!hall.id) return;
-    const confirmed = window.confirm(`'${hall.name ?? "이 홀"}'을(를) 삭제할까요?`);
+
+  const handleDeleteStage = (stage: StageRes) => {
+    if (!stage.id) return;
+    const confirmed = window.confirm(
+      `'${stage.name ?? "이 스테이지"}'을(를) 삭제할까요?`
+    );
     if (!confirmed) return;
-    deleteHall(hall.id);
+    deleteStage({ performanceId, stageId: stage.id });
   };
 
   return (
@@ -106,18 +96,18 @@ export function HallManagerPanel({
         )}
       </div>
 
-      {halls.length === 0 && !addingNew && (
+      {stages.length === 0 && !addingNew && (
         <p className="text-xs text-muted-foreground">등록된 홀이 없습니다</p>
       )}
 
       <div className="flex flex-wrap gap-2">
-        {halls.map((hall) => {
-          if (!hall.id) return null;
-          const isEditingThis = editingId === hall.id;
+        {stages.map((stage) => {
+          if (!stage.id) return null;
+          const isEditingThis = editingId === stage.id;
 
           return (
             <div
-              key={hall.id}
+              key={stage.id}
               className="flex items-center gap-1 rounded border bg-background px-2 py-1"
             >
               {isEditingThis ? (
@@ -126,7 +116,7 @@ export function HallManagerPanel({
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter") handleConfirmEdit(hall.id!);
+                      if (e.key === "Enter") handleConfirmEdit(stage.id!);
                       if (e.key === "Escape") handleCancelEdit();
                     }}
                     className="h-5 w-24 border-0 p-0 text-xs focus-visible:ring-1"
@@ -134,7 +124,7 @@ export function HallManagerPanel({
                   />
                   <button
                     type="button"
-                    onClick={() => handleConfirmEdit(hall.id!)}
+                    onClick={() => handleConfirmEdit(stage.id!)}
                     disabled={isEditing}
                     className="text-green-600 hover:text-green-700 disabled:opacity-50"
                   >
@@ -150,17 +140,17 @@ export function HallManagerPanel({
                 </>
               ) : (
                 <>
-                  <span className="text-xs">{hall.name}</span>
+                  <span className="text-xs">{stage.name}</span>
                   <button
                     type="button"
-                    onClick={() => handleStartEdit(hall)}
+                    onClick={() => handleStartEdit(stage)}
                     className="text-muted-foreground hover:text-foreground"
                   >
                     <Pencil className="h-3 w-3" />
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleDeleteHall(hall)}
+                    onClick={() => handleDeleteStage(stage)}
                     disabled={isDeleting}
                     className="text-muted-foreground hover:text-destructive disabled:opacity-50"
                     title="홀 삭제"
@@ -176,13 +166,13 @@ export function HallManagerPanel({
         {addingNew && (
           <div className="flex items-center gap-1 rounded border bg-background px-2 py-1">
             <Input
-              value={newHallName}
-              onChange={(e) => setNewHallName(e.target.value)}
+              value={newStageName}
+              onChange={(e) => setNewStageName(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") handleAddHall();
+                if (e.key === "Enter") handleAddStage();
                 if (e.key === "Escape") {
                   setAddingNew(false);
-                  setNewHallName("");
+                  setNewStageName("");
                 }
               }}
               placeholder="홀 이름"
@@ -191,8 +181,8 @@ export function HallManagerPanel({
             />
             <button
               type="button"
-              onClick={handleAddHall}
-              disabled={isAdding || !newHallName.trim()}
+              onClick={handleAddStage}
+              disabled={isAdding || !newStageName.trim()}
               className="text-green-600 hover:text-green-700 disabled:opacity-50"
             >
               <Check className="h-3 w-3" />
@@ -201,7 +191,7 @@ export function HallManagerPanel({
               type="button"
               onClick={() => {
                 setAddingNew(false);
-                setNewHallName("");
+                setNewStageName("");
               }}
               className="text-muted-foreground hover:text-foreground"
             >

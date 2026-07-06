@@ -4,7 +4,7 @@ import { useMemo, useCallback, useRef } from "react";
 import { Button } from "@festibee/ui";
 import { Plus } from "lucide-react";
 import type { CastingRow, CreateFormAction } from "../hooks/use-create-form-reducer";
-import type { GetPerformanceHallsResHallInfo } from "../api/performance-api";
+import type { StageRes } from "../api/performance-api";
 import { useCastingFocusManager } from "../hooks/use-casting-focus-manager";
 import { sortRowsForDisplay } from "../lib/casting-row-utils";
 import { CastingSpreadsheetRow } from "./casting-spreadsheet-row";
@@ -17,13 +17,13 @@ export const CASTING_GRID_STYLE = {
 interface CastingSpreadsheetProps {
   rows: CastingRow[];
   dispatch: React.Dispatch<CreateFormAction>;
-  halls?: GetPerformanceHallsResHallInfo[];
+  stages?: StageRes[];
 }
 
 export function CastingSpreadsheet({
   rows,
   dispatch,
-  halls = [],
+  stages = [],
 }: CastingSpreadsheetProps) {
   const focusManager = useCastingFocusManager();
   const pendingFocusRowId = useRef<string | null>(null);
@@ -152,7 +152,7 @@ export function CastingSpreadsheet({
                 onRequestNewRow={handleRequestNewRow}
                 onApplyDateBelow={handleApplyDateBelow}
                 excludeArtistIds={excludeArtistIds}
-                halls={halls}
+                stages={stages}
                 isFirst={idx === 0}
               />
             </div>

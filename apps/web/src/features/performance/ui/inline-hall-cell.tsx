@@ -10,25 +10,25 @@ import {
   cn,
 } from "@festibee/ui";
 import { ChevronsUpDown } from "lucide-react";
-import type { GetPerformanceHallsResHallInfo } from "../api/performance-api";
+import type { StageRes } from "../api/performance-api";
 
 interface InlineHallCellProps {
-  hallId: number | null;
-  halls: GetPerformanceHallsResHallInfo[];
-  onSelect: (hallId: number | null) => void;
+  stageId: number | null;
+  stages: StageRes[];
+  onSelect: (stageId: number | null) => void;
   onEnter: () => void;
   onShiftTab: () => void;
   registerRef: (el: HTMLElement | null) => void;
 }
 
-interface HallOption {
+interface StageOption {
   id: number | null;
   name: string;
 }
 
 export function InlineHallCell({
-  hallId,
-  halls,
+  stageId,
+  stages,
   onSelect,
   onEnter,
   onShiftTab,
@@ -37,26 +37,26 @@ export function InlineHallCell({
   const [open, setOpen] = useState(false);
   const [highlightIdx, setHighlightIdx] = useState(0);
 
-  const options = useMemo<HallOption[]>(
+  const options = useMemo<StageOption[]>(
     () => [
       { id: null, name: "미배정" },
-      ...halls
-        .filter((hall): hall is { id: number; name?: string } => hall.id != null)
-        .map((hall) => ({ id: hall.id, name: hall.name ?? `홀 ${hall.id}` })),
+      ...stages
+        .filter((stage): stage is { id: number; name?: string } => stage.id != null)
+        .map((stage) => ({ id: stage.id, name: stage.name ?? `스테이지 ${stage.id}` })),
     ],
-    [halls]
+    [stages]
   );
 
   const selectedLabel =
-    options.find((option) => option.id === hallId)?.name ??
-    (halls.length === 0 ? "홀 없음" : "미배정");
+    options.find((option) => option.id === stageId)?.name ??
+    (stages.length === 0 ? "홀 없음" : "미배정");
 
   useEffect(() => {
-    const selectedIdx = options.findIndex((option) => option.id === hallId);
+    const selectedIdx = options.findIndex((option) => option.id === stageId);
     setHighlightIdx(selectedIdx >= 0 ? selectedIdx : 0);
-  }, [hallId, options]);
+  }, [stageId, options]);
 
-  const handleSelect = (option: HallOption) => {
+  const handleSelect = (option: StageOption) => {
     onSelect(option.id);
     setOpen(false);
     onEnter();
@@ -114,7 +114,7 @@ export function InlineHallCell({
           onKeyDown={handleKeyDown}
           className="h-8 w-full justify-between rounded-none px-2 text-xs font-normal"
         >
-          <span className={cn("truncate text-left", hallId != null && "font-medium")}>
+          <span className={cn("truncate text-left", stageId != null && "font-medium")}>
             {selectedLabel}
           </span>
           <ChevronsUpDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
