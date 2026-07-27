@@ -170,6 +170,8 @@ export interface GetCrawledRecordsParams {
   status?: CrawledRecordStatus;
   page?: number;
   size?: number;
+  /** Spring 정렬 표현식 목록. 예: ["crawledAt,desc"]. 미지정 시 최신 크롤 순. */
+  sort?: string[];
 }
 
 export interface RecordReviewEventReq {

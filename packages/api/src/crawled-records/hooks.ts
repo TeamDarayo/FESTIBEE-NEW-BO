@@ -1,4 +1,5 @@
 import {
+  useInfiniteQuery,
   useMutation,
   useQuery,
   useQueryClient,
@@ -23,6 +24,9 @@ export const crawledRecordKeys = {
   lists: () => [...crawledRecordKeys.all, "list"] as const,
   list: (params?: GetCrawledRecordsParams) =>
     [...crawledRecordKeys.lists(), params] as const,
+  infiniteLists: () => [...crawledRecordKeys.all, "infinite-list"] as const,
+  infiniteList: (params?: Omit<GetCrawledRecordsParams, "page">) =>
+    [...crawledRecordKeys.infiniteLists(), params] as const,
   details: () => [...crawledRecordKeys.all, "detail"] as const,
   detail: (id: number) => [...crawledRecordKeys.details(), id] as const,
 };
@@ -31,6 +35,25 @@ export function useGetCrawledRecords(params?: GetCrawledRecordsParams) {
   return useQuery({
     queryKey: crawledRecordKeys.list(params),
     queryFn: () => getCrawledRecords(params),
+  });
+}
+
+/**
+ * 무한 스크롤용 목록 조회. 서버 `Page` 응답의 `number`/`totalPages` 로
+ * 다음 페이지 존재 여부를 판단한다.
+ */
+export function useGetInfiniteCrawledRecords(
+  params?: Omit<GetCrawledRecordsParams, "page">,
+) {
+  return useInfiniteQuery({
+    queryKey: crawledRecordKeys.infiniteList(params),
+    queryFn: ({ pageParam }) =>
+      getCrawledRecords({ ...params, page: pageParam }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) =>
+      lastPage.number + 1 < lastPage.totalPages
+        ? lastPage.number + 1
+        : undefined,
   });
 }
 

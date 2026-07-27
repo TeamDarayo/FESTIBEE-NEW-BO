@@ -1,16 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Button,
-  ScrollArea,
-  Tabs,
-  TabsList,
-  TabsTrigger,
-} from "@festibee/ui";
-import { AlertCircle, ChevronRight } from "lucide-react";
-import { useGetCrawledRecords } from "@festibee/api";
+import { Button, ScrollArea, Tabs, TabsList, TabsTrigger } from "@festibee/ui";
+import { AlertCircle, ChevronRight, Loader2 } from "lucide-react";
+import { useGetInfiniteCrawledRecords } from "@festibee/api";
 import type { CrawledRecordStatus, NormalizedCrawlData } from "@festibee/api";
 import { CrawledRecordStatusBadge } from "./crawled-record-status-badge";
 
@@ -27,25 +21,66 @@ function formatRelativeTime(dateStr: string): string {
   return `${days}일 전`;
 }
 
+const PAGE_SIZE = 30;
+
 export function CrawledRecordList() {
   const router = useRouter();
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("NEW");
+  const scrollRootRef = useRef<HTMLDivElement>(null);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
-  const { data, isLoading, isError, refetch } = useGetCrawledRecords({
+  const {
+    data,
+    isLoading,
+    isError,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useGetInfiniteCrawledRecords({
     status: statusFilter === "ALL" ? undefined : statusFilter,
-    size: 50,
-    page: 0,
+    size: PAGE_SIZE,
   });
 
-  const records = data?.content ?? [];
+  const records = useMemo(
+    () => data?.pages.flatMap((page) => page.content) ?? [],
+    [data],
+  );
+  const totalElements = data?.pages[0]?.totalElements ?? 0;
+
+  // 목록 하단 센티널이 보이면 다음 페이지를 이어붙인다.
+  // 스크롤 컨테이너가 ScrollArea 내부 viewport 라서 observer root 로 직접 지정한다.
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel || !hasNextPage || isFetchingNextPage) return;
+
+    const viewport = scrollRootRef.current?.querySelector<HTMLElement>(
+      "[data-radix-scroll-area-viewport]",
+    );
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          void fetchNextPage();
+        }
+      },
+      { root: viewport ?? null, rootMargin: "200px" },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage, records.length]);
+
+  // 필터가 바뀌면 목록을 처음부터 보여준다.
+  useEffect(() => {
+    scrollRootRef.current
+      ?.querySelector<HTMLElement>("[data-radix-scroll-area-viewport]")
+      ?.scrollTo({ top: 0 });
+  }, [statusFilter]);
 
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between border-b px-4 py-3">
         <h1 className="text-sm font-semibold">크롤링 검토</h1>
-        <span className="text-xs text-muted-foreground">
-          {data?.totalElements ?? 0}건
-        </span>
+        <span className="text-xs text-muted-foreground">{totalElements}건</span>
       </div>
 
       <div className="border-b px-3 py-2">
@@ -70,12 +105,15 @@ export function CrawledRecordList() {
         </Tabs>
       </div>
 
-      <ScrollArea className="flex-1">
+      <ScrollArea ref={scrollRootRef} className="flex-1">
         <div className="flex flex-col">
           {isLoading ? (
             <div className="space-y-2 p-4">
               {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="h-20 animate-pulse rounded-lg bg-muted" />
+                <div
+                  key={i}
+                  className="h-20 animate-pulse rounded-lg bg-muted"
+                />
               ))}
             </div>
           ) : isError ? (
@@ -93,51 +131,75 @@ export function CrawledRecordList() {
               항목이 없습니다
             </div>
           ) : (
-            records.map((record) => {
-              let crawlData: NormalizedCrawlData | null = null;
-              try {
-                crawlData = JSON.parse(record.data) as NormalizedCrawlData;
-              } catch {
-                // ignore
-              }
-              return (
-                <button
-                  key={record.id}
-                  type="button"
-                  onClick={() => router.push(`/crawled-records/${record.id}`)}
-                  className="flex items-start gap-3 border-b px-4 py-3 text-left transition-colors hover:bg-accent"
-                >
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="truncate text-sm font-medium">
-                        {crawlData?.title ?? record.venderId}
-                      </span>
-                      <CrawledRecordStatusBadge
-                        status={record.status as CrawledRecordStatus}
-                      />
+            <>
+              {records.map((record) => {
+                let crawlData: NormalizedCrawlData | null = null;
+                try {
+                  crawlData = JSON.parse(record.data) as NormalizedCrawlData;
+                } catch {
+                  // ignore
+                }
+                return (
+                  <button
+                    key={record.id}
+                    type="button"
+                    onClick={() => router.push(`/crawled-records/${record.id}`)}
+                    className="flex items-start gap-3 border-b px-4 py-3 text-left transition-colors hover:bg-accent"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="truncate text-sm font-medium">
+                          {crawlData?.title ?? record.venderId}
+                        </span>
+                        <CrawledRecordStatusBadge
+                          status={record.status as CrawledRecordStatus}
+                        />
+                      </div>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {crawlData
+                          ? [
+                              crawlData.artists.length > 0 &&
+                                `아티스트 ${crawlData.artists.length}명`,
+                              crawlData.dates.length > 0 &&
+                                `${crawlData.dates.length}일 공연`,
+                              crawlData.reservations.length > 0 &&
+                                `예매 ${crawlData.reservations.length}건`,
+                            ]
+                              .filter(Boolean)
+                              .join(" · ")
+                          : record.site}
+                      </p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {record.site} · {formatRelativeTime(record.crawledAt)}
+                      </p>
                     </div>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      {crawlData
-                        ? [
-                            crawlData.artists.length > 0 &&
-                              `아티스트 ${crawlData.artists.length}명`,
-                            crawlData.dates.length > 0 &&
-                              `${crawlData.dates.length}일 공연`,
-                            crawlData.reservations.length > 0 &&
-                              `예매 ${crawlData.reservations.length}건`,
-                          ]
-                            .filter(Boolean)
-                            .join(" · ")
-                        : record.site}
-                    </p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      {record.site} · {formatRelativeTime(record.crawledAt)}
-                    </p>
-                  </div>
-                  <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-                </button>
-              );
-            })
+                    <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                  </button>
+                );
+              })}
+              <div ref={sentinelRef} aria-hidden className="h-px" />
+              {isFetchingNextPage ? (
+                <div className="flex items-center justify-center gap-2 py-4 text-xs text-muted-foreground">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  불러오는 중...
+                </div>
+              ) : hasNextPage ? (
+                <div className="p-3">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full text-xs"
+                    onClick={() => fetchNextPage()}
+                  >
+                    더 보기
+                  </Button>
+                </div>
+              ) : (
+                <div className="py-4 text-center text-xs text-muted-foreground">
+                  마지막 항목입니다
+                </div>
+              )}
+            </>
           )}
         </div>
       </ScrollArea>
