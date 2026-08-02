@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { Button, Input, cn } from "@festibee/ui";
 import {
   ImageOff,
@@ -41,6 +41,8 @@ function extractCreatedArtistId(response: { data?: unknown }): number | null {
  * 별명 등록 + Apple Music 프로필 이미지 선택.
  * - linked: alias/update API 즉시 반영
  * - new: 세부정보 확정 시 createArtist 후 existingArtistId 로 전환
+ *
+ * 펼침 시에만 마운트되므로 crawledName 초기값을 state에 두면 충분하다.
  */
 export function ArtistDetailPanel({
   crawledName,
@@ -63,11 +65,6 @@ export function ArtistDetailPanel({
   const createArtist = useCreateArtist();
   const updateArtist = useUpdateArtist();
 
-  useEffect(() => {
-    setSearchTerm(crawledName);
-    setSearchSubmitted(crawledName.trim());
-  }, [crawledName]);
-
   const {
     data: appleResults = [],
     isFetching: appleLoading,
@@ -81,6 +78,13 @@ export function ArtistDetailPanel({
     addAlias.isPending || createArtist.isPending || updateArtist.isPending;
 
   const currentImageUrl = linked?.imageUrl ?? null;
+
+  const displayAliases = linked?.aliases?.length
+    ? linked.aliases.map((a) => ({
+        key: String(a.id ?? a.name),
+        name: a.name ?? "",
+      }))
+    : pendingAliases.map((name) => ({ key: name, name }));
 
   const handleSearch = () => {
     setSearchSubmitted(searchTerm.trim());
@@ -233,16 +237,6 @@ export function ArtistDetailPanel({
       setImageError(e instanceof Error ? e.message : "이미지 제거 실패");
     }
   };
-
-  const displayAliases = useMemo(() => {
-    if (linked?.aliases?.length) {
-      return linked.aliases.map((a) => ({
-        key: String(a.id ?? a.name),
-        name: a.name ?? "",
-      }));
-    }
-    return pendingAliases.map((name) => ({ key: name, name }));
-  }, [linked, pendingAliases]);
 
   return (
     <div className="space-y-3 rounded-md border border-border/60 bg-muted/20 p-2.5">
