@@ -17,6 +17,11 @@ export type {
 
 // Hooks - Query
 export { useArtistList, useArtistDetail, artistKeys } from "./hooks/use-artist-list";
+export {
+  useAppleMusicArtistSearch,
+  resolveAppleMusicArtworkUrl,
+} from "./hooks/use-apple-music-search";
+export type { AppleMusicArtist } from "./hooks/use-apple-music-search";
 
 // Hooks - Mutations
 export {
