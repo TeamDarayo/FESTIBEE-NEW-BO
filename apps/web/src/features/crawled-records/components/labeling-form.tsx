@@ -1,7 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Badge, Button, Input, Label, Separator, Checkbox } from "@festibee/ui";
+import {
+  Badge,
+  Button,
+  Input,
+  Label,
+  Separator,
+  Checkbox,
+} from "@festibee/ui";
 import { Copy, GitMerge, Plus, Trash2 } from "lucide-react";
 import {
   useApplyCrawledRecord,
@@ -24,7 +31,7 @@ import { PlaceCombobox } from "@/features/performance/ui/place-combobox";
 import { AutoResizeTextarea } from "@/features/performance/ui/auto-resize-textarea";
 import { PerformancePicker, type PerformanceTarget } from "./performance-picker";
 import { MergeModal, type MergeResult } from "./merge-modal";
-import { ArtistCell } from "./artist-cell";
+import { ArtistTimetableRow } from "./artist-timetable-row";
 import { buildEditedData } from "../lib/build-edited-data";
 import { ApplyPreviewDialog } from "./apply-preview-dialog";
 
@@ -449,7 +456,7 @@ export function LabelingForm({
     if (!row) return;
     const target =
       pf.field === "artist"
-        ? row.querySelector<HTMLElement>("[data-tt-artists] button")
+        ? row.querySelector<HTMLElement>("[data-tt-artist-trigger]")
         : row.querySelector<HTMLElement>('[data-tt-focus="date"]');
     target?.focus();
   }, [timetables]);
@@ -899,27 +906,18 @@ export function LabelingForm({
                   </div>
                   <div className="space-y-1 pl-1" data-tt-artists>
                     {t.artists.map((a, ai) => (
-                      <div key={ai} className="flex items-center gap-2">
-                        <ArtistCell
-                          crawledName={a.crawledName}
-                          value={a.mapping}
-                          onChangeName={(name) =>
-                            updateArtist(i, ai, { crawledName: name })
-                          }
-                          onChangeMapping={(next) =>
-                            updateArtist(i, ai, { mapping: next })
-                          }
-                        />
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
-                          onClick={() => removeArtist(i, ai)}
-                          title="아티스트 삭제"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
+                      <ArtistTimetableRow
+                        key={ai}
+                        crawledName={a.crawledName}
+                        mapping={a.mapping}
+                        onChangeName={(name) =>
+                          updateArtist(i, ai, { crawledName: name })
+                        }
+                        onChangeMapping={(next) =>
+                          updateArtist(i, ai, { mapping: next })
+                        }
+                        onRemove={() => removeArtist(i, ai)}
+                      />
                     ))}
                     <Button
                       variant="ghost"
