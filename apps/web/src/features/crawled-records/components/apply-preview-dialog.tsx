@@ -11,38 +11,40 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  Separator,
 } from "@festibee/ui";
-import { AlertTriangle, Sparkles } from "lucide-react";
+import { AlertTriangle, RotateCw, Sparkles, Trash2 } from "lucide-react";
 import type {
   ApplyPreviewRes,
-  MergeFieldKey,
+  PreviewCollectionDiff,
+  PreviewDeletingItem,
   PreviewFieldAction,
 } from "@festibee/api";
 
 const FIELD_LABELS: Record<string, string> = {
-  title: "제목",
+  name: "공연 이름",
+  title: "공연 이름",
   poster_url: "포스터",
-  venue_name: "장소",
-  venue_address: "주소",
   start_date: "시작일",
   end_date: "종료일",
-};
-
-/** preview field → merge.overwrite 키. title 은 원본 존중이라 덮어쓰기 불가. venue_* 는 place 로 묶인다. */
-const FIELD_TO_MERGE_KEY: Record<string, MergeFieldKey | undefined> = {
-  poster_url: "poster_url",
-  start_date: "start_date",
-  end_date: "end_date",
-  venue_name: "place",
-  venue_address: "place",
+  venue_name: "장소",
+  venue_address: "주소",
+  transportation_info: "교통 정보",
+  ban_goods: "주의/반입금지",
+  remark: "특이/비고",
 };
 
 const ACTION_META: Record<
   PreviewFieldAction,
   { label: string; variant: "default" | "secondary" | "outline" | "destructive" }
 > = {
-  FILL: { label: "채워짐", variant: "default" },
+  // plan 모드
+  UNCHANGED: { label: "변경 없음", variant: "outline" },
+  FILLED: { label: "채움", variant: "default" },
+  UPDATED: { label: "변경", variant: "default" },
+  CLEARED: { label: "비움", variant: "destructive" },
+  CREATED: { label: "신규", variant: "default" },
+  // legacy 경로 (plan 없는 옛 초안)
+  FILL: { label: "채움", variant: "default" },
   KEEP: { label: "유지", variant: "outline" },
   CONFLICT: { label: "충돌", variant: "destructive" },
   IGNORED: { label: "유지 (덮어쓰기 불가)", variant: "secondary" },
@@ -54,43 +56,78 @@ interface ApplyPreviewDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   preview: ApplyPreviewRes | null;
-  /** 병합 패널에서 선택해 둔 덮어쓰기 필드(다이얼로그 초기값). */
-  initialOverwrite?: Set<MergeFieldKey>;
-  /** 라벨러가 선택한 덮어쓰기 필드와 함께 반영 확정. */
-  onConfirm: (overwrite: MergeFieldKey[]) => void;
+  /** 폼 상태 그대로 반영 확정. */
+  onConfirm: () => void;
   isPending: boolean;
+  /** CR012(409) — baseline 이후 대상 공연이 수정됨. */
+  staleConflict?: boolean;
+  onReload?: () => void;
+}
+
+/** 백엔드 롤아웃 시차를 감안해 확장 필드가 없어도 안전하게 읽는다. */
+function readDiff(diff: PreviewCollectionDiff | undefined) {
+  return {
+    toAdd: diff?.toAdd ?? 0,
+    toUpdate: diff?.toUpdate ?? 0,
+    toDelete: diff?.toDelete ?? 0,
+    unchanged: diff?.unchanged ?? 0,
+    existing: diff?.existing ?? 0,
+    deleting: (diff?.deleting ?? []) as PreviewDeletingItem[],
+  };
 }
 
 export function ApplyPreviewDialog({
   open,
   onOpenChange,
   preview,
-  initialOverwrite,
   onConfirm,
   isPending,
+  staleConflict = false,
+  onReload,
 }: ApplyPreviewDialogProps) {
-  const [overwrite, setOverwrite] = useState<Set<MergeFieldKey>>(
-    () => new Set(initialOverwrite)
-  );
+  const [deleteConfirmed, setDeleteConfirmed] = useState(false);
 
-  // 다이얼로그가 열릴 때 병합 패널의 선택으로 동기화한다.
+  // 다이얼로그를 다시 열면 삭제 확인은 초기화한다(실수로 확정되는 것 방지).
   useEffect(() => {
-    if (open) setOverwrite(new Set(initialOverwrite));
-  }, [open, initialOverwrite]);
+    if (open) setDeleteConfirmed(false);
+  }, [open, preview]);
+
+  if (staleConflict) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>다른 사람이 이 공연을 수정했습니다</DialogTitle>
+            <DialogDescription>
+              폼을 불러온 뒤 대상 공연이 변경되었습니다. 지금 반영하면 다른 사람의
+              수정이 지워질 수 있어 중단했습니다. 다시 불러온 뒤 편집해 주세요.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
+              닫기
+            </Button>
+            <Button size="sm" className="gap-1" onClick={onReload}>
+              <RotateCw className="h-3.5 w-3.5" />
+              다시 불러오기
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   if (!preview) return null;
 
-  const conflicts = preview.fields.filter((f) => f.action === "CONFLICT");
-  const visibleFields = preview.fields.filter((f) => f.action !== "KEEP");
-
-  const toggleOverwrite = (field: MergeFieldKey) => {
-    setOverwrite((prev) => {
-      const next = new Set(prev);
-      if (next.has(field)) next.delete(field);
-      else next.add(field);
-      return next;
-    });
-  };
+  const reservations = readDiff(preview.reservations);
+  const timetables = readDiff(preview.timetables);
+  const deletingItems = [
+    ...reservations.deleting.map((d) => ({ ...d, kind: "예매" })),
+    ...timetables.deleting.map((d) => ({ ...d, kind: "타임테이블" })),
+  ];
+  const deleteCount = reservations.toDelete + timetables.toDelete;
+  const confirmDisabled =
+    isPending || (deleteCount > 0 && !deleteConfirmed);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -109,31 +146,27 @@ export function ApplyPreviewDialog({
                   {preview.targetPerformance?.name} (#
                   {preview.targetPerformance?.id})
                 </span>
-                에 병합됩니다. 기본은 빈 값만 채우며, 충돌 필드는 아래에서
-                덮어쓰기를 선택할 수 있습니다.
+                이(가) 폼 내용 그대로 갱신됩니다. 폼에 없는 항목은 삭제됩니다.
               </>
             )}
           </DialogDescription>
         </DialogHeader>
 
-        {/* Field diffs */}
-        {visibleFields.length > 0 && (
+        {/* 스칼라 diff */}
+        {preview.fields.length > 0 && (
           <div className="overflow-hidden rounded-lg border">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-muted/50 text-xs text-muted-foreground">
                   <th className="px-3 py-2 text-left font-medium">필드</th>
-                  <th className="px-3 py-2 text-left font-medium">현재 값</th>
-                  <th className="px-3 py-2 text-left font-medium">크롤 값</th>
+                  <th className="px-3 py-2 text-left font-medium">기존 값</th>
+                  <th className="px-3 py-2 text-left font-medium">반영 후</th>
                   <th className="px-3 py-2 text-left font-medium">결과</th>
-                  <th className="px-3 py-2 text-center font-medium">덮어쓰기</th>
                 </tr>
               </thead>
               <tbody>
-                {visibleFields.map((f) => {
+                {preview.fields.map((f) => {
                   const meta = ACTION_META[f.action];
-                  const mergeKey = FIELD_TO_MERGE_KEY[f.field];
-                  const overwritable = f.action === "CONFLICT" && mergeKey != null;
                   return (
                     <tr key={f.field} className="border-b last:border-b-0">
                       <td className="px-3 py-2 font-medium">
@@ -146,15 +179,9 @@ export function ApplyPreviewDialog({
                         {f.incoming ?? "-"}
                       </td>
                       <td className="px-3 py-2">
-                        <Badge variant={meta.variant}>{meta.label}</Badge>
-                      </td>
-                      <td className="px-3 py-2 text-center">
-                        {overwritable && (
-                          <Checkbox
-                            checked={overwrite.has(mergeKey)}
-                            onCheckedChange={() => toggleOverwrite(mergeKey)}
-                          />
-                        )}
+                        <Badge variant={meta?.variant ?? "outline"}>
+                          {meta?.label ?? f.action}
+                        </Badge>
                       </td>
                     </tr>
                   );
@@ -164,24 +191,20 @@ export function ApplyPreviewDialog({
           </div>
         )}
 
-        {/* Collection summary */}
+        {/* 컬렉션 요약 */}
         <div className="grid grid-cols-3 gap-3 text-sm">
           <SummaryCard
             title="예매"
             lines={[
-              `추가 ${preview.reservations.toAdd}건`,
-              preview.reservations.existing > 0
-                ? `중복 제외 ${preview.reservations.existing}건`
-                : null,
+              `추가 ${reservations.toAdd} · 수정 ${reservations.toUpdate}`,
+              `삭제 ${reservations.toDelete} · 그대로 ${reservations.unchanged}`,
             ]}
           />
           <SummaryCard
             title="타임테이블"
             lines={[
-              `추가 ${preview.timetables.toAdd}건`,
-              preview.timetables.existing > 0
-                ? `기존 유지 ${preview.timetables.existing}건`
-                : null,
+              `추가 ${timetables.toAdd} · 수정 ${timetables.toUpdate}`,
+              `삭제 ${timetables.toDelete} · 그대로 ${timetables.unchanged}`,
             ]}
           />
           <SummaryCard
@@ -193,7 +216,25 @@ export function ApplyPreviewDialog({
           />
         </div>
 
-        {/* New entity warnings */}
+        {/* 삭제 목록 — 전부 나열한다 */}
+        {deletingItems.length > 0 && (
+          <div className="rounded-lg border border-destructive/40 bg-destructive/[0.06] p-3 text-xs">
+            <p className="mb-1.5 flex items-center gap-1.5 font-medium text-destructive">
+              <Trash2 className="h-3.5 w-3.5" />
+              삭제되는 항목 {deletingItems.length}건
+            </p>
+            <ul className="space-y-0.5">
+              {deletingItems.map((d) => (
+                <li key={`${d.kind}-${d.id}`} className="flex gap-1.5">
+                  <span className="shrink-0 text-muted-foreground">{d.kind}</span>
+                  <span className="min-w-0 flex-1 break-words">{d.label}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* 신규 생성 경고 */}
         {(preview.artists.toCreate.length > 0 ||
           preview.stagesToCreate.length > 0) && (
           <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-xs">
@@ -214,13 +255,15 @@ export function ApplyPreviewDialog({
           </div>
         )}
 
-        {conflicts.length > 0 && overwrite.size === 0 && (
-          <>
-            <Separator />
-            <p className="text-xs text-muted-foreground">
-              충돌 필드는 덮어쓰기를 선택하지 않으면 기존 값이 유지됩니다.
-            </p>
-          </>
+        {/* 삭제 게이트 */}
+        {deleteCount > 0 && (
+          <label className="flex cursor-pointer items-center gap-2 rounded-md border border-destructive/40 p-2.5 text-xs">
+            <Checkbox
+              checked={deleteConfirmed}
+              onCheckedChange={(v) => setDeleteConfirmed(Boolean(v))}
+            />
+            <span className="font-medium">삭제 {deleteCount}건을 확인했습니다</span>
+          </label>
         )}
 
         <DialogFooter>
@@ -232,12 +275,8 @@ export function ApplyPreviewDialog({
           >
             취소
           </Button>
-          <Button
-            size="sm"
-            onClick={() => onConfirm([...overwrite])}
-            disabled={isPending}
-          >
-            {isPending ? "반영 중..." : "확정 반영"}
+          <Button size="sm" onClick={onConfirm} disabled={confirmDisabled}>
+            {isPending ? "반영 중..." : "반영 확정"}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -256,7 +295,9 @@ function SummaryCard({
     <div className="rounded-lg border p-3">
       <p className="mb-1 text-xs font-medium text-muted-foreground">{title}</p>
       {lines.filter(Boolean).map((line) => (
-        <p key={line}>{line}</p>
+        <p key={line} className="text-xs">
+          {line}
+        </p>
       ))}
     </div>
   );
