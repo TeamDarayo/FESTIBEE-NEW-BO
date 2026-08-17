@@ -1,6 +1,5 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import {
   useGetAllPerformanceDetails as useGeneratedGetAllPerformanceDetails,
   getGetAllPerformanceDetailsQueryKey,
@@ -47,15 +46,24 @@ export function usePerformanceList() {
   });
 }
 
+/**
+ * 공연 단건 상세.
+ *
+ * 관리자 API 에 단건 조회 엔드포인트가 아직 없어(목록 `GET /api/admin/performance` 뿐)
+ * 목록 쿼리에 `select` 를 걸어 한 건만 뽑는다. 예전처럼 목록 쿼리 위에 별도 `useQuery` 를
+ * 얹으면 의존 쿼리가 되어 isLoading/refetch 가 목록과 어긋나므로 그 구조는 걷어냈다.
+ * (단건 엔드포인트가 생기면 이 훅만 갈아끼우면 된다.)
+ */
 export function usePerformanceDetail(id: number) {
-  const { data: performances } = usePerformanceList();
-
-  return useQuery({
-    queryKey: performanceKeys.detail(id),
-    queryFn: async (): Promise<PerformanceDetailRes | undefined> => {
-      return performances?.find((p) => p.performance?.id === id);
+  return useGeneratedGetAllPerformanceDetails({
+    query: {
+      queryKey: performanceKeys.detail(id),
+      enabled: !!id,
+      select: (response): PerformanceDetailRes | undefined =>
+        extractPerformanceList(response.data).find(
+          (p) => p.performance?.id === id
+        ),
     },
-    enabled: !!id && !!performances,
   });
 }
 
