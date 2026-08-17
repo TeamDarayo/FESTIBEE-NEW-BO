@@ -85,24 +85,77 @@ export interface CrawlMapping {
   mergedFromExisting?: boolean;
 }
 
-/**
- * 덮어쓰기를 지원하는 필드 (backend ApplyCrawledRecordReq.Merge.overwrite 값과 일치).
- * 공연 이름(title)은 원본을 존중하므로 덮어쓰기 대상이 아니다. venue_name/venue_address 는 'place' 로 묶인다.
- */
-export type MergeFieldKey = "poster_url" | "start_date" | "end_date" | "place";
+// ============================================================================
+// plan — 반영 실행 계획 (선언적/WYSIWYG). camelCase.
+//   폼의 최종 상태를 그대로 담는다. plan 에 id 로 등장하지 않는 기존 예매/타임테이블/
+//   타임테이블-아티스트는 반영 시 **삭제**된다(삭제는 암묵적, 별도 deletions 배열 없음).
+//   plan 이 없으면 백엔드는 legacy 경로(fill-only)로 처리한다.
+// ============================================================================
+
+export interface PlanPerformance {
+  /** 신규 공연 생성 시에만 사용. 기존 공연이면 백엔드가 무시한다(이름 보호). */
+  name?: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  posterUrl: string | null;
+  transportationInfo: string | null;
+  banGoods: string | null;
+  remark: string | null;
+}
 
 /**
- * 기존 공연 병합 시 필드별 덮어쓰기 선택. 없으면 fill-only(빈 값만 채움).
- * apply-preview 에서 CONFLICT 로 표시된 필드를 라벨러가 선택해 넘긴다.
+ * placeId 가 있으면 그 장소로 연결, 없고 name 이 있으면 신규 장소 생성 후 연결,
+ * 둘 다 비어 있으면 장소 연결 해제. plan.place 자체가 null 이면 기존 장소 유지.
  */
-export interface MergeOptions {
-  overwrite?: MergeFieldKey[];
+export interface PlanPlace {
+  placeId?: number | null;
+  name?: string | null;
+  address?: string | null;
+}
+
+export interface PlanReservation {
+  /** 기존 ReservationInfo.id. null = 신규 생성. */
+  id: number | null;
+  openDateTime: string;
+  closeDateTime: string | null;
+  ticketURL: string | null;
+  type: ReservationTypeEnum;
+}
+
+export interface PlanTimetableArtist {
+  /** 기존 TimetableArtist.id. null = 신규 생성. */
+  id: number | null;
+  /** 기존 Artist.id. null = name 으로 신규 생성. */
+  artistId: number | null;
+  name: string;
+}
+
+export interface PlanTimetable {
+  /** 기존 Timetable.id. null = 신규 생성. */
+  id: number | null;
+  performanceDate: string | null;
+  startTime: string | null;
+  endTime: string | null;
+  /** 대상 공연의 기존 스테이지 id. null 이면 stageName 으로 생성/재사용. */
+  stageId: number | null;
+  stageName: string | null;
+  artists: PlanTimetableArtist[];
+}
+
+export interface Plan {
+  /** 폼에 baseline 을 로드한 시점의 performance.updatedAt. 불일치하면 반영 시 CR012(409). */
+  baselineUpdatedAt: string | null;
+  performance: PlanPerformance;
+  /** null = 장소 변경 없음. */
+  place: PlanPlace | null;
+  reservations: PlanReservation[];
+  timetables: PlanTimetable[];
 }
 
 export interface EditedData {
   extraction: NormalizedCrawlData;
   mapping: CrawlMapping;
-  merge?: MergeOptions;
+  plan?: Plan;
 }
 
 /** 반영/초안저장 요청 본문. */
@@ -113,10 +166,16 @@ export type ApplyMappingReq = EditedData;
 // ============================================================================
 
 /**
- * FILL: 빈 값 채움(자동) · KEEP: 유지 · CONFLICT: 값 다름(덮어쓰기 선택 가능)
- * IGNORED: 값 다르지만 덮어쓰기 미지원(유지) · EXPAND: 기간 확장 · CREATE: 신규 생성
+ * plan 모드: UNCHANGED(그대로) · FILLED(빈 값 → 값) · UPDATED(값 → 다른 값)
+ *            CLEARED(값 → 빈 값) · CREATED(신규 공연 생성)
+ * legacy 경로: FILL · KEEP · CONFLICT · IGNORED · EXPAND · CREATE (옛 초안 호환용으로 공존)
  */
 export type PreviewFieldAction =
+  | "UNCHANGED"
+  | "FILLED"
+  | "UPDATED"
+  | "CLEARED"
+  | "CREATED"
   | "FILL"
   | "KEEP"
   | "CONFLICT"
@@ -125,15 +184,26 @@ export type PreviewFieldAction =
   | "CREATE";
 
 export interface PreviewFieldDiff {
-  field: string; // title | poster_url | venue_name | venue_address | start_date | end_date
+  /** plan 모드: name | poster_url | start_date | end_date | venue_name | venue_address | transportation_info | ban_goods | remark */
+  field: string;
   current: string | null;
   incoming: string | null;
   action: PreviewFieldAction;
 }
 
+/** 삭제 예정 항목. label 은 백엔드가 만들어 내려주는 한 줄 요약. */
+export interface PreviewDeletingItem {
+  id: number;
+  label: string;
+}
+
 export interface PreviewCollectionDiff {
   toAdd: number;
+  toUpdate: number;
+  toDelete: number;
+  unchanged: number;
   existing: number;
+  deleting: PreviewDeletingItem[];
 }
 
 export interface PreviewArtistDiff {
@@ -151,6 +221,12 @@ export interface ApplyPreviewRes {
   timetables: PreviewCollectionDiff;
   stagesToCreate: string[];
 }
+
+/**
+ * baseline 이후 대상 공연이 다른 사람에 의해 수정됨(409).
+ * 폼을 다시 불러와야 안전하게 반영할 수 있다.
+ */
+export const CRAWLED_RECORD_STALE_CODE = "CR012";
 
 /** 아티스트 피커 로컬 값 (payload 빌드 시 artistIdByName 로 변환). */
 export interface ManualArtistMapping {

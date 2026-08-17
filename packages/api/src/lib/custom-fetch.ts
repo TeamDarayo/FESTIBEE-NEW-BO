@@ -1,3 +1,5 @@
+import { HttpError } from "./http-error";
+
 let baseUrl =
   typeof process !== "undefined"
     ? process.env.NEXT_PUBLIC_API_URL || "http://localhost:3011"
@@ -41,7 +43,13 @@ export const customFetch = async <T>(
       error?.message ||
       error?.error ||
       `HTTP error! status: ${response.status}`;
-    throw new Error(message);
+    // resultCode/status 를 보존해야 호출부가 CR012(409, staleness) 같은 코드로 분기할 수 있다.
+    throw new HttpError(
+      message,
+      response.status,
+      typeof error?.resultCode === "string" ? error.resultCode : null,
+      error
+    );
   }
 
   // Handle empty response (204 No Content)
