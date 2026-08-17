@@ -2,6 +2,55 @@ export type CrawlingSite = "INTERPARK";
 
 export type CrawledRecordStatus = "NEW" | "APPLIED" | "IGNORED";
 
+/**
+ * 무시 사유 코드. 추출 정확도가 아니라 "수집 정밀도"(크롤러가 애초에 가져오지 말았어야 할 것을
+ * 가져왔는가)를 계산하는 데 쓴다. 사후에 사유를 되물을 방법이 없으므로 무시 시점에 남긴다.
+ */
+export type IgnoredReason =
+  | "NOT_A_FESTIVAL"
+  | "DUPLICATE"
+  | "OUT_OF_SCOPE"
+  | "INSUFFICIENT_DATA"
+  | "OTHER";
+
+/** 무시 사유 선택지. 순서 = UI 표시 순서. */
+export const IGNORED_REASON_OPTIONS: {
+  value: IgnoredReason;
+  label: string;
+  hint: string;
+}[] = [
+  {
+    value: "NOT_A_FESTIVAL",
+    label: "축제 아님",
+    hint: "공연/축제가 아닌 것을 크롤러가 가져왔다",
+  },
+  {
+    value: "DUPLICATE",
+    label: "이미 등록됨",
+    hint: "같은 축제가 이미 등록돼 있다 (중복 제거 실패)",
+  },
+  {
+    value: "OUT_OF_SCOPE",
+    label: "정책상 제외",
+    hint: "지역/장르 등 운영 정책으로 제외 (크롤러 책임 아님)",
+  },
+  {
+    value: "INSUFFICIENT_DATA",
+    label: "정보 부족",
+    hint: "정보가 너무 없어 등록할 수 없다 (추출 실패)",
+  },
+  { value: "OTHER", label: "기타", hint: "위에 해당하지 않음" },
+];
+
+export const IGNORED_REASON_LABELS: Record<IgnoredReason, string> =
+  IGNORED_REASON_OPTIONS.reduce(
+    (acc, o) => {
+      acc[o.value] = o.label;
+      return acc;
+    },
+    {} as Record<IgnoredReason, string>,
+  );
+
 export interface CrawledVenue {
   name: string;
   address: string | null;
@@ -50,15 +99,26 @@ export interface NormalizedCrawlData {
 export interface CrawledRecordRes {
   id: number;
   site: string;
+  /** 이 레코드를 뽑아낸 크롤러 버전. 구버전 크롤러는 보내지 않아 null 일 수 있다. */
+  crawlerVersion?: string | null;
   venderId: string;
   sourceUrl?: string | null;
   status: CrawledRecordStatus;
+  /** status=IGNORED 일 때의 사유 코드. 사유 미기재면 null. */
+  ignoredReason?: IgnoredReason | null;
   data: string; // JSON string of NormalizedCrawlData (원본, 불변)
   editedData?: string | null; // JSON string of EditedData (사람 교정/매핑 정답)
   crawledAt: string;
   createdAt: string;
   updatedAt: string;
   editedAt?: string | null;
+  /** 반영 시각. updatedAt 은 초안 저장으로도 갱신되므로 리드타임에 쓸 수 없다. */
+  appliedAt?: string | null;
+  /**
+   * 검수 완료 도장 시각. 이 값이 있어야 editedData.extraction 이 정답으로 인정되고,
+   * 비어 있는 필드가 "소스에 정보 없음"으로 확정된다. null = 아직 안 봄.
+   */
+  reviewedAt?: string | null;
   appliedPerformanceId: number | null;
 }
 
@@ -244,6 +304,8 @@ export interface PageResponse<T> {
 
 export interface GetCrawledRecordsParams {
   status?: CrawledRecordStatus;
+  /** 검수 완료 도장 필터. 미지정=전체, true=검수 완료만, false=미검수만. */
+  reviewed?: boolean;
   page?: number;
   size?: number;
   /** Spring 정렬 표현식 목록. 예: ["crawledAt,desc"]. 미지정 시 최신 크롤 순. */

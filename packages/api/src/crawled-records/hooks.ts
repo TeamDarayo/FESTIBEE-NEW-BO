@@ -9,13 +9,16 @@ import {
   getCrawledRecord,
   getCrawledRecords,
   ignoreCrawledRecord,
+  markCrawledRecordReviewed,
   previewApplyCrawledRecord,
   recordReviewEvent,
   saveEditedData,
+  unmarkCrawledRecordReviewed,
 } from "./api";
 import type {
   ApplyMappingReq,
   GetCrawledRecordsParams,
+  IgnoredReason,
   RecordReviewEventReq,
 } from "./types";
 
@@ -108,7 +111,30 @@ export function useRecordReviewEvent() {
 export function useIgnoreCrawledRecord() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => ignoreCrawledRecord(id),
+    mutationFn: ({
+      id,
+      ignoredReason,
+    }: {
+      id: number;
+      ignoredReason?: IgnoredReason | null;
+    }) => ignoreCrawledRecord(id, ignoredReason),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crawledRecordKeys.all });
+    },
+  });
+}
+
+/**
+ * 검수 완료 도장 토글. 반영/무시와 독립된 액션이라 status 를 가리지 않는다.
+ * 목록 필터(reviewed)에도 영향을 주므로 목록·상세를 모두 무효화한다.
+ */
+export function useSetCrawledRecordReviewed() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, reviewed }: { id: number; reviewed: boolean }) =>
+      reviewed
+        ? markCrawledRecordReviewed(id)
+        : unmarkCrawledRecordReviewed(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crawledRecordKeys.all });
     },

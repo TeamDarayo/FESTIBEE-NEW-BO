@@ -4,6 +4,7 @@ import type {
   ApplyPreviewRes,
   CrawledRecordRes,
   GetCrawledRecordsParams,
+  IgnoredReason,
   PageResponse,
   RecordReviewEventReq,
 } from "./types";
@@ -20,6 +21,8 @@ export function getCrawledRecords(
 ): Promise<PageResponse<CrawledRecordRes>> {
   const searchParams = new URLSearchParams();
   if (params?.status !== undefined) searchParams.set("status", params.status);
+  if (params?.reviewed !== undefined)
+    searchParams.set("reviewed", String(params.reviewed));
   if (params?.page !== undefined) searchParams.set("page", String(params.page));
   if (params?.size !== undefined) searchParams.set("size", String(params.size));
   // 최근 크롤링된 순. 같은 배치(crawledAt 동일)는 id 역순으로 안정 정렬한다.
@@ -69,9 +72,38 @@ export function applyCrawledRecord(
   });
 }
 
-export function ignoreCrawledRecord(id: number): Promise<CrawledRecordRes> {
-  return apiFetch<CrawledRecordRes>(`${BASE}/${id}/ignore`, {
+/**
+ * 무시 처리. `ignoredReason` 은 선택이지만 가급적 보낸다 — 사후에 사유를 되물을 방법이 없고,
+ * 수집 정밀도(크롤러 책임 무시 vs 정책상 제외)를 이 코드로만 가를 수 있다.
+ */
+export function ignoreCrawledRecord(
+  id: number,
+  ignoredReason?: IgnoredReason | null,
+): Promise<CrawledRecordRes> {
+  const query = ignoredReason
+    ? `?${new URLSearchParams({ ignoredReason }).toString()}`
+    : "";
+  return apiFetch<CrawledRecordRes>(`${BASE}/${id}/ignore${query}`, {
     method: "POST",
+  });
+}
+
+/**
+ * 검수 완료 도장. 이 레코드의 크롤 필드를 전부 확인했고, 비어 있는 칸은 소스에 정보가
+ * 없다는 뜻이라고 확정한다. status 와 무관하며 반영(apply)과 독립이다. 멱등.
+ */
+export function markCrawledRecordReviewed(
+  id: number,
+): Promise<CrawledRecordRes> {
+  return apiFetch<CrawledRecordRes>(`${BASE}/${id}/review`, { method: "POST" });
+}
+
+/** 검수 완료 도장 취소(오조작 복구용). */
+export function unmarkCrawledRecordReviewed(
+  id: number,
+): Promise<CrawledRecordRes> {
+  return apiFetch<CrawledRecordRes>(`${BASE}/${id}/review`, {
+    method: "DELETE",
   });
 }
 

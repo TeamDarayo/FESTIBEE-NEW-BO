@@ -16,9 +16,19 @@ import {
   AlertDialogTitle,
 } from "@festibee/ui";
 import { AlertCircle, ExternalLink, MapPin, CalendarDays, Users, Ticket } from "lucide-react";
-import { useGetCrawledRecord, useIgnoreCrawledRecord } from "@festibee/api";
-import type { NormalizedCrawlData, CrawledRecordStatus } from "@festibee/api";
+import {
+  IGNORED_REASON_LABELS,
+  IGNORED_REASON_OPTIONS,
+  useGetCrawledRecord,
+  useIgnoreCrawledRecord,
+} from "@festibee/api";
+import type {
+  NormalizedCrawlData,
+  CrawledRecordStatus,
+  IgnoredReason,
+} from "@festibee/api";
 import { CrawledRecordStatusBadge } from "./crawled-record-status-badge";
+import { ReviewedBadge, ReviewStampCard } from "./review-stamp";
 
 function formatDateTime(dateStr: string | null | undefined): string {
   if (!dateStr) return "-";
@@ -84,6 +94,8 @@ export function CrawledRecordDetail({ id }: { id: number }) {
   const { data: record, isLoading, isError } = useGetCrawledRecord(id);
   const ignoreMutation = useIgnoreCrawledRecord();
   const [showIgnoreDialog, setShowIgnoreDialog] = useState(false);
+  // "" = 사유 미기재. 기존 동작(사유 없이 무시)을 보존하기 위해 기본값으로 둔다.
+  const [ignoreReason, setIgnoreReason] = useState<IgnoredReason | "">("");
 
   if (isLoading) {
     return (
@@ -130,7 +142,10 @@ export function CrawledRecordDetail({ id }: { id: number }) {
       : null;
 
   const handleIgnore = async () => {
-    await ignoreMutation.mutateAsync(id);
+    await ignoreMutation.mutateAsync({
+      id,
+      ignoredReason: ignoreReason || undefined,
+    });
     router.push("/crawled-records");
   };
 
@@ -151,9 +166,21 @@ export function CrawledRecordDetail({ id }: { id: number }) {
               {crawlData?.title ?? record.venderId}
             </h1>
             <CrawledRecordStatusBadge status={record.status as CrawledRecordStatus} />
+            <ReviewedBadge reviewedAt={record.reviewedAt} showPending />
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
-            {record.site} &middot; {formatRelativeFromNow(record.crawledAt)}
+            {record.site}
+            {record.crawlerVersion ? ` (v${record.crawlerVersion})` : ""} &middot;{" "}
+            {formatRelativeFromNow(record.crawledAt)}
+            {record.status === "IGNORED" && (
+              <>
+                {" "}
+                &middot; 무시 사유:{" "}
+                {record.ignoredReason
+                  ? IGNORED_REASON_LABELS[record.ignoredReason]
+                  : "미기재"}
+              </>
+            )}
           </p>
           {record.sourceUrl && (
             <a
@@ -168,21 +195,25 @@ export function CrawledRecordDetail({ id }: { id: number }) {
           )}
         </div>
 
-        {isNew && (
-          <div className="flex shrink-0 gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowIgnoreDialog(true)}
-              disabled={ignoreMutation.isPending}
-            >
-              무시
-            </Button>
-            <Button size="sm" onClick={() => router.push(`/crawled-records/${id}/apply`)}>
-              반영
-            </Button>
-          </div>
-        )}
+        {/* 검수 도장은 반영/무시와 독립이므로 상태를 가리지 않고 항상 보인다. */}
+        <div className="w-[320px] shrink-0 space-y-2">
+          {isNew && (
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowIgnoreDialog(true)}
+                disabled={ignoreMutation.isPending}
+              >
+                무시
+              </Button>
+              <Button size="sm" onClick={() => router.push(`/crawled-records/${id}/apply`)}>
+                반영
+              </Button>
+            </div>
+          )}
+          <ReviewStampCard recordId={id} reviewedAt={record.reviewedAt} />
+        </div>
       </div>
 
       {/* Content */}
@@ -327,6 +358,35 @@ export function CrawledRecordDetail({ id }: { id: number }) {
               상태가 &ldquo;무시됨&rdquo;으로 변경됩니다. 이 작업은 되돌릴 수 없습니다.
             </AlertDialogDescription>
           </AlertDialogHeader>
+
+          {/* 무시 사유. 사후에 되물을 방법이 없고, "크롤러가 잘못 가져온 것"과
+              "정책상 뺀 것"을 이 코드로만 가를 수 있다. 선택은 선택 사항이다. */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium" htmlFor="ignore-reason">
+              무시 사유 (선택)
+            </label>
+            <select
+              id="ignore-reason"
+              className="h-9 w-full rounded-md border bg-background px-2 text-sm"
+              value={ignoreReason}
+              onChange={(e) =>
+                setIgnoreReason(e.target.value as IgnoredReason | "")
+              }
+            >
+              <option value="">선택 안 함 (사유 미기재)</option>
+              {IGNORED_REASON_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-muted-foreground">
+              {IGNORED_REASON_OPTIONS.find((o) => o.value === ignoreReason)
+                ?.hint ??
+                "사유를 남기면 크롤러의 수집 정밀도를 계산할 수 있습니다."}
+            </p>
+          </div>
+
           <AlertDialogFooter>
             <AlertDialogCancel>취소</AlertDialogCancel>
             <AlertDialogAction

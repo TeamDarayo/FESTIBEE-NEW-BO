@@ -13,6 +13,7 @@ import { useGetCrawledRecord } from "@festibee/api";
 import type { CrawledRecordStatus, EditedData, NormalizedCrawlData } from "@festibee/api";
 import { CrawledRecordStatusBadge } from "./crawled-record-status-badge";
 import { LabelingForm } from "./labeling-form";
+import { ReviewedBadge, ReviewStampCard } from "./review-stamp";
 
 function safeParse<T>(json: string | null | undefined): T | null {
   if (!json) return null;
@@ -84,6 +85,7 @@ export function ApplyView({ id }: { id: number }) {
             {crawlData.title ?? record.venderId}
           </h1>
           <CrawledRecordStatusBadge status={record.status as CrawledRecordStatus} />
+          <ReviewedBadge reviewedAt={record.reviewedAt} />
         </div>
         <span className="ml-auto text-xs text-muted-foreground">
           {record.site} · #{record.id}
@@ -99,14 +101,23 @@ export function ApplyView({ id }: { id: number }) {
               recordId={id}
               crawlData={crawlData}
               initialEditedData={editedData}
+              reviewedAt={record.reviewedAt}
               reviewStartedAt={reviewStartedAt}
               onApplied={backToDetail}
             />
           ) : (
+            // 라벨링 폼은 닫히지만 검수 도장은 반영/무시와 독립이라 여기서도 찍을 수 있어야 한다.
             <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
               <p className="text-sm text-muted-foreground">
                 이미 처리된 레코드입니다 (상태: {record.status}).
               </p>
+              <div className="w-full text-left">
+                <ReviewStampCard
+                  recordId={id}
+                  reviewedAt={record.reviewedAt}
+                  compact
+                />
+              </div>
               <Button size="sm" variant="outline" onClick={backToDetail}>
                 상세로 돌아가기
               </Button>

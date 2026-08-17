@@ -7,8 +7,18 @@ import { AlertCircle, ChevronRight, Loader2 } from "lucide-react";
 import { useGetInfiniteCrawledRecords } from "@festibee/api";
 import type { CrawledRecordStatus, NormalizedCrawlData } from "@festibee/api";
 import { CrawledRecordStatusBadge } from "./crawled-record-status-badge";
+import { ReviewedBadge } from "./review-stamp";
 
 type StatusFilter = CrawledRecordStatus | "ALL";
+
+/** 검수 완료 도장 필터. 지표 모집단은 REVIEWED 뿐이라 검수 큐를 좁혀 볼 수 있어야 한다. */
+type ReviewFilter = "ALL" | "REVIEWED" | "UNREVIEWED";
+
+const REVIEW_FILTERS: { value: ReviewFilter; label: string }[] = [
+  { value: "ALL", label: "검수 전체" },
+  { value: "UNREVIEWED", label: "미검수" },
+  { value: "REVIEWED", label: "검수 완료" },
+];
 
 function formatRelativeTime(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -26,6 +36,7 @@ const PAGE_SIZE = 30;
 export function CrawledRecordList() {
   const router = useRouter();
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("NEW");
+  const [reviewFilter, setReviewFilter] = useState<ReviewFilter>("ALL");
   const scrollRootRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -39,6 +50,7 @@ export function CrawledRecordList() {
     isFetchingNextPage,
   } = useGetInfiniteCrawledRecords({
     status: statusFilter === "ALL" ? undefined : statusFilter,
+    reviewed: reviewFilter === "ALL" ? undefined : reviewFilter === "REVIEWED",
     size: PAGE_SIZE,
   });
 
@@ -74,7 +86,7 @@ export function CrawledRecordList() {
     scrollRootRef.current
       ?.querySelector<HTMLElement>("[data-radix-scroll-area-viewport]")
       ?.scrollTo({ top: 0 });
-  }, [statusFilter]);
+  }, [statusFilter, reviewFilter]);
 
   return (
     <div className="flex h-full flex-col">
@@ -103,6 +115,19 @@ export function CrawledRecordList() {
             </TabsTrigger>
           </TabsList>
         </Tabs>
+        <div className="mt-2 flex gap-1">
+          {REVIEW_FILTERS.map((f) => (
+            <Button
+              key={f.value}
+              size="sm"
+              variant={reviewFilter === f.value ? "secondary" : "ghost"}
+              className="h-6 flex-1 px-1 text-[11px]"
+              onClick={() => setReviewFilter(f.value)}
+            >
+              {f.label}
+            </Button>
+          ))}
+        </div>
       </div>
 
       <ScrollArea ref={scrollRootRef} className="flex-1">
@@ -154,6 +179,7 @@ export function CrawledRecordList() {
                         <CrawledRecordStatusBadge
                           status={record.status as CrawledRecordStatus}
                         />
+                        <ReviewedBadge reviewedAt={record.reviewedAt} />
                       </div>
                       <p className="mt-0.5 text-xs text-muted-foreground">
                         {crawlData

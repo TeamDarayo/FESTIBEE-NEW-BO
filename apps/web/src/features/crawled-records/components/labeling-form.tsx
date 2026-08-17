@@ -44,6 +44,8 @@ import {
 import { PlaceCombobox } from "@/features/performance/ui/place-combobox";
 import { AutoResizeTextarea } from "@/features/performance/ui/auto-resize-textarea";
 import { PerformancePicker, type PerformanceTarget } from "./performance-picker";
+import { ExtractionReview } from "./extraction-review";
+import { ReviewStampCard } from "./review-stamp";
 import { ArtistTimetableRow } from "./artist-timetable-row";
 import { StageCell } from "./stage-cell";
 import { ApplyPreviewDialog } from "./apply-preview-dialog";
@@ -54,6 +56,11 @@ import {
   type PlaceMode,
   type ScalarValues,
 } from "../lib/build-edited-data";
+import {
+  extractionDraftFromCrawl,
+  extractionDraftFromSaved,
+  type ExtractionDraft,
+} from "../lib/extraction-draft";
 import {
   baselineReservationRows,
   baselineTimetableRows,
@@ -85,6 +92,8 @@ interface LabelingFormProps {
   crawlData: NormalizedCrawlData;
   /** 저장된 라벨링 초안 (record.editedData). plan 이 있으면 폼을 그대로 복원한다. */
   initialEditedData?: EditedData | null;
+  /** 검수 완료 도장 시각(record.reviewedAt). null = 미검수. */
+  reviewedAt?: string | null;
   /** annotation phase 시작 시각(반영 화면 진입). 반영 시 review_event 기록에 사용. */
   reviewStartedAt?: string;
   /** 반영 성공 후 콜백 (보통 라우트 이동). */
@@ -134,6 +143,7 @@ export function LabelingForm({
   recordId,
   crawlData,
   initialEditedData,
+  reviewedAt,
   reviewStartedAt,
   onApplied,
 }: LabelingFormProps) {
@@ -287,6 +297,23 @@ export function LabelingForm({
 
   const [dirty, setDirty] = useState(false);
   const markDirty = useCallback(() => setDirty(true), []);
+
+  // --- 크롤 추출 정답(extraction) 교정 상태 ------------------------------------
+  // plan 폼 상태(scalars/place/reservations/timetables)와 **완전히 별개의 상태**다.
+  // 대상 공연을 바꿔 baseline 을 다시 실어도, plan 값을 고쳐도 여기는 건드리지 않는다.
+  // 반대로 여기서 고쳐도 plan 은 그대로다 — 반영 동작은 전혀 바뀌지 않는다.
+  const [extractionDraft, setExtractionDraft] = useState<ExtractionDraft>(() =>
+    initialEditedData?.extraction
+      ? extractionDraftFromSaved(initialEditedData.extraction)
+      : extractionDraftFromCrawl(crawlData)
+  );
+  const updateExtraction = useCallback(
+    (patch: Partial<ExtractionDraft>) => {
+      setExtractionDraft((prev) => ({ ...prev, ...patch }));
+      markDirty();
+    },
+    [markDirty]
+  );
 
   const [error, setError] = useState<string | null>(null);
   const [savedAt, setSavedAt] = useState<string | null>(null);
@@ -787,6 +814,7 @@ export function LabelingForm({
   const buildPayload = () =>
     buildEditedData({
       crawlData,
+      extraction: extractionDraft,
       target: performanceTarget,
       baselineUpdatedAt,
       scalars,
@@ -887,7 +915,19 @@ export function LabelingForm({
     <TooltipProvider delayDuration={100}>
       <div className="flex h-full flex-col">
         <div className="flex-1 space-y-5 overflow-auto p-5">
-          {/* 대상 공연 */}
+          {/* 크롤 추출 정답 — 아래 plan 입력과 분리된 별도 입력이다. */}
+          <section className="space-y-2">
+            <ExtractionReview
+              crawlData={crawlData}
+              draft={extractionDraft}
+              onChange={updateExtraction}
+            />
+            <ReviewStampCard recordId={recordId} reviewedAt={reviewedAt} compact />
+          </section>
+
+          <Separator />
+
+          {/* 대상 공연 — 여기서부터는 DB 에 반영할 값(plan)이다. */}
           <section>
             <div className="flex items-center justify-between">
               <Label className="text-sm font-semibold">대상 공연</Label>
@@ -920,9 +960,15 @@ export function LabelingForm({
 
           <Separator />
 
-          {/* 공연 기본정보 */}
+          {/* 공연 기본정보 (plan) */}
           <section className="space-y-2">
-            <Label className="text-sm font-semibold">공연 기본정보</Label>
+            <div>
+              <Label className="text-sm font-semibold">공연 기본정보</Label>
+              <p className="text-[11px] text-muted-foreground">
+                DB 에 반영할 값입니다. 위 &ldquo;크롤 추출 정답&rdquo;과 별개이며,
+                여기서 고쳐도 정답은 바뀌지 않습니다.
+              </p>
+            </div>
             <div className="space-y-2.5">
               <div>
                 <div className="flex items-center gap-1">
