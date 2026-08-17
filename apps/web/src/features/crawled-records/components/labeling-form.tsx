@@ -45,6 +45,7 @@ import { PlaceCombobox } from "@/features/performance/ui/place-combobox";
 import { AutoResizeTextarea } from "@/features/performance/ui/auto-resize-textarea";
 import { PerformancePicker, type PerformanceTarget } from "./performance-picker";
 import { ArtistTimetableRow } from "./artist-timetable-row";
+import { StageCell } from "./stage-cell";
 import { ApplyPreviewDialog } from "./apply-preview-dialog";
 import { CrawlSuggestion } from "./crawl-suggestion";
 import { SourceBadge } from "./source-badge";
@@ -71,6 +72,12 @@ import {
   type TimetableArtistRow,
   type TimetableRow,
 } from "../lib/form-state";
+import {
+  applyStageSelection,
+  collectStageOptions,
+  countRowsWithStageName,
+  type StageSelection,
+} from "../lib/stage-registry";
 
 interface LabelingFormProps {
   recordId: number;
@@ -485,6 +492,11 @@ export function LabelingForm({
     () => (targetStages ?? []) as { id?: number; name?: string }[],
     [targetStages]
   );
+  /** 행 스테이지 셀의 선택지: 대상 공연의 기존 스테이지 + 폼의 다른 행이 쓰는 이름. */
+  const stageChoices = useMemo(
+    () => collectStageOptions(timetables, stageOptions),
+    [timetables, stageOptions]
+  );
   useEffect(() => {
     if (targetPerformanceId === 0) {
       setTimetables((prev) =>
@@ -641,6 +653,11 @@ export function LabelingForm({
   // --- 타임테이블 뮤테이터 ------------------------------------------------------
   const updateTimetable = (i: number, patch: Partial<TimetableRow>) => {
     setTimetables((prev) => prev.map((x, j) => (j === i ? { ...x, ...patch } : x)));
+    markDirty();
+  };
+  /** 스테이지는 이름 하나당 하나 — 같은 이름을 쓰는 다른 행의 연결도 함께 맞춘다. */
+  const setStage = (i: number, next: StageSelection) => {
+    setTimetables((prev) => applyStageSelection(prev, i, next));
     markDirty();
   };
   const addTimetable = () => {
@@ -1300,37 +1317,23 @@ export function LabelingForm({
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Input
-                        className="h-7 flex-1 text-xs"
-                        value={t.stageName}
-                        onChange={(e) =>
-                          updateTimetable(i, { stageName: e.target.value })
-                        }
-                        placeholder="스테이지명 (예: 그린스테이지)"
-                      />
-                      {isExistingTarget ? (
-                        <select
-                          className="h-7 w-40 rounded border bg-background px-1 text-xs"
-                          value={t.stageId}
-                          onChange={(e) =>
-                            updateTimetable(i, { stageId: e.target.value })
-                          }
-                          title="기존 스테이지에 연결하거나, 새 스테이지로 생성"
-                        >
-                          <option value="">신규 스테이지 생성</option>
-                          {stageOptions
-                            .filter((s) => s.id != null)
-                            .map((s) => (
-                              <option key={s.id} value={String(s.id)}>
-                                {s.name} #{s.id}
-                              </option>
-                            ))}
-                        </select>
-                      ) : (
-                        <span className="shrink-0 text-[10px] text-muted-foreground">
-                          신규 스테이지
-                        </span>
-                      )}
+                      <span className="shrink-0 text-[10px] text-muted-foreground">
+                        스테이지
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <StageCell
+                          stageId={t.stageId}
+                          stageName={t.stageName}
+                          options={stageChoices}
+                          canLinkExisting={isExistingTarget}
+                          sharedRowCount={countRowsWithStageName(
+                            timetables,
+                            i,
+                            t.stageName
+                          )}
+                          onChange={(next) => setStage(i, next)}
+                        />
+                      </div>
                     </div>
                     <div className="space-y-1 pl-1" data-tt-artists>
                       {t.artists.map((a, ai) => (
