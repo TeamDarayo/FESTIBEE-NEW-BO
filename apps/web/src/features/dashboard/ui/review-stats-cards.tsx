@@ -70,13 +70,16 @@ export function ReviewStatsCards({ data }: ReviewStatsCardsProps) {
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground">
-            평균 리드타임
+            리드타임 (검토 이벤트 기준)
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{leadTime}</div>
           <p className="text-xs text-muted-foreground">
-            크롤링 ~ 처리 소요 시간
+            검토 완료 시점에 기록된 값
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            위 &quot;평균 리드타임&quot;(applied_at 기준)과 표본이 달라 값이 다르다.
           </p>
         </CardContent>
       </Card>
