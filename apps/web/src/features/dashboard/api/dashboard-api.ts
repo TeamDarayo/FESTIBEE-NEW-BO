@@ -135,8 +135,8 @@ export interface CoverageRes {
 
 export interface NoEditRes {
   /** 모든 필드가 원문 무수정인 단위 비율 = 진짜 자동화율. */
-  recordRateStrict: number;
-  recordRateNormalized: number;
+  recordRateStrict: number | null;
+  recordRateNormalized: number | null;
   recordRateStrictValued: number | null;
   recordRateNormalizedValued: number | null;
   avgEditDistance: number | null;
