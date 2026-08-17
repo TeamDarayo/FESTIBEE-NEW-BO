@@ -93,8 +93,13 @@ export interface Metric {
   units: number;
 }
 
-/** 리스트 필드만 truth/crawl/matched·element* 가 채워진다. 스칼라는 전부 null. */
-export interface FieldMetric extends Metric {
+/**
+ * 리스트 필드만 truth/crawl/matched·element* 가 채워진다. 스칼라는 전부 null.
+ *
+ * `units` 는 없다 — 서버 FieldMetricRes 가 보내지 않는다. 필드 단위 표본 수는
+ * hit/wrong/miss/extra/na/unverified 를 합해서 구한다.
+ */
+export interface FieldMetric extends Omit<Metric, "units"> {
   listField: boolean;
   hit: number;
   wrong: number;

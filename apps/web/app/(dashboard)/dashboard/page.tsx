@@ -1,206 +1,165 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Button, Tabs, TabsList, TabsTrigger } from "@festibee/ui";
 import {
-  useDashboardStats,
-  useReviewEventStats,
   useCrawlAccuracyStats,
-  StatsCards,
-  FunnelChart,
-  FillRateChart,
-  ReviewStatsCards,
-  ReviewTrendChart,
-  AccuracyHeadline,
-  AccuracyFieldTable,
-  CoverageCard,
-  ListDetailSection,
-  IngestPrecisionCard,
-  SectionHeading,
+  useDashboardStats,
+  HeadlineMetrics,
+  FieldRecallChart,
+  FieldDetailSheet,
+  SecondaryStrip,
   type StatsPreset,
-  type AccuracyUnit,
 } from "@/features/dashboard";
 
 const PRESETS: { label: string; value: StatsPreset }[] = [
-  { label: "최근 7일", value: "LAST_7D" },
-  { label: "최근 30일", value: "LAST_30D" },
+  { label: "7일", value: "LAST_7D" },
+  { label: "30일", value: "LAST_30D" },
   { label: "전체", value: "ALL" },
 ];
 
-const UNITS: { label: string; value: AccuracyUnit }[] = [
-  { label: "축제 단위", value: "FESTIVAL" },
-  { label: "레코드 단위", value: "RECORD" },
-];
-
 /**
- * 대시보드 정보 구조 — 이 순서와 분리가 의도다.
+ * 개요는 세 가지만 말한다 — 맞았나 / 손 안 탔나 / 믿어도 되나.
+ * 그리고 그래프 하나로 "어디를 고쳐야 하나"에 답한다. 나머지는 전부 상세로 내려갔다.
  *
- * 1. 정확도 (사람 정답 기준): 크롤러가 뽑은 값이 맞았나. 검수 커버리지와 항상 붙어 다닌다
- * 2. 수집 정밀도: 애초에 가져오지 말았어야 할 것을 가져왔나 — 1과 다른 질문
- * 3. 운영 처리 현황: 얼마나 빨리 처리했나 — 크롤러 품질이 아니라 운영 지표
- * 4. 크롤러 출력 채움률: 크롤러가 값을 넣었나 — **정확도가 아니다**
- *
- * 4를 1과 같은 층에 놓으면 "채웠다"가 "맞았다"로 읽힌다. 그게 지금까지의 문제였다.
+ * 분모 단위는 축제 고정이다. 레코드 단위는 재크롤이 잦은 축제가 지표를 지배해
+ * 기본값으로 쓸 수 없고, 토글로 남기면 무심코 켜진다.
  */
 export default function DashboardPage() {
   const [preset, setPreset] = useState<StatsPreset>("ALL");
-  // 재크롤은 이미 연결된 공연이 그대로 제안돼 매핑이 자명하게 100%가 된다.
-  // 섞으면 지표가 통째로 무의미해지므로 기본은 "최초 수집"이고, 재크롤은 별도 탭이다.
   const [isRecrawl, setIsRecrawl] = useState(false);
-  const [unit, setUnit] = useState<AccuracyUnit>("FESTIVAL");
+  const [selectedField, setSelectedField] = useState<string | null>(null);
 
-  const { data, isLoading, error } = useDashboardStats({ preset });
-  const { data: reviewStats } = useReviewEventStats({ preset });
+  const { data: stats } = useDashboardStats({ preset });
   const {
     data: accuracy,
-    isLoading: accuracyLoading,
-    error: accuracyError,
-  } = useCrawlAccuracyStats({ preset, isRecrawl, unit });
+    isLoading,
+    error,
+  } = useCrawlAccuracyStats({ preset, isRecrawl, unit: "FESTIVAL" });
+
+  const hasSample = (accuracy?.coverage.evaluatedUnits ?? 0) > 0;
 
   return (
-    <div className="flex-1 space-y-10 overflow-y-auto p-6">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-3xl font-bold">대시보드</h1>
-        <div className="flex gap-2">
-          {PRESETS.map((p) => (
-            <Button
-              key={p.value}
-              variant={preset === p.value ? "default" : "outline"}
-              size="sm"
-              onClick={() => setPreset(p.value)}
+    <div className="flex-1 overflow-y-auto">
+      <div className="mx-auto max-w-5xl px-6 py-10 lg:px-10">
+        <header className="flex flex-wrap items-end justify-between gap-4">
+          <h1 className="text-2xl font-semibold tracking-tight">
+            크롤링 정확도
+          </h1>
+          <div className="flex flex-wrap items-center gap-2">
+            <Tabs
+              value={isRecrawl ? "recrawl" : "first"}
+              onValueChange={(v) => setIsRecrawl(v === "recrawl")}
             >
-              {p.label}
-            </Button>
-          ))}
+              <TabsList className="h-8">
+                <TabsTrigger value="first" className="text-xs">
+                  최초 수집
+                </TabsTrigger>
+                <TabsTrigger value="recrawl" className="text-xs">
+                  재크롤
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+            <div className="flex rounded-md border p-0.5">
+              {PRESETS.map((p) => (
+                <Button
+                  key={p.value}
+                  variant={preset === p.value ? "secondary" : "ghost"}
+                  size="sm"
+                  className="h-7 px-3 text-xs transition-transform active:scale-[0.97]"
+                  onClick={() => setPreset(p.value)}
+                >
+                  {p.label}
+                </Button>
+              ))}
+            </div>
+          </div>
+        </header>
+
+        <div className="mt-8">
+          {isLoading ? <OverviewSkeleton /> : null}
+
+          {error ? (
+            <p className="rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+              지표를 불러올 수 없습니다 — {error.message}
+            </p>
+          ) : null}
+
+          {accuracy ? (
+            <div className="space-y-10">
+              <HeadlineMetrics data={accuracy} />
+
+              {hasSample ? (
+                <section className="border-t pt-8">
+                  <h2 className="mb-6 text-sm font-medium text-muted-foreground">
+                    필드별 정확도
+                  </h2>
+                  <FieldRecallChart
+                    byField={accuracy.normalized.byField}
+                    onSelect={setSelectedField}
+                  />
+                </section>
+              ) : (
+                <EmptyState />
+              )}
+
+              <SecondaryStrip accuracy={accuracy} stats={stats} />
+            </div>
+          ) : null}
         </div>
       </div>
 
-      {/* 1. 정확도 — 사람이 확정한 정답이 분모다 */}
-      <section className="space-y-4">
-        <SectionHeading
-          title="크롤링 정확도 (사람 정답 기준)"
-          description="검수 완료 도장이 찍힌 레코드만 모집단이다. 분모는 크롤러가 뽑은 것이 아니라 사람이 '있어야 한다'고 확정한 값이다."
-          right={
-            <div className="flex flex-wrap items-center gap-2">
-              <Tabs
-                value={isRecrawl ? "recrawl" : "first"}
-                onValueChange={(v) => setIsRecrawl(v === "recrawl")}
-              >
-                <TabsList>
-                  <TabsTrigger value="first">최초 수집</TabsTrigger>
-                  <TabsTrigger value="recrawl">재크롤</TabsTrigger>
-                </TabsList>
-              </Tabs>
-              <div className="flex gap-1">
-                {UNITS.map((u) => (
-                  <Button
-                    key={u.value}
-                    variant={unit === u.value ? "secondary" : "ghost"}
-                    size="sm"
-                    onClick={() => setUnit(u.value)}
-                  >
-                    {u.label}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          }
+      {accuracy ? (
+        <FieldDetailSheet
+          fieldKey={selectedField}
+          data={accuracy}
+          onClose={() => setSelectedField(null)}
         />
-
-        {isRecrawl ? (
-          <p className="rounded-md bg-muted/50 p-3 text-xs text-muted-foreground">
-            재크롤 탭이다. 재크롤은 이미 연결된 공연이 그대로 제안되므로 매핑
-            정확도가 자명하게 높게 나온다. 최초 수집 수치와 같은 선상에서 비교하지 말 것.
-          </p>
-        ) : null}
-
-        {accuracyLoading && (
-          <div className="text-muted-foreground">정확도 지표 로딩 중...</div>
-        )}
-        {accuracyError && (
-          <div className="text-destructive">
-            정확도 지표를 불러올 수 없습니다: {accuracyError.message}
-          </div>
-        )}
-
-        {accuracy && (
-          <>
-            <CoverageCard coverage={accuracy.coverage} />
-            {accuracy.coverage.evaluatedUnits === 0 ? (
-              <div className="rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground">
-                검수 완료된 레코드가 아직 없어 정확도를 계산할 표본이 없다.
-                <br />
-                크롤 반영 화면에서 <strong>검수 완료</strong> 도장을 찍으면 그
-                레코드부터 지표에 들어간다.
-              </div>
-            ) : (
-              <>
-                <AccuracyHeadline data={accuracy} />
-                <AccuracyFieldTable
-                  normalized={accuracy.normalized}
-                  strict={accuracy.strict}
-                />
-                <ListDetailSection
-                  listDetail={accuracy.listDetail}
-                  normalized={accuracy.normalized}
-                />
-              </>
-            )}
-          </>
-        )}
-      </section>
-
-      {/* 2. 수집 정밀도 — 정확도와 다른 질문이라 층을 나눈다 */}
-      {accuracy && (
-        <section className="space-y-4">
-          <SectionHeading
-            title="수집 정밀도"
-            description="가져온 값이 맞았나(정확도)가 아니라, 애초에 가져오지 말았어야 할 것을 가져왔나를 잰다."
-          />
-          <IngestPrecisionCard data={accuracy.ingestPrecision} />
-        </section>
-      )}
-
-      {/* 3. 운영 처리 현황 */}
-      <section className="space-y-4">
-        <SectionHeading
-          title="운영 처리 현황"
-          description="크롤러 품질이 아니라 우리가 얼마나 빨리 처리했는지를 잰다. 품질 지표와 섞어 읽지 말 것."
-        />
-
-        {isLoading && <div className="text-muted-foreground">통계 로딩 중...</div>}
-        {error && (
-          <div className="text-destructive">
-            통계를 불러올 수 없습니다: {error.message}
-          </div>
-        )}
-
-        {data && (
-          <>
-            <StatsCards data={data} />
-            <FunnelChart data={data} />
-          </>
-        )}
-
-        {reviewStats && (
-          <>
-            <h3 className="pt-2 text-base font-semibold">라벨링 phase 측정</h3>
-            <ReviewStatsCards data={reviewStats} />
-            <ReviewTrendChart data={reviewStats.dailyTrend} />
-          </>
-        )}
-      </section>
-
-      {/* 4. 채움률 — 크롤러 출력의 자기보고. 정확도가 아니다 */}
-      {data && (
-        <section className="space-y-4">
-          <SectionHeading
-            title="크롤러 출력 채움률 (정확도 아님)"
-            description="크롤러가 각 필드에 값을 넣었는지만 센 자기보고 통계다. 넣은 값이 맞았는지는 위 정확도 섹션에서만 나온다."
-          />
-          <FillRateChart data={data.fieldFillRate} />
-        </section>
-      )}
+      ) : null}
     </div>
+  );
+}
+
+function OverviewSkeleton() {
+  return (
+    <div className="space-y-10">
+      <div className="grid grid-cols-1 divide-y sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="space-y-3 px-6 py-5 first:pl-0 last:pr-0">
+            <div className="h-3 w-20 animate-pulse rounded bg-muted" />
+            <div className="h-9 w-28 animate-pulse rounded bg-muted" />
+            <div className="h-3 w-24 animate-pulse rounded bg-muted" />
+          </div>
+        ))}
+      </div>
+      <div className="space-y-3 border-t pt-8">
+        {[0, 1, 2, 3, 4].map((i) => (
+          <div key={i} className="flex items-center gap-4">
+            <div className="h-3 w-16 animate-pulse rounded bg-muted" />
+            <div
+              className="h-4 animate-pulse rounded bg-muted"
+              style={{ width: `${70 - i * 11}%` }}
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function EmptyState() {
+  return (
+    <section className="border-t pt-8">
+      <div className="max-w-sm">
+        <h2 className="text-sm font-medium">아직 잴 것이 없다</h2>
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+          검수 도장이 찍힌 레코드부터 지표에 들어간다.
+        </p>
+        <Button asChild size="sm" variant="outline" className="mt-4">
+          <Link href="/crawled-records">크롤 목록으로</Link>
+        </Button>
+      </div>
+    </section>
   );
 }
