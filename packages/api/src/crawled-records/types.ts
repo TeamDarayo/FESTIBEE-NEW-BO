@@ -212,10 +212,40 @@ export interface Plan {
   timetables: PlanTimetable[];
 }
 
+/**
+ * 정확도 평가 엔진의 `field_key` 어휘. `edited_data.unverified` 는 이 값들만 담는다.
+ * 여기 없는 문자열을 넣으면 백엔드가 조용히 무시하고 그 필드는 다시 NA 로 빠진다.
+ */
+export type ExtractionFieldKey =
+  | "title"
+  | "poster_url"
+  | "venue_name"
+  | "venue_address"
+  | "dates"
+  | "reservations"
+  | "artists"
+  | "transportation_info"
+  | "ban_goods"
+  | "remark";
+
 export interface EditedData {
   extraction: NormalizedCrawlData;
   mapping: CrawlMapping;
   plan?: Plan;
+  /**
+   * 검수자가 **확인하지 못한** 필드 키 목록.
+   *
+   * `extraction` 의 빈칸은 원래 "소스에 그 정보가 없다"는 정답(NA, 분모 제외)이다.
+   * 그런데 "소스에 있는 건 알지만 확인할 수 없었다"(라인업이 이미지 안에만 있음)일 때도
+   * 똑같이 빈칸이 된다. 구분하지 않으면 후자가 전부 NA 로 분모에서 사라져
+   * **크롤러가 못 뽑는 필드일수록 지표가 유리해진다.**
+   *
+   * - `undefined`/`null` = 이 구분이 없던 시절의 데이터(전부 "정답이 빈칸"으로 해석)
+   * - `[]` = 모든 빈칸을 "소스에 없음"으로 확정했다
+   *
+   * 값이 들어 있는 필드는 여기 넣지 않는다 — 값을 넣었다는 것이 곧 확인했다는 뜻이다.
+   */
+  unverified?: ExtractionFieldKey[] | null;
 }
 
 /** 반영/초안저장 요청 본문. */

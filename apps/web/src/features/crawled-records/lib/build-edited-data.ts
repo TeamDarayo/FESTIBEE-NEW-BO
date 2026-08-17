@@ -13,6 +13,11 @@ import type {
   TimetableRow,
 } from "./form-state";
 import { parseDates, type ExtractionDraft } from "./extraction-draft";
+import {
+  blankExtractionFields,
+  toUnverifiedList,
+  type BlankChoices,
+} from "./unverified";
 
 export type PerformanceTargetInput =
   | { mode: "existing"; id: number; name: string }
@@ -48,6 +53,12 @@ export interface BuildEditedDataArgs {
   crawlData: NormalizedCrawlData;
   /** 크롤 값 교정 입력. plan 입력과 물리적으로 분리된 별도 상태다. */
   extraction: ExtractionDraft;
+  /**
+   * 빈칸으로 남은 필드에 대한 "소스에 없음 / 확인 못 함" 선택.
+   * 미선택 필드는 `unverified` 에 들어가지 않는다(= 기존과 같은 NA 해석).
+   * 초안 저장은 미선택 상태로도 가능해야 하므로 여기서 막지 않는다 — 도장만 막는다.
+   */
+  blankChoices?: BlankChoices;
   target: PerformanceTargetInput | null;
   /** 폼에 baseline 을 로드한 시점의 performance.updatedAt. */
   baselineUpdatedAt: string | null;
@@ -83,6 +94,9 @@ const byCrawlRef = (a: { crawlRef: number | null }, b: { crawlRef: number | null
  *                  빈 값은 "소스에 정보 없음"이라는 정답이다. 검수 완료 도장이 찍히면
  *                  `NA`(분모 제외)로 해석된다.
  * - `mapping`    = 자동 매핑 정답(엔티티 ID 연결). 크롤 출처 행 기준으로 채운다.
+ * - `unverified` = 빈칸 중 **확인하지 못한** 필드. "정답이 빈칸"과 "확인 못 함"을 가른다.
+ *                  이게 없으면 확인 불가 필드가 전부 NA 로 분모에서 빠져, 크롤러가
+ *                  못 뽑는 필드일수록 지표가 유리해진다.
  *
  * plan 값을 고쳐도 extraction 은 바뀌지 않고, 그 반대도 마찬가지다. 이 분리가 깨지면
  * "크롤러가 틀렸다"와 "DB 표기 규칙이 다르다"가 구분되지 않아 정확도 지표가 무의미해진다.
@@ -90,6 +104,7 @@ const byCrawlRef = (a: { crawlRef: number | null }, b: { crawlRef: number | null
 export function buildEditedData({
   crawlData,
   extraction: extractionDraft,
+  blankChoices,
   target,
   baselineUpdatedAt,
   scalars,
@@ -263,5 +278,14 @@ export function buildEditedData({
     mergedFromExisting: target?.mode === "existing",
   };
 
-  return { extraction, mapping, plan };
+  // --- unverified (빈칸의 두 가지 의미) ---------------------------------------
+  // 값이 들어간 필드는 확인한 것으로 본다 — 그래서 후보는 빈칸뿐이다.
+  // 미선택 필드는 목록에 넣지 않는다: 초안 저장은 미선택 상태로도 가능해야 하고,
+  // 확정되지 않은 상태를 "확인 못 함"으로 밀어 넣으면 그것도 거짓이다.
+  const unverified = toUnverifiedList(
+    blankExtractionFields(extraction),
+    blankChoices ?? {}
+  );
+
+  return { extraction, mapping, plan, unverified };
 }

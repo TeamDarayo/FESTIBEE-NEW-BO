@@ -15,7 +15,7 @@ import {
 } from "@festibee/ui";
 import type { AccuracyRes, FieldMetric } from "../api/dashboard-api";
 import { diagnosticLabel, fieldLabel, parentField } from "./field-labels";
-import { formatPct } from "./metric-format";
+import { formatPct, UNRELIABLE_UNVERIFIED_RATE } from "./metric-format";
 
 interface Props {
   listDetail: Record<string, FieldMetric>;
@@ -88,6 +88,14 @@ export function ListDetailSection({ listDetail, normalized }: Props) {
                       범인: {diagnosticLabel(worst.key)} {formatPct(worst.recall)}
                     </span>
                   </>
+                ) : null}
+                {/* 대조를 못 한 필드의 원인 분해는 원인이 아니라 표본 부족을 보고 있는 것이다. */}
+                {headline?.unverifiedRate != null &&
+                headline.unverifiedRate > UNRELIABLE_UNVERIFIED_RATE ? (
+                  <span className="mt-1 block font-medium text-amber-600 dark:text-amber-400">
+                    검수자가 {formatPct(headline.unverifiedRate)} 를 확인하지 못했다 —
+                    아래 분해는 확인된 표본에서만 나온 값이라 원인으로 인용하면 안 된다.
+                  </span>
                 ) : null}
               </CardDescription>
             </CardHeader>

@@ -2,7 +2,12 @@
 
 import { Card, CardContent } from "@festibee/ui";
 import type { CoverageRes } from "../api/dashboard-api";
-import { formatCount, formatPct, ReferenceOnlyBadge } from "./metric-format";
+import {
+  formatCount,
+  formatPct,
+  ReferenceOnlyBadge,
+  UNRELIABLE_UNVERIFIED_RATE,
+} from "./metric-format";
 
 /**
  * 검수 커버리지. **정확도 바로 옆에 붙는다.**
@@ -12,6 +17,9 @@ import { formatCount, formatPct, ReferenceOnlyBadge } from "./metric-format";
  */
 export function CoverageCard({ coverage }: { coverage: CoverageRes }) {
   const unitLabel = coverage.unit === "RECORD" ? "레코드" : "축제";
+  const unverified = coverage.avgUnverifiedRate;
+  const unverifiedHeavy =
+    unverified != null && unverified > UNRELIABLE_UNVERIFIED_RATE;
 
   return (
     <Card className={coverage.insufficientSample ? "border-warning" : undefined}>
@@ -25,6 +33,12 @@ export function CoverageCard({ coverage }: { coverage: CoverageRes }) {
           label={`평가 단위 (${unitLabel})`}
           value={`${formatCount(coverage.evaluatedUnits)}${unitLabel === "축제" ? "개" : "건"}`}
           hint={`평가 레코드 ${formatCount(coverage.evaluatedRecords)}건 / 코호트 축제 ${formatCount(coverage.cohortFestivals)}개`}
+        />
+        <Item
+          label="평균 미확인율"
+          value={formatPct(unverified)}
+          hint="검수했지만 대조하지 못한 필드 비율"
+          emphasis={unverifiedHeavy}
         />
         {coverage.insufficientSample ? (
           <div className="flex flex-1 items-center gap-2">
@@ -44,15 +58,26 @@ function Item({
   label,
   value,
   hint,
+  emphasis = false,
 }: {
   label: string;
   value: string;
   hint: string;
+  /** 이 값이 지표 해석을 위협하는 수준일 때. 색으로 먼저 눈에 띄어야 한다. */
+  emphasis?: boolean;
 }) {
   return (
     <div>
       <div className="text-xs font-medium text-muted-foreground">{label}</div>
-      <div className="text-xl font-bold">{value}</div>
+      <div
+        className={
+          emphasis
+            ? "text-xl font-bold text-amber-600 dark:text-amber-400"
+            : "text-xl font-bold"
+        }
+      >
+        {value}
+      </div>
       <p className="text-xs text-muted-foreground">{hint}</p>
     </div>
   );

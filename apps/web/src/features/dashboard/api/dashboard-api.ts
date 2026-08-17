@@ -100,8 +100,19 @@ export interface FieldMetric extends Metric {
   wrong: number;
   miss: number;
   extra: number;
+  /** 정답이 빈칸 = 소스에 정보가 없다고 사람이 확정했다. 분모 제외. */
   na: number;
-  noEditRate: number;
+  /** 확인 못 함 = 사람이 대조하지 못했다. 분모 제외. **na 와 다른 사실이다.** */
+  unverified: number;
+  /** UNVERIFIED 를 뺀 분모 기준. 확인한 단위가 없으면 null(0% 가 아니다). */
+  noEditRate: number | null;
+  /**
+   * 검수 완료 단위 중 이 필드를 **확인하지 못한** 비율.
+   *
+   * **recall 을 이 값 없이 읽지 마라.** 1.0 이면 recall 은 아무 의미가 없다 —
+   * 분모가 통째로 비었다는 뜻이다. 높을수록 같은 행의 recall 은 얇은 표본에서 나온 값이다.
+   */
+  unverifiedRate: number | null;
   avgEditDistance: number | null;
   truthElements: number | null;
   crawlElements: number | null;
@@ -131,6 +142,12 @@ export interface CoverageRes {
   unit: string;
   /** true 면 표본 30 미만 → 화면의 모든 수치가 참고용이다. */
   insufficientSample: boolean;
+  /**
+   * 전체 평균 미확인율. 커버리지와 **다른 축**이다 —
+   * 커버리지가 "몇 건을 봤나"라면 이건 "본 건 안에서 얼마나 대조하지 못했나"다.
+   * 평가 단위가 없으면 null(0% 가 아니다).
+   */
+  avgUnverifiedRate: number | null;
 }
 
 export interface NoEditRes {

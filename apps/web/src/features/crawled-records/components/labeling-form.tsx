@@ -30,6 +30,7 @@ import {
   useSaveEditedData,
   type ApplyPreviewRes,
   type EditedData,
+  type ExtractionFieldKey,
   type ManualArtistMapping,
   type NormalizedCrawlData,
   type ReservationTypeEnum,
@@ -61,6 +62,15 @@ import {
   extractionDraftFromSaved,
   type ExtractionDraft,
 } from "../lib/extraction-draft";
+import {
+  blankExtractionFields,
+  dropChoicesForFilledFields,
+  fieldLabel as extractionFieldLabel,
+  initialBlankChoices,
+  pendingBlankFields,
+  type BlankChoice,
+  type BlankChoices,
+} from "../lib/unverified";
 import {
   baselineReservationRows,
   baselineTimetableRows,
@@ -310,6 +320,22 @@ export function LabelingForm({
   const updateExtraction = useCallback(
     (patch: Partial<ExtractionDraft>) => {
       setExtractionDraft((prev) => ({ ...prev, ...patch }));
+      markDirty();
+    },
+    [markDirty]
+  );
+
+  // 빈칸의 두 가지 의미("소스에 없음" / "확인 못 함") 선택 상태.
+  // 값이 들어간 필드는 확인한 것으로 보므로 여기 후보가 아니다 — 빈칸에만 묻는다.
+  const [blankChoices, setBlankChoices] = useState<BlankChoices>(() =>
+    initialBlankChoices(
+      initialEditedData,
+      blankExtractionFields(initialEditedData?.extraction)
+    )
+  );
+  const chooseBlank = useCallback(
+    (key: ExtractionFieldKey, choice: BlankChoice) => {
+      setBlankChoices((prev) => ({ ...prev, [key]: choice }));
       markDirty();
     },
     [markDirty]
@@ -815,6 +841,7 @@ export function LabelingForm({
     buildEditedData({
       crawlData,
       extraction: extractionDraft,
+      blankChoices,
       target: performanceTarget,
       baselineUpdatedAt,
       scalars,
@@ -911,6 +938,22 @@ export function LabelingForm({
   const enabledReservations = reservations.filter((r) => r.enabled);
   const enabledTimetables = timetables.filter((t) => t.enabled);
 
+  // --- 빈칸 확정 게이트 ---------------------------------------------------------
+  // 정답(extraction)은 교정 카드 + 아래 폼의 크롤 출처 행에서 함께 만들어진다.
+  // 그래서 "지금 무엇이 빈칸인가"는 직렬화된 결과에서만 정확히 알 수 있다.
+  // artists 처럼 카드에 입력칸이 없는 필드가 정확히 이 경우다.
+  const blankFields = blankExtractionFields(buildPayload().extraction);
+  const blankKey = blankFields.join("|");
+  const pendingFields = pendingBlankFields(blankFields, blankChoices);
+
+  // 값이 채워진 필드의 선택은 지운다. 다시 비우면 미선택으로 돌아가야 한다 —
+  // 예전 선택이 살아 있으면 근거 없는 "확인했다"가 남는다.
+  useEffect(() => {
+    setBlankChoices((prev) =>
+      dropChoicesForFilledFields(prev, blankKey ? blankKey.split("|") : [])
+    );
+  }, [blankKey]);
+
   return (
     <TooltipProvider delayDuration={100}>
       <div className="flex h-full flex-col">
@@ -921,8 +964,25 @@ export function LabelingForm({
               crawlData={crawlData}
               draft={extractionDraft}
               onChange={updateExtraction}
+              blankFields={blankFields}
+              choices={blankChoices}
+              onChoose={chooseBlank}
             />
-            <ReviewStampCard recordId={recordId} reviewedAt={reviewedAt} compact />
+            <ReviewStampCard
+              recordId={recordId}
+              reviewedAt={reviewedAt}
+              compact
+              pendingBlankFields={pendingFields.map(extractionFieldLabel)}
+              // 도장은 별도 API 다. 먼저 저장하지 않으면 화면에서 고른 "확인 못 함"이
+              // 반영되지 않은 채 도장만 찍혀, 평가가 옛 정답지로 돌아간다.
+              onBeforeStamp={async () => {
+                await saveDraft.mutateAsync({
+                  id: recordId,
+                  req: buildPayload(),
+                });
+                setSavedAt(new Date().toLocaleTimeString("ko-KR"));
+              }}
+            />
           </section>
 
           <Separator />

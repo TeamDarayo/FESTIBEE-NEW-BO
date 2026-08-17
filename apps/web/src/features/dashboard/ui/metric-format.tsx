@@ -12,6 +12,14 @@ import { Badge } from "@festibee/ui";
 
 export const EMPTY = "—";
 
+/**
+ * 이 비율을 넘게 확인 못 한 필드는 recall 을 **신뢰할 수 없다**고 표시한다.
+ *
+ * 절반 넘게 대조하지 못했으면 남은 표본으로 계산한 recall 은 그 필드를 대표하지 못한다.
+ * 숫자만 덩그러니 있으면 반드시 잘못 인용되므로, 화면이 먼저 못 믿는다고 말해야 한다.
+ */
+export const UNRELIABLE_UNVERIFIED_RATE = 0.5;
+
 export function formatPct(value: number | null | undefined, digits = 1): string {
   if (value == null || Number.isNaN(value)) return EMPTY;
   return `${(value * 100).toFixed(digits)}%`;
