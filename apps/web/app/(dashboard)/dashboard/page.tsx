@@ -54,10 +54,10 @@ export default function DashboardPage() {
             >
               <TabsList className="h-8">
                 <TabsTrigger value="first" className="text-xs">
-                  최초 수집
+                  처음 수집
                 </TabsTrigger>
                 <TabsTrigger value="recrawl" className="text-xs">
-                  재크롤
+                  다시 수집
                 </TabsTrigger>
               </TabsList>
             </Tabs>
@@ -82,7 +82,7 @@ export default function DashboardPage() {
 
           {error ? (
             <p className="rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-              지표를 불러올 수 없습니다 — {error.message}
+              불러오지 못했어요. 잠시 후 다시 시도해 주세요.
             </p>
           ) : null}
 
@@ -93,7 +93,7 @@ export default function DashboardPage() {
               {hasSample ? (
                 <section className="border-t pt-8">
                   <h2 className="mb-6 text-sm font-medium text-muted-foreground">
-                    필드별 정확도
+                    항목별 정확도
                   </h2>
                   <FieldRecallChart
                     byField={accuracy.normalized.byField}
@@ -152,12 +152,12 @@ function EmptyState() {
   return (
     <section className="border-t pt-8">
       <div className="max-w-sm">
-        <h2 className="text-sm font-medium">아직 잴 것이 없다</h2>
+        <h2 className="text-sm font-medium">아직 보여드릴 게 없어요</h2>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-          검수 도장이 찍힌 레코드부터 지표에 들어간다.
+          확인을 마친 건이 생기면 여기에 나와요.
         </p>
         <Button asChild size="sm" variant="outline" className="mt-4">
-          <Link href="/crawled-records">크롤 목록으로</Link>
+          <Link href="/crawled-records">확인하러 가기</Link>
         </Button>
       </div>
     </section>

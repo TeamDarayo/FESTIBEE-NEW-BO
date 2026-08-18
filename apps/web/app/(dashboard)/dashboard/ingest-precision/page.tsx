@@ -10,8 +10,8 @@ import {
 export default function IngestPrecisionPage() {
   return (
     <DetailShell
-      title="수집 정밀도"
-      caption="가져오지 말았어야 할 것을 가져왔는지 잰다."
+      title="제대로 가져온 비율"
+      caption="안 가져와도 될 걸 가져왔는지 봐요."
     >
       {(preset) => <IngestPrecisionBody preset={preset} />}
     </DetailShell>
@@ -35,7 +35,7 @@ function IngestPrecisionBody({
   if (error) {
     return (
       <p className="rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-        불러올 수 없습니다 — {error.message}
+        불러오지 못했어요. 잠시 후 다시 시도해 주세요.
       </p>
     );
   }

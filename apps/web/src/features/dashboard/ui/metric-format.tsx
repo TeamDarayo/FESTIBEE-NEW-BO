@@ -55,7 +55,7 @@ export function BigMetric({
   label,
   value,
   hint,
-  emptyLabel = "표본 없음",
+  emptyLabel = "아직 없어요",
   emphasis = false,
 }: BigMetricProps) {
   const hasValue = value != null && !Number.isNaN(value);
@@ -85,7 +85,7 @@ export function BigMetric({
 export function ReferenceOnlyBadge({ reason }: { reason?: string }) {
   return (
     <Badge variant="warning" title={reason}>
-      참고용 · 표본 부족
+      아직 참고용
     </Badge>
   );
 }

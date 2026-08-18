@@ -61,31 +61,31 @@ export function SecondaryStrip({ accuracy, stats }: Props) {
     <div className="grid grid-cols-2 divide-x divide-y border-t sm:grid-cols-3 lg:grid-cols-5 lg:divide-y-0">
       <Item
         index={0}
-        label="수집 정밀도"
+        label="제대로 가져온 비율"
         value={formatPct(accuracy?.ingestPrecision.precision, 0)}
         href="/dashboard/ingest-precision"
       />
       <Item
         index={1}
-        label="전환율"
+        label="등록률"
         value={formatPct(stats?.conversionRate, 0)}
         href="/dashboard/operations"
       />
       <Item
         index={2}
-        label="미처리 적체"
+        label="대기 중"
         value={stats ? `${stats.byStatus.NEW}` : EMPTY}
         href="/dashboard/operations"
       />
       <Item
         index={3}
-        label="평균 리드타임"
+        label="평균 처리 시간"
         value={leadTime}
         href="/dashboard/operations"
       />
       <Item
         index={4}
-        label="채움률"
+        label="값 채운 비율"
         value={formatPct(stats?.fieldFillRate.overall, 0)}
         href="/dashboard/fill-rate"
       />

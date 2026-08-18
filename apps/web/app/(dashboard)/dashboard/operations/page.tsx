@@ -15,7 +15,7 @@ export default function OperationsPage() {
   return (
     <DetailShell
       title="처리 현황"
-      caption="크롤러 품질이 아니라 처리 속도를 잰다."
+      caption="얼마나 빨리 처리했는지 보여드려요."
     >
       {(preset) => <OperationsBody preset={preset} />}
     </DetailShell>
@@ -32,7 +32,7 @@ function OperationsBody({ preset }: { preset: "LAST_7D" | "LAST_30D" | "ALL" }) 
   if (error) {
     return (
       <p className="rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-        불러올 수 없습니다 — {error.message}
+        불러오지 못했어요. 잠시 후 다시 시도해 주세요.
       </p>
     );
   }

@@ -95,7 +95,7 @@ export function ReviewStampCard({
       }
       await setReviewed.mutateAsync({ id: recordId, reviewed: next });
     } catch (e) {
-      setError(e instanceof Error ? e.message : "검수 상태를 바꾸지 못했습니다");
+      setError(e instanceof Error ? e.message : "저장하지 못했어요. 잠시 후 다시 시도해 주세요.");
     } finally {
       setSaving(false);
     }
@@ -117,7 +117,7 @@ export function ReviewStampCard({
             className="h-6 shrink-0 gap-1 px-1.5 text-[11px]"
             disabled={setReviewed.isPending}
             onClick={() => toggle(false)}
-            title="잘못 눌렀을 때 되돌립니다"
+            title="잘못 눌렀다면 되돌릴 수 있어요"
           >
             <Undo2 className="h-3 w-3" />
             도장 취소
@@ -144,14 +144,14 @@ export function ReviewStampCard({
         onClick={() => toggle(true)}
         title={
           blocked
-            ? "빈칸의 이유를 모두 고른 뒤에 찍을 수 있습니다"
+            ? "빈칸의 이유를 먼저 골라주세요"
             : undefined
         }
       >
         <Stamp className="h-3.5 w-3.5" />
         {setReviewed.isPending || saving
-          ? "기록 중..."
-          : "크롤 필드를 모두 확인했습니다 (검수 완료 도장)"}
+          ? "저장 중..."
+          : "다 확인했어요"}
       </Button>
       {blocked ? (
         <div className="mt-1.5 flex gap-1.5 rounded border border-amber-500/50 bg-amber-500/[0.06] p-1.5">

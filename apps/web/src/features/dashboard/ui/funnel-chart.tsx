@@ -30,7 +30,7 @@ export function FunnelChart({ data }: FunnelChartProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">상태 분포</CardTitle>
+        <CardTitle className="text-base">처리 상태</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="h-[250px]">

@@ -10,7 +10,7 @@ const REASON_LABELS: Record<string, string> = {
   INSUFFICIENT_DATA: "정보 부족",
   OUT_OF_SCOPE: "정책상 제외",
   OTHER: "기타",
-  UNSPECIFIED: "사유 미기재",
+  UNSPECIFIED: "이유 없음",
 };
 
 /** 크롤러 책임으로 세는 사유. 나머지와 미기재는 분자에 들어가지 않는다. */
@@ -28,12 +28,12 @@ export function IngestPrecisionCard({ data }: { data: IngestPrecisionRes }) {
     <Card className={data.insufficientSample ? "border-warning" : undefined}>
       <CardHeader className="pb-3">
         <div className="flex flex-wrap items-center gap-2">
-          <CardTitle className="text-base">수집 정밀도</CardTitle>
+          <CardTitle className="text-base">제대로 가져온 비율</CardTitle>
           {data.insufficientSample ? (
-            <ReferenceOnlyBadge reason="검수 완료 레코드 30건 미만" />
+            <ReferenceOnlyBadge reason="확인을 마친 건이 30건이 안 돼요" />
           ) : null}
           {lowReasonCoverage ? (
-            <Badge variant="outline" title="사유 미기재는 분자에서 빠진다">
+            <Badge variant="outline" title="이유를 안 적은 건은 빠져 있어요">
               사유 기재율 {formatPct(data.reasonCoverage)} · 낙관 편향
             </Badge>
           ) : null}
@@ -45,7 +45,7 @@ export function IngestPrecisionCard({ data }: { data: IngestPrecisionRes }) {
       </CardHeader>
       <CardContent className="grid gap-4 md:grid-cols-2">
         <BigMetric
-          label="수집 정밀도"
+          label="제대로 가져온 비율"
           value={data.precision}
           hint={`크롤러 책임 ${formatCount(data.crawlerFaultRecords)}건 / 검수 완료 ${formatCount(data.reviewedRecords)}건`}
           emphasis
@@ -66,7 +66,7 @@ export function IngestPrecisionCard({ data }: { data: IngestPrecisionRes }) {
                   <span className={CRAWLER_FAULT.has(reason) ? "font-medium" : "text-muted-foreground"}>
                     {REASON_LABELS[reason] ?? reason}
                     {CRAWLER_FAULT.has(reason) ? (
-                      <span className="ml-1 text-xs text-destructive">크롤러 책임</span>
+                      <span className="ml-1 text-xs text-destructive">가져오지 말았어야 함</span>
                     ) : null}
                   </span>
                   <span className="tabular-nums">{formatCount(count)}건</span>

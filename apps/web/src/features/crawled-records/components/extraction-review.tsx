@@ -30,7 +30,7 @@ const FIELDS: FieldSpec[] = [
     field: "title",
     key: "title",
     label: "제목",
-    placeholder: "소스에 적힌 축제/공연 이름",
+    placeholder: "페이지에 적힌 이름",
   },
   {
     field: "posterUrl",
@@ -42,20 +42,20 @@ const FIELDS: FieldSpec[] = [
     field: "venueName",
     key: "venue_name",
     label: "장소 이름",
-    placeholder: "소스에 적힌 장소명",
+    placeholder: "페이지에 적힌 장소",
   },
   {
     field: "venueAddress",
     key: "venue_address",
     label: "장소 주소",
-    placeholder: "소스에 적힌 주소",
+    placeholder: "페이지에 적힌 주소",
   },
   {
     field: "dates",
     key: "dates",
     label: "공연 날짜",
     placeholder: "2026-09-01, 2026-09-02",
-    hint: "쉼표로 구분. 소스에 날짜가 없으면 비웁니다.",
+    hint: "쉼표로 구분해서 적어주세요",
   },
 ];
 
@@ -104,13 +104,13 @@ function VerdictChip({ verdict }: { verdict: Verdict }) {
 }
 
 /**
- * 빈칸 하나에 대한 "소스에 없음 / 확인 못 함" 선택.
+ * 빈칸 하나에 대한 "왜 비었나요?" 선택.
  *
  * 둘 다 정확도 분모에서 빠지지만 **전혀 다른 사실**이다.
- * - 소스에 없음 = 정답이 빈칸이다(`NA`)
- * - 확인 못 함 = 소스에 있는지조차 확정 못 했다(`UNVERIFIED`) → 그 필드의 recall 은 못 믿는다
+ * - 원래 없어요 = 정답이 빈칸이다(`NA`)
+ * - 못 봤어요 = 소스에 있는지조차 확정 못 했다(`UNVERIFIED`) → 그 필드의 recall 은 못 믿는다
  *
- * 미선택 상태를 시각적으로 남겨 둔다. 기본값을 주면 "소스에 없음"이 조용히 눌려버리고,
+ * 미선택 상태를 시각적으로 남겨 둔다. 기본값을 주면 "원래 없어요"이 조용히 눌려버리고,
  * 그러면 이 기능이 고치려던 편향이 그대로 재발한다.
  */
 function BlankChoiceRow({
@@ -125,17 +125,17 @@ function BlankChoiceRow({
       <ChoiceButton
         active={choice === "absent"}
         onClick={() => onChoose("absent")}
-        title="이 축제는 원래 그 정보가 없다 — 정답이 빈칸이다"
+        title="페이지에 그 정보가 없어요"
         icon={<MinusCircle className="h-3 w-3" />}
-        label="소스에 없음"
+        label="원래 없어요"
         activeClassName="border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
       />
       <ChoiceButton
         active={choice === "unverified"}
         onClick={() => onChoose("unverified")}
-        title="소스를 봤지만 확인할 수 없었다 (예: 이미지 안에만 있음) — 지표에서 '미확인'으로 집계된다"
+        title="이미지 안에 있는 등의 이유로 확인하지 못했어요"
         icon={<EyeOff className="h-3 w-3" />}
-        label="확인 못 함"
+        label="못 봤어요"
         activeClassName="border-amber-500 bg-amber-500/10 text-amber-700 dark:text-amber-400"
       />
       {choice == null && (
@@ -192,7 +192,7 @@ interface ExtractionReviewProps {
 }
 
 /**
- * 크롤 값 교정 UI — "크롤러가 뽑았어야 할 정답"을 사람이 확정하는 곳.
+ * 크롤 값 교정 UI — "맞는 값"을 사람이 확정하는 곳.
  *
  * 아래 `plan` 입력칸(공연 기본정보/장소)과 **물리적으로 분리된 별도 입력**이다.
  * 여기서 고친 값은 `edited_data.extraction` 에만 들어가고 반영 동작에는 영향이 없다.
@@ -202,7 +202,7 @@ interface ExtractionReviewProps {
  *
  * ### 빈칸에만 묻는다
  * 값을 넣은 필드는 확인한 것으로 간주한다 — 별도 체크는 클릭 비용만 늘린다.
- * 모호한 것은 빈칸뿐이므로, 빈칸에만 "소스에 없음 / 확인 못 함"을 고르게 한다.
+ * 모호한 것은 빈칸뿐이므로, 빈칸에만 "왜 비었나요?"을 고르게 한다.
  */
 export function ExtractionReview({
   crawlData,
@@ -219,9 +219,9 @@ export function ExtractionReview({
   return (
     <div className="space-y-3 rounded-md border border-indigo-500/40 bg-indigo-500/[0.03] p-3">
       <div>
-        <Label className="text-sm font-semibold">크롤 추출 정답 (검수)</Label>
+        <Label className="text-sm font-semibold">가져온 값 확인</Label>
         <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
-          <b>이 소스 페이지를 사람이 직접 읽었다면 뽑았을 값</b>을 적습니다. 우리
+          <b>페이지를 직접 보고 맞는 값을 적어주세요</b>을 적습니다. 우리
           DB 의 표기 규칙이나 기존 공연 이름과 <b>무관</b>합니다 — 소스에 적힌
           그대로가 정답입니다. 여기 값은 반영되지 않고 크롤러 정확도 측정에만
           쓰입니다.
@@ -247,7 +247,7 @@ export function ExtractionReview({
                     className="h-5 gap-0.5 px-1.5 text-[10px]"
                     disabled={current === orig}
                     onClick={() => onChange({ [field]: orig })}
-                    title="크롤 원본 값으로 되돌리기"
+                    title="원래대로"
                   >
                     <RotateCcw className="h-2.5 w-2.5" />
                     원복
@@ -259,7 +259,7 @@ export function ExtractionReview({
                     className="h-5 gap-0.5 px-1.5 text-[10px]"
                     disabled={!current}
                     onClick={() => onChange({ [field]: "" })}
-                    title="이 값을 비웁니다 (비운 뒤 이유를 골라야 합니다)"
+                    title="비우기"
                   >
                     <Eraser className="h-2.5 w-2.5" />
                     비우기
@@ -269,9 +269,9 @@ export function ExtractionReview({
 
               {/* 원본 → 교정값 대조. 원본 줄은 읽기 전용이며 항상 보인다. */}
               <div className="flex items-baseline gap-1.5 text-[11px] text-muted-foreground">
-                <span className="shrink-0">크롤 원본</span>
+                <span className="shrink-0">가져온 값</span>
                 <span className="min-w-0 flex-1 truncate" title={orig}>
-                  {orig || <i>(비어 있음)</i>}
+                  {orig || <i>비어 있어요</i>}
                 </span>
               </div>
 
@@ -300,7 +300,7 @@ export function ExtractionReview({
         <div className="space-y-2 rounded border border-dashed p-2">
           <p className="text-[11px] leading-relaxed text-muted-foreground">
             아래 폼의 <b>크롤 출처</b> 행에서 가져오는 정답이 비어 있습니다. 각각이{" "}
-            <b>소스에 없어서</b> 빈 것인지, <b>확인하지 못해서</b> 빈 것인지
+            <b>원래 없어요</b> 빈 것인지, <b>확인하지 못해서</b> 빈 것인지
             골라주세요.
           </p>
           {blankDerived.map((key) => (
@@ -319,7 +319,7 @@ export function ExtractionReview({
 
       <p className="text-[11px] leading-relaxed text-muted-foreground">
         예매·아티스트·부가정보의 정답은 아래 폼의 <b>크롤 출처</b> 행에서 그대로
-        가져옵니다. <b>&ldquo;소스에 없음&rdquo;과 &ldquo;확인 못 함&rdquo;은 다른
+        가져옵니다. <b>&ldquo;원래 없어요&rdquo;과 &ldquo;못 봤어요&rdquo;은 다른
         사실입니다</b> — 둘 다 정확도 분모에서 빠지지만, 확인 못 한 필드는
         미확인율로 따로 집계되어 그 필드의 정확도를 믿으면 안 된다는 표시가 됩니다.
       </p>

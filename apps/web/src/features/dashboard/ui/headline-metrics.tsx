@@ -88,13 +88,13 @@ export function HeadlineMetrics({ data }: Props) {
           index={0}
           label="정확도"
           value={formatPct(normalized, 1)}
-          hint="사람이 '값이 있어야 한다'고 확정한 것이 분모다. 크롤러가 놓친 것도 분모에 남는다."
+          hint="꼭 있어야 하는 값 중에 제대로 가져온 비율이에요."
           sub={
             gap == null ? (
-              <span className="text-muted-foreground">원문 기준 {EMPTY}</span>
+              <span className="text-muted-foreground">그대로 맞은 비율 {EMPTY}</span>
             ) : (
               <span className="text-muted-foreground">
-                원문 {formatPct(strict, 1)}
+                그대로 {formatPct(strict, 1)}
                 <span
                   className={
                     gap > 0.001
@@ -113,19 +113,19 @@ export function HeadlineMetrics({ data }: Props) {
           index={1}
           label="자동화율"
           value={formatPct(data.noEdit.recordRateStrict, 1)}
-          hint="사람이 한 글자도 고치지 않은 레코드 비율. 정확도가 '맞았나'라면 이건 '안 건드렸나'다."
+          hint="사람이 한 글자도 안 고치고 그대로 쓴 건의 비율이에요."
           sub={
             <span className="text-muted-foreground">
-              평가 {coverage.evaluatedUnits}건 기준
+              {coverage.evaluatedUnits}건 기준
             </span>
           }
         />
 
         <Cell
           index={2}
-          label="검수 커버리지"
+          label="확인한 비율"
           value={formatPct(coverage.reviewCoverage, 1)}
-          hint="코호트 중 검수 도장이 찍힌 비율. 이 값이 낮으면 위 두 숫자는 얇은 표본에서 나온 값이다."
+          hint="전체 중에 사람이 확인을 마친 비율이에요. 낮으면 옆 숫자들도 아직 믿기 일러요."
           sub={
             <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-muted-foreground">
               <span className="font-mono">
@@ -133,12 +133,12 @@ export function HeadlineMetrics({ data }: Props) {
               </span>
               {unverified != null && unverified > 0 ? (
                 <span className="text-amber-600 dark:text-amber-500">
-                  미확인 {formatPct(unverified, 0)}
+                  못 본 값 {formatPct(unverified, 0)}
                 </span>
               ) : null}
               {coverage.insufficientSample ? (
                 <span className="rounded-sm bg-amber-500/10 px-1.5 py-0.5 text-[11px] font-medium text-amber-600 dark:text-amber-500">
-                  참고용
+                  아직 참고용
                 </span>
               ) : null}
             </span>

@@ -29,12 +29,12 @@ interface Props {
 }
 
 const VERDICTS = [
-  { key: "hit", label: "일치", tone: "bg-[hsl(var(--chart-2))]" },
-  { key: "wrong", label: "불일치", tone: "bg-amber-500" },
-  { key: "miss", label: "누락", tone: "bg-rose-500" },
-  { key: "extra", label: "오검출", tone: "bg-orange-400" },
-  { key: "na", label: "정답 빈칸", tone: "bg-muted-foreground/25" },
-  { key: "unverified", label: "확인 못 함", tone: "bg-muted-foreground/50" },
+  { key: "hit", label: "맞음", tone: "bg-[hsl(var(--chart-2))]" },
+  { key: "wrong", label: "틀림", tone: "bg-amber-500" },
+  { key: "miss", label: "빠뜨림", tone: "bg-rose-500" },
+  { key: "extra", label: "없는 걸 가져옴", tone: "bg-orange-400" },
+  { key: "na", label: "원래 없음", tone: "bg-muted-foreground/25" },
+  { key: "unverified", label: "못 봄", tone: "bg-muted-foreground/50" },
 ] as const;
 
 /**
@@ -121,7 +121,7 @@ export function FieldDetailSheet({ fieldKey, data, onClose }: Props) {
                 {fieldLabel(fieldKey)}
               </SheetTitle>
               <SheetDescription className="text-xs">
-                {metric.listField ? "리스트 필드" : "단일 값 필드"} · 판정{" "}
+                {metric.listField ? "여러 항목" : "값 하나"} · {" "}
                 {verdictTotal(metric)}건
               </SheetDescription>
             </SheetHeader>
@@ -129,51 +129,50 @@ export function FieldDetailSheet({ fieldKey, data, onClose }: Props) {
             <div className="mt-6 space-y-7">
               {unreliable ? (
                 <p className="rounded-md bg-amber-500/10 px-3 py-2 text-xs leading-relaxed text-amber-700 dark:text-amber-500">
-                  검수 단위의 {formatPct(metric.unverifiedRate, 0)}를 대조하지
-                  못했다. 아래 정확도는 남은 표본에서 나온 값이라 이 필드를
-                  대표하지 못한다.
+                  {formatPct(metric.unverifiedRate, 0)}는 아직 확인을 못 했어요.
+                  아래 숫자는 나머지만 가지고 낸 거라 참고만 해주세요.
                 </p>
               ) : null}
 
               <VerdictBar metric={metric} />
 
               <div className="divide-y">
-                <Row label="정확도 (recall)">
+                <Row label="정확도">
                   {formatPct(metric.recall)}
                   <span className="ml-2 text-xs text-muted-foreground">
-                    원문 {formatPct(strictMetric?.recall)}
+                    그대로 {formatPct(strictMetric?.recall)}
                   </span>
                 </Row>
-                <Row label="정밀도 (precision)">
+                <Row label="가져온 값이 맞은 비율">
                   {formatPct(metric.precision)}
                 </Row>
-                <Row label="오검출률">
+                <Row label="잘못 가져온 비율">
                   {formatPct(metric.falseDiscoveryRate)}
                 </Row>
-                <Row label="F1">{formatPct(metric.f1)}</Row>
-                <Row label="무수정 통과율">{formatPct(metric.noEditRate)}</Row>
+                <Row label="종합 점수">{formatPct(metric.f1)}</Row>
+                <Row label="손 안 댄 비율">{formatPct(metric.noEditRate)}</Row>
                 <Row label="확인 못 한 비율">
                   {formatPct(metric.unverifiedRate)}
                 </Row>
-                <Row label="평균 수정 강도">
+                <Row label="고친 정도">
                   {formatDistance(metric.avgEditDistance)}
                 </Row>
               </div>
 
               {metric.listField ? (
                 <div>
-                  <h3 className="mb-1 text-sm font-medium">원소 단위</h3>
+                  <h3 className="mb-1 text-sm font-medium">항목별</h3>
                   <div className="divide-y">
-                    <Row label="정답 / 크롤 / 일치">
+                    <Row label="필요 / 가져옴 / 맞음">
                       {metric.truthElements ?? EMPTY} /{" "}
                       {metric.crawlElements ?? EMPTY} /{" "}
                       {metric.matchedElements ?? EMPTY}
                     </Row>
-                    <Row label="원소 recall (micro / macro)">
+                    <Row label="맞힌 비율">
                       {formatPct(metric.elementRecallMicro, 0)} /{" "}
                       {formatPct(metric.elementRecallMacro, 0)}
                     </Row>
-                    <Row label="원소 precision (micro / macro)">
+                    <Row label="가져온 것 중 맞은 비율">
                       {formatPct(metric.elementPrecisionMicro, 0)} /{" "}
                       {formatPct(metric.elementPrecisionMacro, 0)}
                     </Row>
@@ -183,9 +182,9 @@ export function FieldDetailSheet({ fieldKey, data, onClose }: Props) {
 
               {diagnostics.length > 0 ? (
                 <div>
-                  <h3 className="mb-1 text-sm font-medium">하위 필드</h3>
+                  <h3 className="mb-1 text-sm font-medium">세부 항목</h3>
                   <p className="mb-2 text-xs text-muted-foreground">
-                    완전일치를 깎는 지점
+                    어디서 어긋나는지
                   </p>
                   <div className="divide-y">
                     {diagnostics

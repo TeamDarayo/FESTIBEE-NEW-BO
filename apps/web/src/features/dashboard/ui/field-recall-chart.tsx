@@ -118,13 +118,13 @@ export function FieldRecallChart({ byField, onSelect }: Props) {
             className="h-3 w-3 shrink-0 text-amber-600 dark:text-amber-500"
             strokeWidth={2}
           />
-          흐린 막대는 절반 넘게 대조하지 못한 필드다
+          흐린 건 아직 확인이 덜 된 항목이에요
         </p>
       ) : null}
 
       {unmeasured.length > 0 ? (
         <div className="flex flex-wrap items-center gap-1.5 border-t pt-4">
-          <span className="mr-1 text-xs text-muted-foreground">미측정</span>
+          <span className="mr-1 text-xs text-muted-foreground">아직 확인 전</span>
           {unmeasured.map((f) => (
             <button
               key={f.key}
@@ -132,10 +132,10 @@ export function FieldRecallChart({ byField, onSelect }: Props) {
               onClick={() => onSelect(f.key)}
               className="rounded-sm border px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted active:scale-[0.98]"
             >
-              {f.label}
+              <span>{f.label}</span>
               {f.unverified ? (
-                <span className="ml-1 text-amber-600 dark:text-amber-500">
-                  확인 못 함
+                <span className="ml-1.5 text-amber-600 dark:text-amber-500">
+                  못 봤어요
                 </span>
               ) : null}
             </button>

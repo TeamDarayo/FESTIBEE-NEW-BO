@@ -22,17 +22,13 @@ export function StatsCards({ data }: StatsCardsProps) {
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground">
-            전환율
+            등록률
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{formatPct(data.conversionRate)}</div>
           <p className="text-xs text-muted-foreground">
-            등록 {formatCount(data.byStatus.APPLIED)} / 판단 완료{" "}
-            {formatCount(decided)}건 (등록 + 무시)
-          </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            미처리는 아직 판단이 안 난 건이라 분모에 없다.
+            처리한 {formatCount(decided)}건 중 {formatCount(data.byStatus.APPLIED)}건 등록
           </p>
         </CardContent>
       </Card>
@@ -40,7 +36,7 @@ export function StatsCards({ data }: StatsCardsProps) {
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground">
-            미처리 적체
+            대기 중
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -48,7 +44,7 @@ export function StatsCards({ data }: StatsCardsProps) {
             {formatCount(data.byStatus.NEW)}건
           </div>
           <p className="text-xs text-muted-foreground">
-            수집 {formatCount(data.total)}건 중 처리 대기
+            모은 {formatCount(data.total)}건 중 아직 안 본 것
           </p>
         </CardContent>
       </Card>
@@ -56,7 +52,7 @@ export function StatsCards({ data }: StatsCardsProps) {
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground">
-            평균 리드타임
+            평균 처리 시간
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -68,14 +64,11 @@ export function StatsCards({ data }: StatsCardsProps) {
             }
           >
             {data.avgLeadTimeHours == null
-              ? "표본 없음"
+              ? "아직 없어요"
               : `${data.avgLeadTimeHours.toFixed(1)}h`}
           </div>
           <p className="text-xs text-muted-foreground">
-            수집 → 반영. 표본 {formatCount(data.leadTimeSamples)}건
-          </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            반영 시각이 안 남은 과거 레코드는 집계에서 빠져 있다.
+            모은 뒤 등록까지 · {formatCount(data.leadTimeSamples)}건 기준
           </p>
         </CardContent>
       </Card>
