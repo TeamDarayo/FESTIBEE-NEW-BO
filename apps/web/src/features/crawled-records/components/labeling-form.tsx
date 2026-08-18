@@ -88,6 +88,7 @@ import {
   type ScalarSources,
   type TimetableArtistRow,
   type TimetableRow,
+  toDayList,
 } from "../lib/form-state";
 import {
   applyStageSelection,
@@ -168,10 +169,8 @@ export function LabelingForm({
   const initialPlan = initialEditedData?.plan ?? null;
 
   // --- 크롤 원본에서 파생된 값(제안의 원천, 불변) --------------------------------
-  const crawlDates = useMemo(
-    () => [...(crawlData.dates ?? [])].filter(Boolean).sort(),
-    [crawlData]
-  );
+  // 원본은 ISO 일시(회차 단위)라 달력 날짜로 접어야 기간이 제대로 나온다.
+  const crawlDates = useMemo(() => toDayList(crawlData.dates), [crawlData]);
   const crawlScalars = useMemo(
     () => scalarsFromCrawl(crawlData, crawlDates),
     [crawlData, crawlDates]
@@ -216,7 +215,7 @@ export function LabelingForm({
           banGoods: initialPlan.performance.banGoods ?? "",
           remark: initialPlan.performance.remark ?? "",
         }
-      : scalarsFromCrawl(crawlData, [...(crawlData.dates ?? [])].filter(Boolean).sort())
+      : scalarsFromCrawl(crawlData, toDayList(crawlData.dates))
   );
 
   // 초안에는 출처가 저장되지 않는다(백엔드 계약에 없음).

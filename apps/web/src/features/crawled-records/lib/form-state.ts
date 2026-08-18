@@ -120,6 +120,24 @@ export function toDateInput(value: string | null | undefined): string {
   return value.slice(0, 10);
 }
 
+/**
+ * 크롤 `dates` 를 **달력 날짜** 목록으로 정규화한다.
+ *
+ * 원본은 `"2026-09-12T12:00:00+09:00"` 같은 ISO 일시라 회차가 여러 개면 같은 날이
+ * 여러 번 들어온다. 그대로 세면 공연 일수가 부풀고, 그대로 첫/끝을 쓰면 정렬이
+ * 보장되지 않아 기간이 뒤집히거나 하루로 접힌다.
+ */
+export function toDayList(
+  dates: readonly (string | null | undefined)[] | null | undefined
+): string[] {
+  const days = new Set<string>();
+  for (const d of dates ?? []) {
+    const day = toDateInput(d);
+    if (day) days.add(day);
+  }
+  return [...days].sort();
+}
+
 // ---------------------------------------------------------------------------
 // 매칭 키 (baseline ↔ 크롤 행 대조)
 // ---------------------------------------------------------------------------

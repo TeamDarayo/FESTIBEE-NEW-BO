@@ -1,5 +1,6 @@
 "use client";
 
+import { toDayList } from "../lib/form-state";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -134,12 +135,14 @@ export function CrawledRecordDetail({ id }: { id: number }) {
   }
 
   const isNew = record.status === "NEW";
+  // 크롤 dates 는 회차 단위 ISO 일시라 달력 날짜로 접은 뒤 기간을 만든다.
+  const crawlDays = toDayList(crawlData?.dates);
   const dateRange =
-    crawlData && crawlData.dates.length > 0
-      ? crawlData.dates.length === 1
-        ? formatDateOnly(crawlData.dates[0])
-        : `${formatDateOnly(crawlData.dates[0])} ~ ${formatDateOnly(crawlData.dates[crawlData.dates.length - 1])}`
-      : null;
+    crawlDays.length === 0
+      ? null
+      : crawlDays.length === 1
+        ? formatDateOnly(crawlDays[0])
+        : `${formatDateOnly(crawlDays[0])} ~ ${formatDateOnly(crawlDays[crawlDays.length - 1])}`;
 
   const handleIgnore = async () => {
     await ignoreMutation.mutateAsync({
@@ -224,7 +227,7 @@ export function CrawledRecordDetail({ id }: { id: number }) {
             <InfoRow label="기간" value={dateRange} />
             <InfoRow
               label="공연 일수"
-              value={crawlData?.dates.length ? `${crawlData.dates.length}일` : null}
+              value={crawlDays.length ? `${crawlDays.length}일` : null}
             />
           </SectionCard>
 
