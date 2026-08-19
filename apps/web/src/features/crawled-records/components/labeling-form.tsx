@@ -412,33 +412,75 @@ export function LabelingForm({
     []
   );
 
-  /** 신규 공연/미선택일 때. 크롤 데이터로 폼을 채운다. */
-  const applyCrawlBaseline = useCallback(
+  /**
+   * 신규 공연 대상. **폼을 갈아엎지 않고 합친다.**
+   *
+   * 새로 만드는 쪽에는 덮어쓸 원본이 없다. 이미 입력한 값을 지울 이유가 없으므로
+   * 비어 있는 자리만 채운다. 순서는 지금 입력한 값 > 대상이 들고 온 값 > 크롤 값.
+   */
+  const mergeCrawlBaseline = useCallback(
     (target: PerformanceTarget | null) => {
       const isNew = target?.mode === "new";
-      setScalars({
-        ...crawlScalars,
-        name: isNew ? target.name : crawlScalars.name,
-        startDate: isNew && target.startDate ? target.startDate : crawlScalars.startDate,
-        endDate: isNew && target.endDate ? target.endDate : crawlScalars.endDate,
-        posterUrl: isNew && target.posterUrl ? target.posterUrl : crawlScalars.posterUrl,
-      });
-      setScalarSources(makeScalarSources("crawl"));
-      setPlace({
-        mode: "new",
-        existingPlaceId: null,
-        name: crawlData.venue?.name ?? "",
-        address: crawlData.venue?.address ?? "",
-      });
-      setReservations(crawlResRows);
-      setTimetables(crawlTtRows);
+      const pick = (
+        field: keyof ScalarValues,
+        fromTarget: string | undefined
+      ): [string, "crawl" | "manual" | "existing"] => {
+        const kept = scalars[field]?.trim();
+        if (kept) return [scalars[field], scalarSources[field]];
+        if (isNew && fromTarget?.trim()) return [fromTarget, "manual"];
+        return [crawlScalars[field], "crawl"];
+      };
+
+      const entries: [keyof ScalarValues, string | undefined][] = [
+        ["name", isNew ? target.name : undefined],
+        ["startDate", isNew ? target.startDate : undefined],
+        ["endDate", isNew ? target.endDate : undefined],
+        ["posterUrl", isNew ? target.posterUrl : undefined],
+        ["transportationInfo", undefined],
+        ["banGoods", undefined],
+        ["remark", undefined],
+      ];
+
+      const nextScalars = { ...scalars };
+      const nextSources = { ...scalarSources };
+      for (const [field, fromTarget] of entries) {
+        const [value, source] = pick(field, fromTarget);
+        nextScalars[field] = value;
+        nextSources[field] = source;
+      }
+      setScalars(nextScalars);
+      setScalarSources(nextSources);
+
+      // 장소도 이미 고른 것이 있으면 유지한다.
+      if (place.existingPlaceId == null && !place.name.trim()) {
+        setPlace({
+          mode: "new",
+          existingPlaceId: null,
+          name: crawlData.venue?.name ?? "",
+          address: crawlData.venue?.address ?? "",
+        });
+      }
+
+      if (reservations.length === 0) setReservations(crawlResRows);
+      if (timetables.length === 0) setTimetables(crawlTtRows);
+
+      // 기존 공연에 묶여 있던 흔적만 끊는다. 삭제 목록은 그 공연 기준이라 의미가 없다.
       setBaselineUpdatedAt(null);
       setRemovedReservations([]);
       setRemovedTimetables([]);
-      setDirty(false);
       setStaleConflict(false);
     },
-    [crawlScalars, crawlData, crawlResRows, crawlTtRows]
+    [
+      scalars,
+      scalarSources,
+      place,
+      reservations,
+      timetables,
+      crawlScalars,
+      crawlData,
+      crawlResRows,
+      crawlTtRows,
+    ]
   );
 
   // 기존 공연 대상은 detail 이 도착한 뒤에야 baseline 을 만들 수 있다.
@@ -460,10 +502,10 @@ export function LabelingForm({
         baselineKeyRef.current = null;
       } else {
         baselineKeyRef.current = 0;
-        applyCrawlBaseline(next);
+        mergeCrawlBaseline(next);
       }
     },
-    [applyCrawlBaseline]
+    [mergeCrawlBaseline]
   );
 
   const handleTargetChange = useCallback(
@@ -473,7 +515,8 @@ export function LabelingForm({
         performanceTarget?.mode === "existing" &&
         performanceTarget.id === next.id;
       if (sameTarget) return;
-      if (dirty) {
+      // 기존 공연을 부르는 것만 폼을 그 공연 상태로 덮어쓴다. 그때만 확인을 받는다.
+      if (next.mode === "existing" && dirty) {
         setPendingTarget(next);
         return;
       }
@@ -1550,10 +1593,9 @@ export function LabelingForm({
         >
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>폼을 다시 불러올까요?</AlertDialogTitle>
+              <AlertDialogTitle>기존 공연을 불러올까요?</AlertDialogTitle>
               <AlertDialogDescription>
-                대상 공연을 바꾸면 지금까지 편집한 내용이 사라지고 새 대상의 현재
-                상태로 폼이 다시 채워집니다.
+                지금 입력한 내용이 그 공연의 현재 상태로 바뀌어요.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -1566,7 +1608,7 @@ export function LabelingForm({
                   setPendingTarget(null);
                 }}
               >
-                다시 불러오기
+                불러오기
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
