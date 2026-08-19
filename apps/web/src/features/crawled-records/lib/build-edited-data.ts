@@ -175,8 +175,13 @@ export function buildEditedData({
 
   // --- extraction (사람이 확정한 "소스에 적혀 있던 값") ------------------------
 
-  const crawlReservations = enabledReservations
-    .filter((r) => r.source === "crawl")
+  // 정답은 "이 페이지를 사람이 읽었다면 뽑았을 값"이다. 크롤러가 찾았는지와 무관하다.
+  //
+  // 크롤 출처만 담으면 사람이 페이지를 보고 더 넣은 행이 정답에서 빠지고, 그러면
+  // 크롤러가 1건만 가져와도 정답이 1건이 되어 **누락이 통째로 안 보인다.**
+  // 기존 공연에서 불러온 행(existing)만 뺀다 — 그건 우리 DB 값이지 페이지의 증거가 아니다.
+  const sourcedReservations = enabledReservations
+    .filter((r) => r.source !== "existing")
     .sort(byCrawlRef);
 
   const venderIdByArtist = new Map<string, string | null>();
@@ -186,10 +191,10 @@ export function buildEditedData({
     }
   });
 
-  const crawlArtistEntries = enabledTimetables
+  const sourcedArtistEntries = enabledTimetables
     .flatMap((t) =>
       t.artists
-        .filter((a) => a.source === "crawl" && a.name.trim())
+        .filter((a) => a.source !== "existing" && a.name.trim())
         .map((a) => ({
           crawlRef: a.crawlRef,
           entry: {
@@ -236,12 +241,12 @@ export function buildEditedData({
     poster_url: blankToNull(extractionDraft.posterUrl),
     venue: extractionVenue,
     dates: parseDates(extractionDraft.dates),
-    reservations: crawlReservations.map((r) => ({
+    reservations: sourcedReservations.map((r) => ({
       start_at: r.openDateTime,
       end_at: blankToNull(r.closeDateTime),
       url: r.ticketURL.trim(),
     })),
-    artists: crawlArtistEntries.map((x) => x.entry),
+    artists: sourcedArtistEntries.map((x) => x.entry),
     transportation_info: crawlSourced(
       "transportationInfo",
       scalars.transportationInfo,
@@ -251,19 +256,19 @@ export function buildEditedData({
     remark: crawlSourced("remark", scalars.remark, crawlData.remark),
   };
 
-  // --- mapping (크롤 출처 행 기준) -------------------------------------------
+  // --- mapping (페이지에서 나온 행 기준) -------------------------------------
 
   const artistIdByName: Record<string, number | null> = {};
   for (const t of enabledTimetables) {
     for (const a of t.artists) {
-      if (a.source !== "crawl" || !a.name.trim()) continue;
+      if (a.source === "existing" || !a.name.trim()) continue;
       artistIdByName[a.name] = a.artistId;
     }
   }
 
   const stageIdByName: Record<string, number | null> = {};
   for (const t of enabledTimetables) {
-    if (t.source !== "crawl") continue;
+    if (t.source === "existing") continue;
     const name = t.stageName.trim();
     if (!name) continue;
     stageIdByName[name] = t.stageId.trim() ? Number(t.stageId.trim()) : null;
@@ -274,7 +279,7 @@ export function buildEditedData({
     placeId: place.mode === "existing" ? place.existingPlaceId : null,
     artistIdByName,
     stageIdByName,
-    reservationTypes: crawlReservations.map((r) => r.type),
+    reservationTypes: sourcedReservations.map((r) => r.type),
     mergedFromExisting: target?.mode === "existing",
   };
 
