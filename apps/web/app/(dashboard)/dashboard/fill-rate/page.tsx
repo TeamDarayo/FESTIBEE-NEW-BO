@@ -9,10 +9,7 @@ import {
 /** 크롤러가 값을 넣었는지만 센 자기보고 통계. 넣은 값이 맞았는지는 정확도에서만 나온다. */
 export default function FillRatePage() {
   return (
-    <DetailShell
-      title="값 채운 비율"
-      caption="값을 채웠는지만 봐요. 맞았는지는 정확도에서 확인할 수 있어요."
-    >
+    <DetailShell title="값 채운 비율">
       {(preset) => <FillRateBody preset={preset} />}
     </DetailShell>
   );

@@ -9,10 +9,7 @@ import {
 /** 가져온 값이 맞았나(정확도)가 아니라, 애초에 가져오지 말았어야 할 것을 가져왔나. */
 export default function IngestPrecisionPage() {
   return (
-    <DetailShell
-      title="제대로 가져온 비율"
-      caption="안 가져와도 될 걸 가져왔는지 봐요."
-    >
+    <DetailShell title="제대로 가져온 비율">
       {(preset) => <IngestPrecisionBody preset={preset} />}
     </DetailShell>
   );

@@ -123,11 +123,6 @@ export function ReviewStampCard({
             도장 취소
           </Button>
         </div>
-        <p className="mt-1 text-[11px] text-muted-foreground">
-          &ldquo;소스에 없음&rdquo;으로 고른 빈칸은 정확도 분모에서 빠지고,
-          &ldquo;확인 못 함&rdquo;으로 고른 빈칸은 분모에서 빠지되 <b>미확인율</b>로
-          따로 집계됩니다.
-        </p>
         {error && <p className="mt-1 text-[11px] text-destructive">{error}</p>}
       </div>
     );
@@ -156,22 +151,11 @@ export function ReviewStampCard({
       {blocked ? (
         <div className="mt-1.5 flex gap-1.5 rounded border border-amber-500/50 bg-amber-500/[0.06] p-1.5">
           <AlertTriangle className="mt-px h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
-          <p className="text-[11px] leading-relaxed text-amber-700 dark:text-amber-400">
-            아래 필드가 빈칸인데 <b>소스에 없음 / 확인 못 함</b>을 아직 고르지
-            않았습니다. 두 빈칸은 전혀 다른 사실이라 고르기 전에는 도장을 찍을 수
-            없습니다.
-            <br />
-            <b>{pendingBlankFields.join(", ")}</b>
+          <p className="text-[11px] text-amber-700 dark:text-amber-400">
+            빈칸 이유 선택: <b>{pendingBlankFields.join(", ")}</b>
           </p>
         </div>
-      ) : (
-        <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground">
-          이 레코드의 크롤 필드를 <b>모두 대조</b>했음을 확정합니다. 빈칸은 각각
-          &ldquo;소스에 없음&rdquo;(분모 제외) 또는 &ldquo;확인 못 함&rdquo;(미확인율로
-          집계)으로 기록됩니다. 도장을 찍어야 이 레코드가 정확도 지표에 들어갑니다.
-          반영/무시와는 무관합니다.
-        </p>
-      )}
+      ) : null}
       {error && <p className="mt-1 text-[11px] text-destructive">{error}</p>}
     </div>
   );

@@ -153,10 +153,7 @@ function EmptyState() {
     <section className="border-t pt-8">
       <div className="max-w-sm">
         <h2 className="text-sm font-medium">아직 보여드릴 게 없어요</h2>
-        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-          확인을 마친 건이 생기면 여기에 나와요.
-        </p>
-        <Button asChild size="sm" variant="outline" className="mt-4">
+        <Button asChild size="sm" variant="outline" className="mt-3">
           <Link href="/crawled-records">확인하러 가기</Link>
         </Button>
       </div>

@@ -16,18 +16,11 @@ const PRESETS: { label: string; value: StatsPreset }[] = [
 
 interface Props {
   title: string;
-  /** 이 화면이 무엇을 재는지. 개요에서 걷어낸 설명이 여기 한 줄로 남는다. */
-  caption: string;
   showPreset?: boolean;
   children: (preset: StatsPreset) => React.ReactNode;
 }
 
-export function DetailShell({
-  title,
-  caption,
-  showPreset = true,
-  children,
-}: Props) {
+export function DetailShell({ title, showPreset = true, children }: Props) {
   const [preset, setPreset] = useState<StatsPreset>("ALL");
 
   return (
@@ -42,10 +35,7 @@ export function DetailShell({
         </Link>
 
         <header className="mt-4 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-            <p className="mt-1.5 text-sm text-muted-foreground">{caption}</p>
-          </div>
+          <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
           {showPreset ? (
             <div className="flex rounded-md border p-0.5">
               {PRESETS.map((p) => (

@@ -8,12 +8,7 @@ import {
   SheetTitle,
 } from "@festibee/ui";
 import { diagnosticLabel, fieldLabel, parentField } from "./field-labels";
-import {
-  EMPTY,
-  UNRELIABLE_UNVERIFIED_RATE,
-  formatDistance,
-  formatPct,
-} from "./metric-format";
+import { EMPTY, formatDistance, formatPct } from "./metric-format";
 import type { CrawlAccuracyStatsRes, FieldMetric } from "../api/dashboard-api";
 
 /**
@@ -108,9 +103,6 @@ export function FieldDetailSheet({ fieldKey, data, onClose }: Props) {
       )
     : [];
 
-  const unreliable =
-    (metric?.unverifiedRate ?? 0) > UNRELIABLE_UNVERIFIED_RATE;
-
   return (
     <Sheet open={fieldKey != null} onOpenChange={(open) => !open && onClose()}>
       <SheetContent className="w-full overflow-y-auto p-6 sm:max-w-md">
@@ -127,12 +119,6 @@ export function FieldDetailSheet({ fieldKey, data, onClose }: Props) {
             </SheetHeader>
 
             <div className="mt-6 space-y-7">
-              {unreliable ? (
-                <p className="rounded-md bg-amber-500/10 px-3 py-2 text-xs leading-relaxed text-amber-700 dark:text-amber-500">
-                  {formatPct(metric.unverifiedRate, 0)}는 아직 확인을 못 했어요.
-                  아래 숫자는 나머지만 가지고 낸 거라 참고만 해주세요.
-                </p>
-              ) : null}
 
               <VerdictBar metric={metric} />
 
@@ -183,9 +169,6 @@ export function FieldDetailSheet({ fieldKey, data, onClose }: Props) {
               {diagnostics.length > 0 ? (
                 <div>
                   <h3 className="mb-1 text-sm font-medium">세부 항목</h3>
-                  <p className="mb-2 text-xs text-muted-foreground">
-                    어디서 어긋나는지
-                  </p>
                   <div className="divide-y">
                     {diagnostics
                       .sort(

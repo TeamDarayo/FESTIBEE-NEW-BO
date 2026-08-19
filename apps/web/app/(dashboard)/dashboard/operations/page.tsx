@@ -13,10 +13,7 @@ import {
 /** 크롤러 품질이 아니라 우리가 얼마나 빨리 처리했는지. 정확도와 섞어 읽으면 안 된다. */
 export default function OperationsPage() {
   return (
-    <DetailShell
-      title="처리 현황"
-      caption="얼마나 빨리 처리했는지 보여드려요."
-    >
+    <DetailShell title="처리 현황">
       {(preset) => <OperationsBody preset={preset} />}
     </DetailShell>
   );

@@ -9,7 +9,6 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { AlertTriangle } from "lucide-react";
 import { fieldLabel } from "./field-labels";
 import { UNRELIABLE_UNVERIFIED_RATE, formatPct } from "./metric-format";
 import type { FieldMetric } from "../api/dashboard-api";
@@ -112,15 +111,6 @@ export function FieldRecallChart({ byField, onSelect }: Props) {
         </div>
       ) : null}
 
-      {measured.some((r) => r.unreliable) ? (
-        <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <AlertTriangle
-            className="h-3 w-3 shrink-0 text-amber-600 dark:text-amber-500"
-            strokeWidth={2}
-          />
-          흐린 건 아직 확인이 덜 된 항목이에요
-        </p>
-      ) : null}
 
       {unmeasured.length > 0 ? (
         <div className="flex flex-wrap items-center gap-1.5 border-t pt-4">
