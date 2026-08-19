@@ -89,6 +89,8 @@ import {
   type TimetableArtistRow,
   type TimetableRow,
   toDayList,
+  toDateTimeLocal,
+  fromDateTimeLocal,
 } from "../lib/form-state";
 import {
   applyStageSelection,
@@ -1007,13 +1009,9 @@ export function LabelingForm({
                 onChange={handleTargetChange}
                 crawlData={crawlData}
               />
-              <p className="text-[11px] text-muted-foreground">
-                {isExistingTarget
-                  ? isTargetFetching
-                    ? "기존 공연 데이터를 불러오는 중..."
-                    : "폼이 곧 최종 상태입니다. 여기서 지운 예매·타임테이블은 반영 시 삭제됩니다."
-                  : "새 공연을 만듭니다. 폼 내용 그대로 생성됩니다."}
-              </p>
+              {isExistingTarget && isTargetFetching ? (
+                <p className="text-[11px] text-muted-foreground">불러오는 중...</p>
+              ) : null}
             </div>
           </section>
 
@@ -1021,13 +1019,7 @@ export function LabelingForm({
 
           {/* 공연 기본정보 (plan) */}
           <section className="space-y-2">
-            <div>
-              <Label className="text-sm font-semibold">공연 기본정보</Label>
-              <p className="text-[11px] text-muted-foreground">
-                DB 에 반영할 값입니다. 위 &ldquo;크롤 추출 정답&rdquo;과 별개이며,
-                여기서 고쳐도 정답은 바뀌지 않습니다.
-              </p>
-            </div>
+            <Label className="text-sm font-semibold">공연 기본정보</Label>
             <div className="space-y-2.5">
               <div>
                 <div className="flex items-center gap-1">
@@ -1062,10 +1054,10 @@ export function LabelingForm({
                 <div>
                   <Label className="text-xs">시작일</Label>
                   <Input
+                    type="date"
                     value={scalars.startDate}
                     onChange={(e) => setScalar("startDate", e.target.value, "manual")}
                     className="h-8 text-xs"
-                    placeholder="YYYY-MM-DD"
                   />
                   <CrawlSuggestion
                     value={crawlScalars.startDate}
@@ -1076,10 +1068,11 @@ export function LabelingForm({
                 <div>
                   <Label className="text-xs">종료일</Label>
                   <Input
+                    type="date"
                     value={scalars.endDate}
+                    min={scalars.startDate || undefined}
                     onChange={(e) => setScalar("endDate", e.target.value, "manual")}
                     className="h-8 text-xs"
-                    placeholder="YYYY-MM-DD"
                   />
                   <CrawlSuggestion
                     value={crawlScalars.endDate}
@@ -1289,20 +1282,27 @@ export function LabelingForm({
                     </div>
                     <div className="mt-1 grid grid-cols-2 gap-2">
                       <Input
+                        type="datetime-local"
+                        step={60}
                         className="h-7 text-xs"
-                        value={r.openDateTime}
+                        value={toDateTimeLocal(r.openDateTime)}
                         onChange={(e) =>
-                          updateReservation(i, { openDateTime: e.target.value })
+                          updateReservation(i, {
+                            openDateTime: fromDateTimeLocal(e.target.value),
+                          })
                         }
-                        placeholder="오픈 (YYYY-MM-DDTHH:mm:ss)"
                       />
                       <Input
+                        type="datetime-local"
+                        step={60}
                         className="h-7 text-xs"
-                        value={r.closeDateTime}
+                        value={toDateTimeLocal(r.closeDateTime)}
+                        min={toDateTimeLocal(r.openDateTime) || undefined}
                         onChange={(e) =>
-                          updateReservation(i, { closeDateTime: e.target.value })
+                          updateReservation(i, {
+                            closeDateTime: fromDateTimeLocal(e.target.value),
+                          })
                         }
-                        placeholder="마감 (YYYY-MM-DDTHH:mm:ss)"
                       />
                     </div>
                   </div>
@@ -1377,28 +1377,28 @@ export function LabelingForm({
                       <Input
                         data-tt-focus="date"
                         className="h-7 w-32 text-xs"
+                        type="date"
                         value={t.performanceDate}
                         onChange={(e) =>
                           updateTimetable(i, { performanceDate: e.target.value })
                         }
-                        placeholder="YYYY-MM-DD"
                       />
                       <Input
-                        className="h-7 w-20 text-xs"
+                        type="time"
+                        className="h-7 w-24 text-xs"
                         value={t.startTime}
                         onChange={(e) =>
                           updateTimetable(i, { startTime: e.target.value })
                         }
-                        placeholder="시작"
                       />
                       <span className="text-muted-foreground">~</span>
                       <Input
-                        className="h-7 w-20 text-xs"
+                        type="time"
+                        className="h-7 w-24 text-xs"
                         value={t.endTime}
                         onChange={(e) =>
                           updateTimetable(i, { endTime: e.target.value })
                         }
-                        placeholder="종료"
                       />
                       <div className="ml-auto flex shrink-0 items-center">
                         <Button

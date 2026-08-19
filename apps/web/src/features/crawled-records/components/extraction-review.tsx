@@ -1,7 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { Badge, Button, Input, Label } from "@festibee/ui";
-import { Eraser, EyeOff, MinusCircle, RotateCcw } from "lucide-react";
+import { Eraser, EyeOff, MinusCircle, RotateCcw, X } from "lucide-react";
 import type { ExtractionFieldKey, NormalizedCrawlData } from "@festibee/api";
 import {
   extractionDraftFromCrawl,
@@ -21,8 +22,6 @@ interface FieldSpec {
   key: ExtractionFieldKey;
   label: string;
   placeholder: string;
-  /** 입력칸 아래 붙는 보조 설명. 형식이 자유롭지 않은 필드에만. */
-  hint?: string;
 }
 
 const FIELDS: FieldSpec[] = [
@@ -54,10 +53,69 @@ const FIELDS: FieldSpec[] = [
     field: "dates",
     key: "dates",
     label: "공연 날짜",
-    placeholder: "2026-09-01, 2026-09-02",
-    hint: "쉼표로 구분해서 적어주세요",
+    placeholder: "",
   },
 ];
+
+/**
+ * 공연 날짜 편집기.
+ *
+ * 저장 형식은 쉼표 목록 그대로 두되, 원본 항목은 문자열을 건드리지 않는다.
+ * 손대지 않은 값이 그대로 남아야 "크롤과 동일" 판정이 유지된다.
+ */
+function DateChips({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (next: string) => void;
+}) {
+  // 원본은 회차 단위(같은 날이 여러 번)라 날짜로 합쳐서 보여준다.
+  const days = [
+    ...new Set(
+      value
+        .split(",")
+        .map((v) => v.trim().slice(0, 10))
+        .filter(Boolean)
+    ),
+  ].sort((a, b) => a.localeCompare(b));
+  const [picking, setPicking] = useState("");
+
+  const commit = (next: string[]) => onChange(next.join(", "));
+
+  const add = (day: string) => {
+    setPicking("");
+    if (!day || days.includes(day)) return;
+    commit([...days, day].sort((a, b) => a.localeCompare(b)));
+  };
+
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      {days.map((day) => (
+        <span
+          key={day}
+          className="inline-flex items-center gap-1 rounded border bg-background px-1.5 py-0.5 font-mono text-[11px] tabular-nums"
+        >
+          {day}
+          <button
+            type="button"
+            aria-label="빼기"
+            className="text-muted-foreground transition-colors hover:text-destructive"
+            onClick={() => commit(days.filter((d) => d !== day))}
+          >
+            <X className="h-2.5 w-2.5" />
+          </button>
+        </span>
+      ))}
+      <Input
+        type="date"
+        value={picking}
+        onChange={(e) => add(e.target.value)}
+        className="h-7 w-[136px] text-xs"
+      />
+    </div>
+  );
+}
 
 type Verdict = "same" | "absent" | "corrected" | "cleared";
 
@@ -125,7 +183,6 @@ function BlankChoiceRow({
       <ChoiceButton
         active={choice === "absent"}
         onClick={() => onChoose("absent")}
-        title="페이지에 그 정보가 없어요"
         icon={<MinusCircle className="h-3 w-3" />}
         label="원래 없어요"
         activeClassName="border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
@@ -133,7 +190,6 @@ function BlankChoiceRow({
       <ChoiceButton
         active={choice === "unverified"}
         onClick={() => onChoose("unverified")}
-        title="이미지 안에 있는 등의 이유로 확인하지 못했어요"
         icon={<EyeOff className="h-3 w-3" />}
         label="못 봤어요"
         activeClassName="border-amber-500 bg-amber-500/10 text-amber-700 dark:text-amber-400"
@@ -150,14 +206,12 @@ function BlankChoiceRow({
 function ChoiceButton({
   active,
   onClick,
-  title,
   icon,
   label,
   activeClassName,
 }: {
   active: boolean;
   onClick: () => void;
-  title: string;
   icon: React.ReactNode;
   label: string;
   activeClassName: string;
@@ -166,7 +220,6 @@ function ChoiceButton({
     <button
       type="button"
       onClick={onClick}
-      title={title}
       aria-pressed={active}
       className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] transition-colors ${
         active
@@ -218,18 +271,10 @@ export function ExtractionReview({
 
   return (
     <div className="space-y-3 rounded-md border border-indigo-500/40 bg-indigo-500/[0.03] p-3">
-      <div>
-        <Label className="text-sm font-semibold">가져온 값 확인</Label>
-        <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
-          <b>페이지를 직접 보고 맞는 값을 적어주세요</b>을 적습니다. 우리
-          DB 의 표기 규칙이나 기존 공연 이름과 <b>무관</b>합니다 — 소스에 적힌
-          그대로가 정답입니다. 여기 값은 반영되지 않고 크롤러 정확도 측정에만
-          쓰입니다.
-        </p>
-      </div>
+      <Label className="text-sm font-semibold">가져온 값 확인</Label>
 
       <div className="space-y-3">
-        {FIELDS.map(({ field, key, label, placeholder, hint }) => {
+        {FIELDS.map(({ field, key, label, placeholder }) => {
           const current = draft[field];
           const orig = original[field];
           const verdict = verdictOf(current, orig);
@@ -275,14 +320,18 @@ export function ExtractionReview({
                 </span>
               </div>
 
-              <Input
-                value={current}
-                onChange={(e) => onChange({ [field]: e.target.value })}
-                className="h-8 text-xs"
-                placeholder={placeholder}
-              />
-              {hint && (
-                <p className="text-[10px] text-muted-foreground">{hint}</p>
+              {field === "dates" ? (
+                <DateChips
+                  value={current}
+                  onChange={(next) => onChange({ dates: next })}
+                />
+              ) : (
+                <Input
+                  value={current}
+                  onChange={(e) => onChange({ [field]: e.target.value })}
+                  className="h-8 text-xs"
+                  placeholder={placeholder}
+                />
               )}
               {isBlank && (
                 <BlankChoiceRow
@@ -298,11 +347,6 @@ export function ExtractionReview({
       {/* 아래 폼에서 파생되는 정답(예매/라인업/부가정보). 빈칸이면 여기서 묻는다. */}
       {blankDerived.length > 0 && (
         <div className="space-y-2 rounded border border-dashed p-2">
-          <p className="text-[11px] leading-relaxed text-muted-foreground">
-            아래 폼의 <b>크롤 출처</b> 행에서 가져오는 정답이 비어 있습니다. 각각이{" "}
-            <b>원래 없어요</b> 빈 것인지, <b>확인하지 못해서</b> 빈 것인지
-            골라주세요.
-          </p>
           {blankDerived.map((key) => (
             <div key={key} className="flex flex-wrap items-center gap-2">
               <span className="w-[92px] shrink-0 text-xs font-medium">
@@ -317,12 +361,6 @@ export function ExtractionReview({
         </div>
       )}
 
-      <p className="text-[11px] leading-relaxed text-muted-foreground">
-        예매·아티스트·부가정보의 정답은 아래 폼의 <b>크롤 출처</b> 행에서 그대로
-        가져옵니다. <b>&ldquo;원래 없어요&rdquo;과 &ldquo;못 봤어요&rdquo;은 다른
-        사실입니다</b> — 둘 다 정확도 분모에서 빠지지만, 확인 못 한 필드는
-        미확인율로 따로 집계되어 그 필드의 정확도를 믿으면 안 된다는 표시가 됩니다.
-      </p>
     </div>
   );
 }

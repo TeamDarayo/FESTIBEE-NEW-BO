@@ -127,6 +127,20 @@ export function toDateInput(value: string | null | undefined): string {
  * 여러 번 들어온다. 그대로 세면 공연 일수가 부풀고, 그대로 첫/끝을 쓰면 정렬이
  * 보장되지 않아 기간이 뒤집히거나 하루로 접힌다.
  */
+/** 폼 값(`YYYY-MM-DDTHH:mm:ss`) -> `datetime-local` 입력값. 초는 뗀다. */
+export function toDateTimeLocal(value: string | null | undefined): string {
+  if (!value) return "";
+  const t = value.trim();
+  return t.length >= 16 && t[10] === "T" ? t.slice(0, 16) : "";
+}
+
+/** `datetime-local` 입력값 -> 폼 값. 초를 붙여 형식을 맞춘다. */
+export function fromDateTimeLocal(value: string | null | undefined): string {
+  if (!value) return "";
+  const t = value.trim();
+  return t.length === 16 ? `${t}:00` : t;
+}
+
 export function toDayList(
   dates: readonly (string | null | undefined)[] | null | undefined
 ): string[] {
