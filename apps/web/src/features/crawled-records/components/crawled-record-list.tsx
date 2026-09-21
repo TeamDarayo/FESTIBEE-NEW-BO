@@ -8,6 +8,7 @@ import { useGetInfiniteCrawledRecords } from "@festibee/api";
 import type { CrawledRecordStatus, NormalizedCrawlData } from "@festibee/api";
 import { CrawledRecordStatusBadge } from "./crawled-record-status-badge";
 import { ReviewedBadge } from "./review-stamp";
+import { RecordOriginBadge } from "./record-origin-badge";
 
 type StatusFilter = CrawledRecordStatus | "ALL";
 
@@ -178,6 +179,9 @@ export function CrawledRecordList() {
                         </span>
                         <CrawledRecordStatusBadge
                           status={record.status as CrawledRecordStatus}
+                        />
+                        <RecordOriginBadge
+                          crawlerVersion={record.crawlerVersion}
                         />
                         <ReviewedBadge reviewedAt={record.reviewedAt} />
                       </div>

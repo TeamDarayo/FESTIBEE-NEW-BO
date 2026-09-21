@@ -12,9 +12,16 @@ import type {
  * 폼 한 행의 출처.
  * - existing: 대상 공연에서 불러온 baseline 행(= DB 에 이미 있는 것)
  * - crawl:    크롤 데이터에서 온 행 / 크롤 값으로 덮어쓴 입력칸
+ * - llm:      크롤 데이터 중 **모델이 포스터에서 읽은** 값. crawl 과 출처는 같지만
+ *             신뢰도가 전혀 달라(특히 시각) 검수자가 반드시 대조해야 한다.
  * - manual:   라벨러가 직접 만든 행 / 직접 타이핑한 값
  */
-export type RowSource = "existing" | "crawl" | "manual";
+export type RowSource = "existing" | "crawl" | "manual" | "llm";
+
+/** crawl 과 llm 은 둘 다 "크롤 레코드에서 온 값"이다. 정답 집계는 이 둘을 같이 본다. */
+export function isCrawlSource(source: RowSource): boolean {
+  return source === "crawl" || source === "llm";
+}
 
 export interface ReservationRow {
   /** 기존 ReservationInfo.id. null = 신규. */
@@ -202,13 +209,25 @@ export function collectTimetableKeys(rows: TimetableRow[]): Set<string> {
 // 크롤 데이터 → 폼 행
 // ---------------------------------------------------------------------------
 
+/**
+ * 이 필드가 크롤러에서 왔는지 포스터 분석기에서 왔는지.
+ * 행을 만드는 쪽에서 한 번 판정해 두면 화면은 `source` 만 보고 갈라 그릴 수 있다.
+ */
+function crawlFieldSource(
+  crawl: NormalizedCrawlData,
+  field: string
+): RowSource {
+  return crawl.field_origins?.[field] === "llm" ? "llm" : "crawl";
+}
+
 export function crawlReservationRows(
   crawl: NormalizedCrawlData,
   types?: string[]
 ): ReservationRow[] {
+  const source = crawlFieldSource(crawl, "reservations");
   return (crawl.reservations ?? []).map((r, i) => ({
     id: null,
-    source: "crawl" as const,
+    source,
     crawlRef: i,
     enabled: true,
     openDateTime: toDateTimeInput(r.start_at),
@@ -223,9 +242,10 @@ export function crawlReservationRows(
  * (같은 시간/스테이지라도 합치지 않는다 — 라벨러가 필요할 때 직접 합침)
  */
 export function crawlTimetableRows(crawl: NormalizedCrawlData): TimetableRow[] {
+  const source = crawlFieldSource(crawl, "artists");
   return (crawl.artists ?? []).map((a, i) => ({
     id: null,
-    source: "crawl" as const,
+    source,
     enabled: true,
     performanceDate: a.date ?? "",
     startTime: toTimeInput(a.start_time),
@@ -237,7 +257,7 @@ export function crawlTimetableRows(crawl: NormalizedCrawlData): TimetableRow[] {
         timetableArtistId: null,
         artistId: null,
         name: a.name,
-        source: "crawl" as const,
+        source,
         crawlRef: i,
       },
     ],
@@ -310,7 +330,7 @@ export function planReservationRows(
     const matched = r.id == null ? byKey.get(reservationKey(row)) : undefined;
     return {
       id: r.id ?? null,
-      source: r.id != null ? "existing" : matched ? "crawl" : "manual",
+      source: r.id != null ? "existing" : (matched?.source ?? "manual"),
       crawlRef: matched?.crawlRef ?? null,
       enabled: true,
       openDateTime: row.openDateTime,
@@ -325,11 +345,15 @@ export function planTimetableRows(
   plan: Plan,
   crawlRows: TimetableRow[]
 ): TimetableRow[] {
-  const crawlArtistByKey = new Map<string, { crawlRef: number | null }>();
+  const crawlArtistByKey = new Map<
+    string,
+    { crawlRef: number | null; source: RowSource }
+  >();
   for (const row of crawlRows) {
     for (const a of row.artists) {
       crawlArtistByKey.set(timetableArtistKey(row, a.name), {
         crawlRef: a.crawlRef,
+        source: a.source,
       });
     }
   }
@@ -350,7 +374,7 @@ export function planTimetableRows(
         timetableArtistId: a.id ?? null,
         artistId: a.artistId ?? null,
         name: a.name,
-        source: a.id != null ? "existing" : matched ? "crawl" : "manual",
+        source: a.id != null ? "existing" : (matched?.source ?? "manual"),
         crawlRef: matched?.crawlRef ?? null,
       };
     });
@@ -359,9 +383,7 @@ export function planTimetableRows(
       source:
         t.id != null
           ? "existing"
-          : artists.some((a) => a.source === "crawl")
-            ? "crawl"
-            : "manual",
+          : (artists.find((a) => isCrawlSource(a.source))?.source ?? "manual"),
       enabled: true,
       performanceDate: base.performanceDate,
       startTime: base.startTime,

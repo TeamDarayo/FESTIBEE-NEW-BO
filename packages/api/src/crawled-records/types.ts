@@ -51,6 +51,14 @@ export const IGNORED_REASON_LABELS: Record<IgnoredReason, string> =
     {} as Record<IgnoredReason, string>,
   );
 
+/**
+ * 값 하나가 어디서 왔는지. 크롤러 `schema.py` 의 `FieldOrigin` 과 같은 어휘다.
+ * - crawled: 예매처 API 가 그대로 준 값
+ * - llm:     모델이 포스터 픽셀에서 읽어낸 값 — 정답률이 낮아 사람 확인이 전제다
+ * - manual:  사람이 직접 넣은 값
+ */
+export type FieldOrigin = "manual" | "crawled" | "llm";
+
 export interface CrawledVenue {
   name: string;
   address: string | null;
@@ -93,7 +101,11 @@ export interface NormalizedCrawlData {
   work_location?: string | null;
   self_intro_questions?: string[];
   detail_markdown?: string | null;
-  field_origins: Record<string, string>;
+  /**
+   * 필드별 출처. 구버전 레코드에는 없어 optional 이다.
+   * 키는 크롤 스키마의 필드명("title" | "dates" | "venue" | "artists" | ...).
+   */
+  field_origins?: Record<string, FieldOrigin | undefined>;
 }
 
 export interface CrawledRecordRes {

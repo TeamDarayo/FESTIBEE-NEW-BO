@@ -421,10 +421,12 @@ export function LabelingForm({
   const mergeCrawlBaseline = useCallback(
     (target: PerformanceTarget | null) => {
       const isNew = target?.mode === "new";
+      // 반환하는 출처는 RowSource 그대로다. 여기서 union 을 다시 적으면
+      // 출처가 하나 늘 때마다 이 줄이 깨진다.
       const pick = (
         field: keyof ScalarValues,
         fromTarget: string | undefined
-      ): [string, "crawl" | "manual" | "existing"] => {
+      ): [string, ScalarSources[ScalarField]] => {
         const kept = scalars[field]?.trim();
         if (kept) return [scalars[field], scalarSources[field]];
         if (isNew && fromTarget?.trim()) return [fromTarget, "manual"];

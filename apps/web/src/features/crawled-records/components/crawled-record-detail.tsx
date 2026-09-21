@@ -30,6 +30,12 @@ import type {
 } from "@festibee/api";
 import { CrawledRecordStatusBadge } from "./crawled-record-status-badge";
 import { ReviewedBadge, ReviewStampCard } from "./review-stamp";
+import {
+  LlmFieldBadge,
+  LlmRecordNotice,
+  RecordOriginBadge,
+} from "./record-origin-badge";
+import { isLlmField, isLlmRecord, llmModelLabel } from "../lib/record-origin";
 
 function formatDateTime(dateStr: string | null | undefined): string {
   if (!dateStr) return "-";
@@ -135,6 +141,8 @@ export function CrawledRecordDetail({ id }: { id: number }) {
   }
 
   const isNew = record.status === "NEW";
+  const isLlm = isLlmRecord(record.crawlerVersion);
+  const llmTimes = isLlmField(crawlData, "artists");
   // 크롤 dates 는 회차 단위 ISO 일시라 달력 날짜로 접은 뒤 기간을 만든다.
   const crawlDays = toDayList(crawlData?.dates);
   const dateRange =
@@ -169,12 +177,17 @@ export function CrawledRecordDetail({ id }: { id: number }) {
               {crawlData?.title ?? record.venderId}
             </h1>
             <CrawledRecordStatusBadge status={record.status as CrawledRecordStatus} />
+            <RecordOriginBadge crawlerVersion={record.crawlerVersion} />
             <ReviewedBadge reviewedAt={record.reviewedAt} showPending />
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
             {record.site}
-            {record.crawlerVersion ? ` (v${record.crawlerVersion})` : ""} &middot;{" "}
-            {formatRelativeFromNow(record.crawledAt)}
+            {record.crawlerVersion
+              ? isLlm
+                ? ` (${llmModelLabel(record.crawlerVersion)})`
+                : ` (v${record.crawlerVersion})`
+              : ""}{" "}
+            &middot; {formatRelativeFromNow(record.crawledAt)}
             {record.status === "IGNORED" && (
               <>
                 {" "}
@@ -219,11 +232,17 @@ export function CrawledRecordDetail({ id }: { id: number }) {
         </div>
       </div>
 
+      {isLlm && <LlmRecordNotice artistCount={crawlData?.artists.length ?? 0} />}
+
       {/* Content */}
       <div className="flex-1 overflow-auto p-6">
         {/* 3-column summary row */}
         <div className="grid grid-cols-3 gap-6">
-          <SectionCard icon={<CalendarDays className="h-4 w-4" />} title="공연 일정">
+          <SectionCard
+            icon={<CalendarDays className="h-4 w-4" />}
+            title="공연 일정"
+            badge={isLlmField(crawlData, "dates") ? <LlmFieldBadge /> : null}
+          >
             <InfoRow label="기간" value={dateRange} />
             <InfoRow
               label="공연 일수"
@@ -231,7 +250,11 @@ export function CrawledRecordDetail({ id }: { id: number }) {
             />
           </SectionCard>
 
-          <SectionCard icon={<MapPin className="h-4 w-4" />} title="장소">
+          <SectionCard
+            icon={<MapPin className="h-4 w-4" />}
+            title="장소"
+            badge={isLlmField(crawlData, "venue") ? <LlmFieldBadge /> : null}
+          >
             {crawlData?.venue ? (
               <>
                 <InfoRow label="이름" value={crawlData.venue.name} />
@@ -260,6 +283,7 @@ export function CrawledRecordDetail({ id }: { id: number }) {
             <div className="mb-3 flex items-center gap-2">
               <Ticket className="h-4 w-4 text-muted-foreground" />
               <h2 className="text-sm font-semibold">예매 정보</h2>
+              {isLlmField(crawlData, "reservations") && <LlmFieldBadge />}
             </div>
             <Separator className="mb-3" />
             <div className="overflow-hidden rounded-lg border">
@@ -312,6 +336,7 @@ export function CrawledRecordDetail({ id }: { id: number }) {
             <div className="mb-3 flex items-center gap-2">
               <Users className="h-4 w-4 text-muted-foreground" />
               <h2 className="text-sm font-semibold">아티스트 ({crawlData.artists.length}명)</h2>
+              {llmTimes && <LlmFieldBadge />}
             </div>
             <Separator className="mb-3" />
             <div className="overflow-hidden rounded-lg border">
@@ -320,7 +345,15 @@ export function CrawledRecordDetail({ id }: { id: number }) {
                   <tr className="border-b bg-muted/50">
                     <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">이름</th>
                     <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">날짜</th>
-                    <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">시간</th>
+                    <th
+                      className={
+                        llmTimes
+                          ? "px-4 py-2.5 text-left font-semibold text-rose-600 dark:text-rose-400"
+                          : "px-4 py-2.5 text-left font-medium text-muted-foreground"
+                      }
+                    >
+                      시간{llmTimes ? " · 확인 필요" : ""}
+                    </th>
                     <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">스테이지</th>
                   </tr>
                 </thead>
@@ -331,7 +364,20 @@ export function CrawledRecordDetail({ id }: { id: number }) {
                       <td className="px-4 py-2.5 text-muted-foreground">
                         {artist.date ?? "-"}
                       </td>
-                      <td className="px-4 py-2.5 text-muted-foreground">
+                      {/* 모델이 읽은 시각은 열에 아홉이 틀린다. 다른 칸과 같은 회색으로
+                          두면 그냥 지나치므로, 값이 있는 칸만 경고색으로 세운다. */}
+                      <td
+                        className={
+                          llmTimes && artist.start_time
+                            ? "px-4 py-2.5 font-medium text-rose-600 dark:text-rose-400"
+                            : "px-4 py-2.5 text-muted-foreground"
+                        }
+                        title={
+                          llmTimes && artist.start_time
+                            ? "모델이 포스터에서 읽은 시각입니다. 포스터 원본과 대조하세요."
+                            : undefined
+                        }
+                      >
                         {artist.start_time
                           ? `${artist.start_time}${artist.end_time ? ` ~ ${artist.end_time}` : ""}`
                           : "-"}
@@ -408,11 +454,14 @@ export function CrawledRecordDetail({ id }: { id: number }) {
 function SectionCard({
   icon,
   title,
+  badge,
   children,
   className,
 }: {
   icon: React.ReactNode;
   title: string;
+  /** 이 묶음의 값이 어디서 왔는지 알리는 표식. 없으면 안 그린다. */
+  badge?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
 }) {
@@ -421,6 +470,7 @@ function SectionCard({
       <div className="mb-3 flex items-center gap-2">
         <span className="text-muted-foreground">{icon}</span>
         <h2 className="text-sm font-semibold">{title}</h2>
+        {badge}
       </div>
       <Separator className="mb-3" />
       {children}
