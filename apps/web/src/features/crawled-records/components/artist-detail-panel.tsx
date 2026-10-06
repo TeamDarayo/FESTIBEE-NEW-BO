@@ -77,7 +77,7 @@ export function ArtistDetailPanel({
   const busy =
     addAlias.isPending || createArtist.isPending || updateArtist.isPending;
 
-  const currentImageUrl = linked?.imageUrl ?? null;
+  const currentImageUrl = resolveAppleMusicArtworkUrl(linked?.imageUrl);
 
   const displayAliases = linked?.aliases?.length
     ? linked.aliases.map((a) => ({
@@ -95,7 +95,8 @@ export function ArtistDetailPanel({
     imageUrl?: string | null;
     extraAliases?: string[];
   }): Promise<number | null> => {
-    if (linked?.id) return linked.id;
+    // 목록 조회 상태와 무관하게 이미 연결된 ID는 신규 생성하지 않는다.
+    if (value.existingArtistId != null) return value.existingArtistId;
 
     const name =
       crawledName.trim() ||
@@ -202,10 +203,16 @@ export function ArtistDetailPanel({
       return;
     }
 
-    if (linked?.id) {
+    if (value.existingArtistId != null) {
+      if (!linked) {
+        setImageError(
+          "연결된 아티스트 정보를 불러오지 못했습니다. 목록을 새로고침한 후 다시 시도해주세요."
+        );
+        return;
+      }
       try {
         await updateArtist.mutateAsync({
-          artistId: linked.id,
+          artistId: value.existingArtistId,
           data: {
             name: linked.name,
             description: linked.description ?? undefined,
